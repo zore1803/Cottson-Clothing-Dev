@@ -49,6 +49,18 @@
       "originalColor": "white",
       "colors": ["white", "black", "navy", "red", "grey"],
       "minBulk": 25
+    },
+    {
+      "slug": "contrast-trim-shirt",
+      "title": "Contrast Trim Shirt",
+      "category": "Shirts",
+      "description": "Crisp cotton shirt with a bold patterned collar, cuffs and pocket trim. A sharper layer for nights out or dressed-down office days.",
+      "price": 1799,
+      "currency": "INR",
+      "sizes": ["S", "M", "L", "XL", "XXL"],
+      "originalColor": "white",
+      "colors": ["white", "black", "navy", "maroon", "grey"],
+      "minBulk": 25
     }
   ]
 }
