@@ -23,8 +23,7 @@
       "currency": "INR",
       "sizes": ["S", "M", "L", "XL", "XXL"],
       "originalColor": "grey",
-      "colors": ["grey", "white", "sky", "navy", "maroon", "black", "beige", "olive"],
-      "pantsColors": ["black", "navy", "grey", "beige"],
+      "colors": ["grey", "white", "navy", "black", "maroon"],
       "minBulk": 25
     },
     {
@@ -36,8 +35,7 @@
       "currency": "INR",
       "sizes": ["S", "M", "L", "XL", "XXL"],
       "originalColor": "black",
-      "colors": ["black", "white", "navy", "maroon", "royal", "red", "forest", "sky"],
-      "pantsColors": ["beige", "black", "navy", "grey"],
+      "colors": ["black", "white", "navy", "red", "forest"],
       "minBulk": 25
     }
   ]

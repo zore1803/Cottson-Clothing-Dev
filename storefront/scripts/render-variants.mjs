@@ -3,8 +3,10 @@
 //   node scripts/render-variants.mjs
 //
 // Reads photo.jpg + mask.png + meta.json (from prepare-product.mjs) and writes
-// public/products/<slug>/variants/<colorId>.webp. The math is the same as the PixiJS
-// shader in src/lib/recolor-shader.ts, so listing images match the live studio.
+// public/products/<slug>/variants/<colorId>.webp for listing/grid thumbnails. The live
+// product page and studio use a different, simpler overlay-blend technique on separate
+// model-photo.png/garment-layer.png assets (src/lib/recolor-shader.ts) — grid thumbnails
+// stay on this pre-rendered pipeline for listing performance.
 // In production this runs in a background worker and uploads to R2/S3 behind the CDN.
 
 import fs from 'node:fs/promises';

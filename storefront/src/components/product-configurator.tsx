@@ -14,7 +14,6 @@ import { cn } from "@/lib/utils";
 
 export function ProductConfigurator({ product, initialColor }: { product: Product; initialColor: string }) {
   const [colorId, setColorId] = useState(initialColor);
-  const [pantsId, setPantsId] = useState<string | null>(null);
   const [size, setSize] = useState<string | null>(null);
   const [qty, setQty] = useState(1);
   const add = useCart((s) => s.add);
@@ -41,7 +40,6 @@ export function ProductConfigurator({ product, initialColor }: { product: Produc
         <RecolorCanvas
           slug={product.slug}
           topColor={colorId === product.originalColor ? null : color.hex}
-          pantsColor={pantsId ? colorById(pantsId).hex : null}
           className="rounded-2xl"
         />
         <p className="mt-2 text-center text-xs text-muted-foreground">Live preview on the real garment</p>
@@ -71,21 +69,6 @@ export function ProductConfigurator({ product, initialColor }: { product: Produc
           </div>
           <div className="mt-3">
             <ColorSwatches colorIds={product.colors} value={colorId} onChange={changeColor} />
-          </div>
-        </div>
-
-        <div className="mt-6">
-          <div className="text-sm font-medium">
-            Style it with trousers:{" "}
-            <span className="font-normal text-muted-foreground">{pantsId ? colorById(pantsId).name : "As photographed"}</span>
-          </div>
-          <div className="mt-3 flex items-center gap-3">
-            <ColorSwatches colorIds={product.pantsColors} value={pantsId ?? ""} onChange={setPantsId} size="sm" />
-            {pantsId && (
-              <button className="text-xs text-muted-foreground underline" onClick={() => setPantsId(null)}>
-                Reset
-              </button>
-            )}
           </div>
         </div>
 

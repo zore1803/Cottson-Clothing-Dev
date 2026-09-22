@@ -3,7 +3,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { Application, Mesh, Shader } from "pixi.js";
 import { RECOLOR_FRAGMENT, RECOLOR_VERTEX } from "@/lib/recolor-shader";
-import { assetUrl, type PartStats, type ProductMeta } from "@/lib/catalog";
+import { type GarmentMeta } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 
 export type RecolorHandle = {
@@ -14,15 +14,13 @@ export type RecolorHandle = {
 
 type Props = {
   slug: string;
-  /** hex, or null to keep the photo's own color */
+  /** hex, or null to keep the photo's own original color */
   topColor: string | null;
-  pantsColor?: string | null;
   className?: string;
-  onReady?: (meta: ProductMeta) => void;
+  onReady?: (meta: GarmentMeta) => void;
 };
 
 const hexToRgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
-const statsVec = (s: PartStats | null) => (s ? [s.avg, s.exp, s.peak, s.dark ? 1 : 0] : [1, 1, 1, 0]);
 
 function loadImage(url: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
@@ -33,15 +31,39 @@ function loadImage(url: string) {
   });
 }
 
-/** Live garment recolor: PixiJS mesh + custom shader. Changing a color is one uniform update + one render. */
+/** Bounding box of the garment's non-transparent pixels, for the studio's print-area placement */
+function alphaBbox(img: HTMLImageElement): [number, number, number, number] {
+  const canvas = document.createElement("canvas");
+  canvas.width = img.width;
+  canvas.height = img.height;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(img, 0, 0);
+  const { data } = ctx.getImageData(0, 0, img.width, img.height);
+  let x0 = img.width, y0 = img.height, x1 = 0, y1 = 0;
+  for (let y = 0; y < img.height; y++) {
+    for (let x = 0; x < img.width; x++) {
+      if (data[(y * img.width + x) * 4 + 3] > 8) {
+        if (x < x0) x0 = x;
+        if (x > x1) x1 = x;
+        if (y < y0) y0 = y;
+        if (y > y1) y1 = y;
+      }
+    }
+  }
+  return x1 > x0 ? [x0, y0, x1, y1] : [0, 0, img.width, img.height];
+}
+
+/** Live garment recolor: a grayscale "garment-layer" PNG, overlay-blended and stacked on
+ * the untouched product photo. Changing a color is one uniform update + one render. */
 export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCanvas(
-  { slug, topColor, pantsColor = null, className, onReady },
+  { slug, topColor, className, onReady },
   ref
 ) {
   const hostRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
   const shaderRef = useRef<Shader | null>(null);
-  const metaRef = useRef<ProductMeta | null>(null);
+  const garmentMeshRef = useRef<Mesh | null>(null);
+  const metaRef = useRef<GarmentMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,21 +85,13 @@ export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCa
     (async () => {
       try {
         const PIXI = await import("pixi.js");
-        const [meta, photo, maskImg] = await Promise.all([
-          fetch(assetUrl(slug, "meta.json")).then((r) => r.json() as Promise<ProductMeta>),
-          loadImage(assetUrl(slug, "photo.jpg")),
-          loadImage(assetUrl(slug, "mask.png")),
+        const [modelImg, garmentImg] = await Promise.all([
+          loadImage(`/products/${slug}/model-photo.png`),
+          loadImage(`/products/${slug}/garment-layer.png`),
         ]);
         if (cancelled) return;
-        const { width: W, height: H } = meta;
-
-        // Feather mask edges slightly so garment borders blend into the photo
-        const maskCanvas = document.createElement("canvas");
-        maskCanvas.width = W;
-        maskCanvas.height = H;
-        const mctx = maskCanvas.getContext("2d")!;
-        mctx.filter = "blur(0.8px)";
-        mctx.drawImage(maskImg, 0, 0, W, H);
+        const W = modelImg.width, H = modelImg.height;
+        const meta: GarmentMeta = { width: W, height: H, bbox: alphaBbox(garmentImg) };
 
         app = new PIXI.Application();
         await app.init({
@@ -94,8 +108,12 @@ export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCa
           return;
         }
 
-        const photoTex = PIXI.Texture.from(photo);
-        const maskTex = PIXI.Texture.from(maskCanvas);
+        // Static base: the full photo (model, skin, background) — never recolored
+        const modelSprite = new PIXI.Sprite(PIXI.Texture.from(modelImg));
+        modelSprite.width = W;
+        modelSprite.height = H;
+
+        // Garment-only layer, pixel-aligned with the photo above, overlay-blended live
         const geometry = new PIXI.Geometry({
           attributes: { aPosition: [0, 0, W, 0, W, H, 0, H], aUV: [0, 0, 1, 0, 1, 1, 0, 1] },
           indexBuffer: [0, 1, 2, 0, 2, 3],
@@ -103,20 +121,13 @@ export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCa
         const shader = PIXI.Shader.from({
           gl: { vertex: RECOLOR_VERTEX, fragment: RECOLOR_FRAGMENT },
           resources: {
-            uPhoto: photoTex.source,
-            uMask: maskTex.source,
-            recolor: {
-              uTopColor: { value: new Float32Array(3), type: "vec3<f32>" },
-              uPantsColor: { value: new Float32Array(3), type: "vec3<f32>" },
-              uTopStats: { value: new Float32Array(statsVec(meta.parts.top)), type: "vec4<f32>" },
-              uPantsStats: { value: new Float32Array(statsVec(meta.parts.pants)), type: "vec4<f32>" },
-              uOn: { value: new Float32Array(2), type: "vec2<f32>" },
-              uTexel: { value: new Float32Array([1 / W, 1 / H]), type: "vec2<f32>" },
-            },
+            uGarment: PIXI.Texture.from(garmentImg).source,
+            recolor: { uColor: { value: new Float32Array(3), type: "vec3<f32>" } },
           },
         });
-        const mesh = new PIXI.Mesh({ geometry, shader }) as Mesh;
-        app.stage.addChild(mesh);
+        const garmentMesh = new PIXI.Mesh({ geometry, shader }) as Mesh;
+
+        app.stage.addChild(modelSprite, garmentMesh);
 
         const canvas = app.canvas as HTMLCanvasElement;
         canvas.style.width = "100%";
@@ -126,6 +137,7 @@ export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCa
 
         appRef.current = app;
         shaderRef.current = shader;
+        garmentMeshRef.current = garmentMesh;
         metaRef.current = meta;
         setLoading(false);
         onReady?.(meta);
@@ -139,24 +151,24 @@ export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCa
       cancelled = true;
       appRef.current = null;
       shaderRef.current = null;
+      garmentMeshRef.current = null;
       if (app) app.destroy(true, { children: true, texture: true });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
-  // Color changes: update uniforms and draw one frame (~1 ms on the GPU)
+  // Color changes: update the uniform (or hide the overlay for the original color) and draw one frame
   useEffect(() => {
     const shader = shaderRef.current;
+    const mesh = garmentMeshRef.current;
     const app = appRef.current;
-    if (!shader || !app) return;
-    const u = shader.resources.recolor.uniforms;
-    const meta = metaRef.current!;
-    u.uTopColor.set(hexToRgb(topColor ?? "#000000"));
-    u.uPantsColor.set(hexToRgb(pantsColor ?? "#000000"));
-    u.uOn[0] = topColor && meta.parts.top ? 1 : 0;
-    u.uOn[1] = pantsColor && meta.parts.pants ? 1 : 0;
+    if (!shader || !mesh || !app) return;
+    mesh.visible = topColor !== null;
+    if (topColor !== null) {
+      shader.resources.recolor.uniforms.uColor.set(hexToRgb(topColor));
+    }
     app.render();
-  }, [topColor, pantsColor, loading]);
+  }, [topColor, loading]);
 
   const meta = metaRef.current;
   return (
