@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Check, MessageSquare, Palette, Shirt, Truck, Users } from "lucide-react";
-import { PRODUCTS, COLORS, variantUrl } from "@/lib/catalog";
+import { PRODUCTS, COLORS } from "@/lib/catalog";
 import { ProductCard } from "@/components/product-card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -18,8 +18,8 @@ export default function HomePage() {
         <div className="absolute inset-0 -z-20 bg-[#b9bcc2]" />
         <div className="absolute inset-y-0 right-0 -z-10 w-full md:w-[58%]">
           <Image
-            src="/products/polo-black/variants/white.webp"
-            alt="Model wearing a white COTTSON polo"
+            src="/products/polo-black/photo.jpg"
+            alt="Model wearing a COTTSON polo"
             fill
             priority
             sizes="(min-width: 768px) 58vw, 100vw"
