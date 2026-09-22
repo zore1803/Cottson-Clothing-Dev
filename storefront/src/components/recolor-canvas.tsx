@@ -99,7 +99,9 @@ export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCa
           height: H,
           preference: "webgl",
           backgroundAlpha: 0,
-          antialias: false,
+          antialias: true,
+          resolution: Math.min(window.devicePixelRatio || 1, 2),
+          autoDensity: true,
           autoStart: false, // render on demand only
           preserveDrawingBuffer: true, // lets us export the canvas
         });

@@ -26,6 +26,15 @@ function overlayBlend(colorNorm, g) {
   return g < 0.5 ? low : high;
 }
 
+const luminance = ([r, g, b]) => 0.299 * r + 0.587 * g + 0.114 * b;
+// Same adaptive strength as the shader: colors far from mid-grey (black, white, saturated
+// hues) need some flat color mixed in to actually read as that color on a photo whose own
+// brightness sits far from that target; colors close to the original stay pure overlay.
+const blendStrength = (colorNorm) => {
+  const t = Math.abs(luminance(colorNorm) - 0.5) * 2;
+  return 0.15 + (0.65 - 0.15) * t;
+};
+
 for (const product of catalog.products) {
   const dir = path.join(root, 'public/products', product.slug);
   const { data: base, info } = await sharp(path.join(dir, 'model-photo.png')).removeAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -36,6 +45,7 @@ for (const product of catalog.products) {
   for (const colorId of product.colors) {
     if (colorId === product.originalColor) continue;
     const colorNorm = hexToNorm(colorHex[colorId]);
+    const strength = blendStrength(colorNorm);
     const out = Buffer.alloc(n * 3);
     for (let p = 0; p < n; p++) {
       const a = garment[p * 4 + 3] / 255;
@@ -47,7 +57,8 @@ for (const product of catalog.products) {
       }
       const g = 0.22 + 0.66 * (garment[p * 4] / 255); // matches mix(0.22, 0.88, g) in the shader
       for (let ch = 0; ch < 3; ch++) {
-        const blended = Math.min(1, Math.max(0, overlayBlend(colorNorm[ch], g)));
+        const overlay = Math.min(1, Math.max(0, overlayBlend(colorNorm[ch], g)));
+        const blended = overlay * (1 - strength) + colorNorm[ch] * strength;
         const baseNorm = base[p * 3 + ch] / 255;
         const v = baseNorm * (1 - a) + blended * a;
         out[p * 3 + ch] = Math.round(Math.min(1, Math.max(0, v)) * 255);

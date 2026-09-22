@@ -37,6 +37,16 @@ void main() {
   g = mix(0.22, 0.88, g);
   vec3 low = 2.0 * uColor * g;
   vec3 high = 1.0 - 2.0 * (1.0 - uColor) * (1.0 - g);
-  vec3 blended = clamp(mix(low, high, vec3(step(0.5, g))), 0.0, 1.0);
+  vec3 overlay = clamp(mix(low, high, vec3(step(0.5, g))), 0.0, 1.0);
+  // Pure overlay blend can't reach a target far from the source photo's own average
+  // brightness — a light target on a dark photo (or a dark target on a light photo) hits a
+  // ceiling/floor set by the source pixel's own brightness either way. Mix in some flat
+  // target color so extreme colors read correctly; scale that fraction by how far the
+  // target sits from mid-grey, so colors close to the original (already accurate from
+  // overlay alone) keep full fold/shadow realism while black/white/saturated ones give up
+  // some of it to actually look right.
+  float targetLum = dot(uColor, vec3(0.299, 0.587, 0.114));
+  float strength = mix(0.15, 0.65, abs(targetLum - 0.5) * 2.0);
+  vec3 blended = mix(overlay, uColor, strength);
   finalColor = vec4(blended * px.a, px.a);
 }`;
