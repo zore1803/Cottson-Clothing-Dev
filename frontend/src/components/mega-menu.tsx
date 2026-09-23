@@ -117,9 +117,9 @@ export function MegaMenu() {
         // instead of pushing it down, flush against the header with no gap. The card itself
         // is only as wide as the page content — no blank strip on either side.
         <div className="fixed inset-x-0 top-20 z-50" onMouseEnter={() => show(open)}>
-          <div className="mx-auto flex max-w-7xl overflow-hidden rounded-2xl border bg-background shadow-xl">
+          <div className="mx-auto flex w-fit max-w-7xl overflow-hidden rounded-2xl border bg-background shadow-xl">
             {MENUS.find((m) => m.label === open)!.columns.map((col, i) => (
-              <div key={col.heading} className={cn("min-w-0", col.cols === 2 ? "flex-[2]" : "flex-1", i > 0 && "border-l")}>
+              <div key={col.heading} className={cn("w-64 shrink-0", col.cols === 2 && "w-[420px]", i > 0 && "border-l")}>
                 <div className="border-b bg-muted/50 px-4 py-2.5 text-base font-semibold text-brand">
                   {col.heading}
                   <span className="text-brand-accent">.</span>
