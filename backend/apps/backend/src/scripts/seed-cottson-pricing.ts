@@ -1,4 +1,4 @@
-// COTTSON pricing rules in Medusa, matching what the storefront shows.
+// COTTSON pricing rules in Medusa, matching what the frontend shows.
 //   npx medusa exec ./src/scripts/seed-cottson-pricing.ts
 // Safe to re-run.
 //  - Bulk tiers on every garment variant: 25–49 −10%, 50–99 −15%, 100+ −20% (per line quantity)
@@ -13,7 +13,7 @@ import {
   updateShippingOptionsWorkflow,
 } from "@medusajs/medusa/core-flows";
 
-// Keep in sync with storefront/src/lib/pricing.ts
+// Keep in sync with frontend/src/lib/pricing.ts
 export const BULK_TIERS = [
   { min: 25, max: 49, discount: 0.1 },
   { min: 50, max: 99, discount: 0.15 },
@@ -56,6 +56,7 @@ export default async function seedCottsonPricing({ container }: ExecArgs) {
   // ---------- Customization fee product ----------
   if (!products.some((p: any) => p.handle === "customization")) {
     const { data: [store] } = await query.graph({ entity: "store", fields: ["default_sales_channel_id"] });
+    const salesChannelId = store.default_sales_channel_id as string;
     const { data: [profile] } = await query.graph({ entity: "shipping_profile", fields: ["id"] });
     await createProductsWorkflow(container).run({
       input: {
@@ -68,7 +69,7 @@ export default async function seedCottsonPricing({ container }: ExecArgs) {
             shipping_profile_id: profile.id,
             metadata: { brand: "cottson", internal: true },
             options: [{ title: "Type", values: ["Print or embroidery"] }],
-            sales_channels: [{ id: store.default_sales_channel_id }],
+            sales_channels: [{ id: salesChannelId }],
             variants: [
               {
                 title: "Logo customization",
@@ -89,6 +90,7 @@ export default async function seedCottsonPricing({ container }: ExecArgs) {
   const { data: options } = await query.graph({ entity: "shipping_option", fields: ["id", "name", "prices.*"] });
   const { data: regions } = await query.graph({ entity: "region", fields: ["id", "currency_code"] });
   const india = regions.find((r: any) => r.currency_code === "inr");
+  if (!india) throw new Error("No INR region found. Run seed-cottson.ts first.");
   const indiaOptions = options.filter((o: any) => o.prices?.some((p: any) => p.currency_code === "inr"));
   for (const o of indiaOptions) {
     await updateShippingOptionsWorkflow(container).run({

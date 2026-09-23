@@ -4,7 +4,7 @@ Custom cotton apparel store: live garment recoloring (PixiJS), a design studio f
 
 | Folder | What |
 | --- | --- |
-| `storefront/` | Next.js 16 + TypeScript + Tailwind + shadcn/ui. See [storefront/README.md](storefront/README.md) |
+| `frontend/` | Next.js 16 + TypeScript + Tailwind + shadcn/ui. See [frontend/README.md](frontend/README.md) |
 | `backend/` | Medusa v2 (Postgres + Redis). COTTSON seed scripts in `backend/apps/backend/src/scripts/` |
 | `docker-compose.yml` | Local Postgres (port 5433) and Redis (6379) |
 
@@ -23,7 +23,7 @@ npx medusa exec ./src/scripts/seed-cottson-pricing.ts
 npx medusa user -e you@example.com -p <password>
 npm run dev                                   # http://localhost:9100 (admin at /app)
 
-cd ../../../storefront
+cd ../../../frontend
 # .env.local: MONGODB_URI, NEXT_PUBLIC_MEDUSA_URL=http://localhost:9100,
 #             NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY, NEXT_PUBLIC_MEDUSA_REGION_ID (printed by seed-cottson.ts)
 npm install --legacy-peer-deps

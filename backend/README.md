@@ -40,7 +40,7 @@
 
 # Medusa DTC Starter
 
-A production-ready monorepo starter for direct-to-consumer ecommerce stores powered by Medusa and Next.js. Includes a fully featured storefront with product browsing, cart, checkout, customer accounts, and order management.
+A production-ready monorepo starter for direct-to-consumer ecommerce stores powered by Medusa and Next.js. Includes a fully featured frontend with product browsing, cart, checkout, customer accounts, and order management.
 
 ## Features
 
@@ -113,28 +113,28 @@ pnpm dev
 
 7. Open the admin dashboard at `localhost:9000/app` and log in. Retrieve your publishable API key at Settings > Publishable API key.
 
-8. Set up environment variables for the storefront:
+8. Set up environment variables for the frontend:
 
 ```bash
-cp apps/storefront/.env.template apps/storefront/.env.local
+cp apps/frontend/.env.template apps/frontend/.env.local
 ```
 
-9. Update `apps/storefront/.env.local` with your Medusa publishable API key:
+9. Update `apps/frontend/.env.local` with your Medusa publishable API key:
 
 ```bash
 NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_6c3...
 ```
 
-10.  Start storefront:
+10.  Start frontend:
 
 ```bash
-cd apps/storefront
+cd apps/frontend
 pnpm dev
 ```
 
-The storefront runs on `http://localhost:8000`.
+The frontend runs on `http://localhost:8000`.
 
-You can slo run the following command from the root to start both backend and storefront:
+You can slo run the following command from the root to start both backend and frontend:
 
 ```bash
 pnpm dev
@@ -142,14 +142,14 @@ pnpm dev
 
 ## Configuration
 
-The storefront is configured via environment variables in `apps/storefront/.env.local`:
+The frontend is configured via environment variables in `apps/frontend/.env.local`:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` | Publishable API key from your Medusa backend | — |
 | `NEXT_PUBLIC_MEDUSA_BACKEND_URL` | URL of your Medusa backend | `http://localhost:9000` |
 | `NEXT_PUBLIC_DEFAULT_REGION` | Default region country code | `dk` |
-| `NEXT_PUBLIC_BASE_URL` | Base URL of the storefront | `https://localhost:8000` |
+| `NEXT_PUBLIC_BASE_URL` | Base URL of the frontend | `https://localhost:8000` |
 | `NEXT_PUBLIC_STRIPE_KEY` | Stripe publishable key (optional) | — |
 
 ## Resources

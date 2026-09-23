@@ -1,0 +1,73 @@
+# Render Blueprint: Medusa backend + PostgreSQL + Redis (Valkey).
+# The Next.js frontend is deployed separately on Vercel (root directory: frontend).
+#
+# Deploy: Render dashboard -> New -> Blueprint -> pick this repo.
+# After the first deploy, open the service Shell and run:
+#   cd apps/backend
+#   npx medusa db:migrate
+#   npx medusa exec ./src/scripts/seed-cottson.ts        # prints the publishable key + region id
+#   npx medusa exec ./src/scripts/seed-cottson-pricing.ts
+#   npx medusa user -e you@example.com -p '<a strong password>'
+# Then set STORE_CORS / AUTH_CORS to your Vercel domain and add the key + region id in Vercel.
+
+services:
+  - type: web
+    name: cottson-medusa
+    runtime: node
+    plan: starter # free instances sleep and lose background jobs; starter keeps it awake
+    region: singapore # closest to India; must match the database region
+    rootDir: backend
+    buildCommand: npm ci && npm run build --workspace @dtc/backend
+    startCommand: cd apps/backend/.medusa/server && npm run start
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cottson-postgres
+          property: connectionString
+      - key: DATABASE_SSL
+        value: "true"
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: cottson-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: COOKIE_SECRET
+        generateValue: true
+      - key: AUTH_MFA_ENCRYPTION_KEY
+        generateValue: true
+      - key: MEDUSA_WORKER_MODE
+        value: shared
+      - key: MEDUSA_BACKEND_URL
+        fromService:
+          type: web
+          name: cottson-medusa
+          property: host
+      # Set these to your Vercel domain once the frontend is deployed
+      - key: STORE_CORS
+        sync: false
+      - key: ADMIN_CORS
+        sync: false
+      - key: AUTH_CORS
+        sync: false
+      # Public URL of the frontend, used for product image URLs when seeding
+      - key: FRONTEND_URL
+        sync: false
+
+databases:
+  - name: cottson-postgres
+    plan: basic-256mb # free plan expires after 30 days
+    region: singapore
+    postgresMajorVersion: "16"
+
+  - name: cottson-redis
+    type: keyvalue
+    plan: free
+    region: singapore
+    maxmemoryPolicy: noeviction # required by Medusa's job queue
+    ipAllowList: [] # internal access only

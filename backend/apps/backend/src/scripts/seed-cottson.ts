@@ -1,7 +1,7 @@
 // Seeds COTTSON's catalog into Medusa.
 //   npx medusa exec ./src/scripts/seed-cottson.ts
 // Safe to re-run: existing COTTSON products are replaced, the India region is created once.
-// Product data comes from the storefront's catalog file so both stay in sync.
+// Product data comes from the frontend's catalog file so both stay in sync.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -26,26 +26,30 @@ type Catalog = {
   }[];
 };
 
+// Product photos are served by the frontend (Vercel in production, localhost in development)
+const FRONTEND_URL = (process.env.FRONTEND_URL || "http://localhost:3000").replace(/\/$/, "");
+
 export default async function seedCottson({ container }: ExecArgs) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
   const query = container.resolve(ContainerRegistrationKeys.QUERY);
   const link = container.resolve(ContainerRegistrationKeys.LINK);
   const fulfillment = container.resolve(Modules.FULFILLMENT);
 
-  const catalogPath = path.resolve(process.cwd(), "../../../storefront/src/data/products.json");
+  const catalogPath = path.resolve(process.cwd(), "../../../frontend/src/data/products.json");
   const catalog: Catalog = JSON.parse(fs.readFileSync(catalogPath, "utf8"));
   const colorName = (id: string) => catalog.colors.find((c) => c.id === id)!.name;
 
   // ---------- Store currency ----------
   const { data: [store] } = await query.graph({ entity: "store", fields: ["id", "supported_currencies.*", "default_sales_channel_id"] });
-  if (!store.supported_currencies?.some((c: { currency_code: string }) => c.currency_code === "inr")) {
+  const currencies = (store.supported_currencies ?? []).filter(Boolean) as { currency_code: string }[];
+  if (!currencies.some((c) => c.currency_code === "inr")) {
     await updateStoresWorkflow(container).run({
       input: {
         selector: { id: store.id },
         update: {
           supported_currencies: [
             { currency_code: "inr", is_default: true },
-            ...(store.supported_currencies ?? []).map((c: { currency_code: string }) => ({ currency_code: c.currency_code, is_default: false })),
+            ...currencies.map((c) => ({ currency_code: c.currency_code, is_default: false })),
           ],
         },
       },
@@ -55,7 +59,7 @@ export default async function seedCottson({ container }: ExecArgs) {
 
   // ---------- India region, tax, shipping ----------
   const { data: regions } = await query.graph({ entity: "region", fields: ["id", "name", "currency_code"] });
-  let india = regions.find((r: { currency_code: string }) => r.currency_code === "inr");
+  let india: { id: string } | undefined = regions.find((r: { currency_code: string }) => r.currency_code === "inr");
   if (!india) {
     const { result } = await createRegionsWorkflow(container).run({
       input: { regions: [{ name: "India", currency_code: "inr", countries: ["in"], payment_providers: ["pp_system_default"] }] },
@@ -79,7 +83,7 @@ export default async function seedCottson({ container }: ExecArgs) {
           service_zone_id: zone.id,
           shipping_profile_id: profile.id,
           type: { label: "Standard", description: "Delivered in 7–10 days", code: "in-standard" },
-          prices: [{ region_id: india.id, amount: 99 }, { currency_code: "inr", amount: 99 }],
+          prices: [{ region_id: india!.id, amount: 99 }, { currency_code: "inr", amount: 99 }],
           rules: [
             { attribute: "enabled_in_store", value: "true", operator: "eq" },
             { attribute: "is_return", value: "false", operator: "eq" },
@@ -109,15 +113,15 @@ export default async function seedCottson({ container }: ExecArgs) {
     const { result } = await createProductCategoriesWorkflow(container).run({
       input: { product_categories: needed.map((name) => ({ name, is_active: true })) },
     });
-    cats.push(...result);
+    cats.push(...(result as unknown as typeof cats));
   }
 
   // ---------- Shared options (Garment Color / Garment Size) ----------
   const allColors = [...new Set(catalog.products.flatMap((p) => p.colors))].map(colorName);
   const allSizes = [...new Set(catalog.products.flatMap((p) => p.sizes))];
   const { data: opts } = await query.graph({ entity: "product_option", fields: ["id", "title", "values.value"] });
-  let colorOpt = opts.find((o: { title: string }) => o.title === "Garment Color");
-  let sizeOpt = opts.find((o: { title: string }) => o.title === "Garment Size");
+  let colorOpt: { id: string; title: string } | undefined = opts.find((o: { title: string }) => o.title === "Garment Color");
+  let sizeOpt: { id: string; title: string } | undefined = opts.find((o: { title: string }) => o.title === "Garment Size");
   if (!colorOpt || !sizeOpt) {
     const { result } = await createProductOptionsWorkflow(container).run({
       input: {
@@ -133,17 +137,19 @@ export default async function seedCottson({ container }: ExecArgs) {
 
   // ---------- Products ----------
   const { data: [profile] } = await query.graph({ entity: "shipping_profile", fields: ["id"] });
+  // The workflow's input type is stricter than what we build here (option ids, metadata shapes),
+  // so this seed passes a loosely typed array
   await createProductsWorkflow(container).run({
     input: {
-      products: catalog.products.map((p) => ({
+      products: catalog.products.map((p): any => ({
         title: p.title,
         handle: p.slug,
         description: p.description,
         status: ProductStatus.PUBLISHED,
         category_ids: [cats.find((c: { name: string }) => c.name === p.category)!.id],
         shipping_profile_id: profile.id,
-        thumbnail: `http://localhost:3000/products/${p.slug}/photo.jpg`,
-        images: [{ url: `http://localhost:3000/products/${p.slug}/photo.jpg` }],
+        thumbnail: `${FRONTEND_URL}/products/${p.slug}/photo.jpg`,
+        images: [{ url: `${FRONTEND_URL}/products/${p.slug}/photo.jpg` }],
         metadata: {
           brand: "cottson",
           original_color: p.originalColor,
@@ -168,7 +174,7 @@ export default async function seedCottson({ container }: ExecArgs) {
   });
   logger.info(`Created ${catalog.products.length} COTTSON products`);
 
-  // ---------- Publishable key for the storefront ----------
+  // ---------- Publishable key for the frontend ----------
   const { data: keys } = await query.graph({ entity: "api_key", fields: ["token", "type"] });
   const pk = keys.find((k: { type: string }) => k.type === "publishable");
   logger.info(`Region id: ${india!.id}`);
