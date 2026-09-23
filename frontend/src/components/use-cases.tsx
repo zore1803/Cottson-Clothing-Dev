@@ -102,8 +102,8 @@ export function UseCases() {
             Talk to us about {c.label.toLowerCase()} →
           </Link>
         </div>
-        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted">
-          <Image src={c.image} alt={c.title} fill sizes="600px" className="object-cover" />
+        <div className="relative mx-auto aspect-[4/3] w-1/2 overflow-hidden rounded-2xl bg-muted lg:mx-0">
+          <Image src={c.image} alt={c.title} fill sizes="300px" className="object-cover" />
         </div>
       </div>
     </section>
