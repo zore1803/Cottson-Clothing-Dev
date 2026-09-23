@@ -2,13 +2,16 @@
 # The Next.js frontend is deployed separately on Vercel (root directory: frontend).
 #
 # Deploy: Render dashboard -> New -> Blueprint -> pick this repo.
-# After the first deploy, open the service Shell and run:
-#   cd apps/backend
-#   npx medusa db:migrate
-#   npx medusa exec ./src/scripts/seed-cottson.ts        # prints the publishable key + region id
-#   npx medusa exec ./src/scripts/seed-cottson-pricing.ts
-#   npx medusa user -e you@example.com -p '<a strong password>'
-# Then set STORE_CORS / AUTH_CORS to your Vercel domain and add the key + region id in Vercel.
+#
+# The free plan has no Shell access, so migration + seeding + the admin user all run as
+# part of the build instead (see buildCommand below):
+#   - db:migrate and both seed-cottson scripts are safe to re-run, so they run on every
+#     deploy and keep Medusa in sync with the catalog/pricing files.
+#   - the admin user is only created once ADMIN_EMAIL/ADMIN_PASSWORD are set (below) and
+#     "|| true" stops a later deploy failing once that user already exists.
+# Open the deploy's build log (Logs tab, no Shell needed) to read the publishable key and
+# region id that seed-cottson.ts prints — you need both in Vercel.
+# Then set STORE_CORS / ADMIN_CORS / AUTH_CORS / FRONTEND_URL to your Vercel domain.
 
 services:
   - type: web
@@ -17,11 +20,17 @@ services:
     plan: free # sleeps when idle and background jobs stop while asleep; upgrade to starter to avoid that
     region: singapore # closest to India; must match the database region
     rootDir: backend
-    # Migration runs as part of the build, not as a preDeployCommand: on this plan,
-    # preDeployCommand's exit after a successful one-off command gets misread as the
-    # service crashing ("Application exited early"), failing the deploy outright even
-    # though the migration itself succeeded. Bundling it into the build sidesteps that.
-    buildCommand: npm ci && npm run build --workspace @dtc/backend && cd apps/backend && npx medusa db:migrate
+    # Migration + seeding run as part of the build, not as a preDeployCommand: on this
+    # plan, preDeployCommand's exit after a successful one-off command gets misread as
+    # the service crashing ("Application exited early"), failing the deploy outright
+    # even though the command itself succeeded. Bundling it into the build sidesteps
+    # that, and also works around the free plan having no Shell access.
+    buildCommand: >-
+      npm ci && npm run build --workspace @dtc/backend && cd apps/backend &&
+      npx medusa db:migrate &&
+      npx medusa exec ./src/scripts/seed-cottson.ts &&
+      npx medusa exec ./src/scripts/seed-cottson-pricing.ts &&
+      ([ -z "$ADMIN_EMAIL" ] || npx medusa user -e "$ADMIN_EMAIL" -p "$ADMIN_PASSWORD" || true)
     startCommand: cd apps/backend/.medusa/server && npm run start
     healthCheckPath: /health
     autoDeployTrigger: commit
@@ -61,6 +70,12 @@ services:
         sync: false
       # Public URL of the frontend, used for product image URLs when seeding
       - key: FRONTEND_URL
+        sync: false
+      # Set both, redeploy once to create the admin login, then leave them — the "|| true"
+      # above means a later deploy won't fail once the user already exists
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
         sync: false
 
   # Key Value (Redis) stores are declared as services, not under databases: (Postgres-only)
