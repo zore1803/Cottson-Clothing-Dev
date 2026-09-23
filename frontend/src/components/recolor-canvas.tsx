@@ -31,8 +31,10 @@ function loadImage(url: string) {
   });
 }
 
-/** Bounding box of the garment's non-transparent pixels, for the studio's print-area placement */
-function alphaBbox(img: HTMLImageElement): [number, number, number, number] {
+/** Bounding box of the garment's non-transparent pixels (for the studio's print-area
+ * placement), and the garment's own average brightness (for the recolor shader's
+ * light-target dampening — see uSourceLum in recolor-shader.ts). */
+function scanGarment(img: HTMLImageElement): { bbox: [number, number, number, number]; avgLum: number } {
   const canvas = document.createElement("canvas");
   canvas.width = img.width;
   canvas.height = img.height;
@@ -40,17 +42,24 @@ function alphaBbox(img: HTMLImageElement): [number, number, number, number] {
   ctx.drawImage(img, 0, 0);
   const { data } = ctx.getImageData(0, 0, img.width, img.height);
   let x0 = img.width, y0 = img.height, x1 = 0, y1 = 0;
+  let lumSum = 0, count = 0;
   for (let y = 0; y < img.height; y++) {
     for (let x = 0; x < img.width; x++) {
-      if (data[(y * img.width + x) * 4 + 3] > 8) {
+      const i = (y * img.width + x) * 4;
+      if (data[i + 3] > 8) {
         if (x < x0) x0 = x;
         if (x > x1) x1 = x;
         if (y < y0) y0 = y;
         if (y > y1) y1 = y;
+        lumSum += data[i];
+        count++;
       }
     }
   }
-  return x1 > x0 ? [x0, y0, x1, y1] : [0, 0, img.width, img.height];
+  return {
+    bbox: x1 > x0 ? [x0, y0, x1, y1] : [0, 0, img.width, img.height],
+    avgLum: count > 0 ? lumSum / count / 255 : 0.5,
+  };
 }
 
 /** Live garment recolor: a grayscale "garment-layer" PNG, overlay-blended and stacked on
@@ -91,7 +100,8 @@ export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCa
         ]);
         if (cancelled) return;
         const W = modelImg.width, H = modelImg.height;
-        const meta: GarmentMeta = { width: W, height: H, bbox: alphaBbox(garmentImg) };
+        const { bbox, avgLum } = scanGarment(garmentImg);
+        const meta: GarmentMeta = { width: W, height: H, bbox };
 
         app = new PIXI.Application();
         await app.init({
@@ -124,7 +134,10 @@ export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCa
           gl: { vertex: RECOLOR_VERTEX, fragment: RECOLOR_FRAGMENT },
           resources: {
             uGarment: PIXI.Texture.from(garmentImg).source,
-            recolor: { uColor: { value: new Float32Array(3), type: "vec3<f32>" } },
+            recolor: {
+              uColor: { value: new Float32Array(3), type: "vec3<f32>" },
+              uSourceLum: { value: avgLum, type: "f32" },
+            },
           },
         });
         const garmentMesh = new PIXI.Mesh({ geometry, shader }) as Mesh;

@@ -23,6 +23,7 @@ in vec2 vUV;
 out vec4 finalColor;
 uniform sampler2D uGarment;
 uniform vec3 uColor;
+uniform float uSourceLum; // this photo's own average garment brightness, 0-1
 
 void main() {
   vec4 px = texture(uGarment, vUV);
@@ -47,6 +48,14 @@ void main() {
   // some of it to actually look right.
   float targetLum = dot(uColor, vec3(0.299, 0.587, 0.114));
   float strength = mix(0.15, 0.65, abs(targetLum - 0.5) * 2.0);
+  // A light target needs much less of that flat-color help when the source photo is
+  // already naturally bright (overlay alone already lands close to it) — without this,
+  // a light target on an already-bright photo gets pushed past the real photo into a
+  // flat, overexposed block. Only light targets are dampened; dark targets and darker
+  // source photos (where overlay alone can't get there) are unaffected.
+  if (targetLum > 0.5) {
+    strength *= mix(1.0, 0.35, uSourceLum);
+  }
   vec3 blended = mix(overlay, uColor, strength);
   finalColor = vec4(blended * px.a, px.a);
 }`;

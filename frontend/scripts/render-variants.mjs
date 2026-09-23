@@ -30,10 +30,15 @@ const luminance = ([r, g, b]) => 0.299 * r + 0.587 * g + 0.114 * b;
 // Same adaptive strength as the shader: colors far from mid-grey (black, white, saturated
 // hues) need some flat color mixed in to actually read as that color on a photo whose own
 // brightness sits far from that target; colors close to the original stay pure overlay.
-const blendStrength = (colorNorm) => {
-  const t = Math.abs(luminance(colorNorm) - 0.5) * 2;
-  return 0.15 + (0.65 - 0.15) * t;
-};
+// A light target additionally gets dampened on a photo that's already naturally bright —
+// overlay alone already lands close to it there, so the same fixed light-target strength
+// would overshoot into a flat, overexposed block (sourceLum, computed per photo below).
+function blendStrength(colorNorm, sourceLum) {
+  const targetLum = luminance(colorNorm);
+  let strength = 0.15 + (0.65 - 0.15) * Math.abs(targetLum - 0.5) * 2;
+  if (targetLum > 0.5) strength *= 1 - 0.65 * sourceLum;
+  return strength;
+}
 
 for (const product of catalog.products) {
   const dir = path.join(root, 'public/products', product.slug);
@@ -41,11 +46,20 @@ for (const product of catalog.products) {
   const W = info.width, H = info.height, n = W * H;
   const { data: garment } = await sharp(path.join(dir, 'garment-layer.png')).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
 
+  let sourceLumSum = 0, sourceLumCount = 0;
+  for (let p = 0; p < n; p++) {
+    if (garment[p * 4 + 3] > 128) {
+      sourceLumSum += garment[p * 4] / 255;
+      sourceLumCount++;
+    }
+  }
+  const sourceLum = sourceLumCount > 0 ? sourceLumSum / sourceLumCount : 0.5;
+
   await fs.mkdir(path.join(dir, 'variants'), { recursive: true });
   for (const colorId of product.colors) {
     if (colorId === product.originalColor) continue;
     const colorNorm = hexToNorm(colorHex[colorId]);
-    const strength = blendStrength(colorNorm);
+    const strength = blendStrength(colorNorm, sourceLum);
     const out = Buffer.alloc(n * 3);
     for (let p = 0; p < n; p++) {
       const a = garment[p * 4 + 3] / 255;
