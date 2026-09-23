@@ -14,7 +14,7 @@ services:
   - type: web
     name: cottson-medusa
     runtime: node
-    plan: starter # free instances sleep and lose background jobs; starter keeps it awake
+    plan: free # sleeps when idle and background jobs stop while asleep; upgrade to starter to avoid that
     region: singapore # closest to India; must match the database region
     rootDir: backend
     buildCommand: npm ci && npm run build --workspace @dtc/backend
@@ -69,6 +69,6 @@ services:
 
 databases:
   - name: cottson-postgres
-    plan: basic-256mb # free plan expires after 30 days
+    plan: free # deleted automatically after 30 days; upgrade to a paid plan before then to keep the data
     region: singapore
     postgresMajorVersion: "16"
