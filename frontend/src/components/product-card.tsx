@@ -10,7 +10,7 @@ import { ColorSwatches } from "@/components/color-swatches";
 export function ProductCard({ product }: { product: Product }) {
   const [color, setColor] = useState(product.originalColor);
   return (
-    <div className="group">
+    <div className="group mx-auto w-2/3">
       <Link href={`/products/${product.slug}?color=${color}`} className="block overflow-hidden rounded-xl bg-muted">
         <Image
           src={variantUrl(product, color)}
