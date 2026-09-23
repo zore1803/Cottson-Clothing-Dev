@@ -95,16 +95,16 @@ export function MegaMenu() {
   };
 
   return (
-    <nav className="hidden h-full items-center md:flex" onMouseLeave={hide}>
+    <nav className="hidden items-center gap-1 md:flex" onMouseLeave={hide}>
       {MENUS.map((m) => (
-        <div key={m.label} className="relative flex h-full items-center" onMouseEnter={() => show(m.label)}>
+        <div key={m.label} className="relative" onMouseEnter={() => show(m.label)}>
           <button
             type="button"
             aria-expanded={open === m.label}
             onClick={() => setOpen(open === m.label ? null : m.label)}
             className={cn(
-              "flex h-full items-center rounded-t-md px-4 text-sm font-semibold transition-colors",
-              open === m.label ? "bg-background shadow-[0_-4px_12px_rgba(0,0,0,0.06)]" : "hover:text-brand"
+              "rounded-md px-4 py-2 text-sm font-semibold leading-none transition-colors",
+              open === m.label ? "bg-muted text-brand" : "hover:text-brand"
             )}
           >
             {m.label}
