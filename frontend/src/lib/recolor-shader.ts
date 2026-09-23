@@ -16,17 +16,21 @@ void main() {
   vUV = aUV;
 }`;
 
-// Lab color-swap: convert the source pixel to CIE Lab, keep its own L (lightness) untouched
-// and replace only a*/b* (color) with the target's — the same trick as Photoshop's "Color"
-// blend mode. Folds, shadows and fabric texture come straight from the photo's own
-// brightness; only hue/saturation change. Matches scripts/lab-color.mjs used offline to
-// pre-render the listing thumbnails, so the live canvas and the cached variants agree.
+// Lab color-swap: convert the source pixel to CIE Lab and replace a*/b* (color) with the
+// target's — the same trick as Photoshop's "Color" blend mode, so folds, shadows and fabric
+// texture come straight from the photo's own shading; only hue/saturation change. L
+// (lightness) is re-centered on the target color's own L, keeping each pixel's shading
+// relative to the garment's average L, so a black target actually renders black and a white
+// target actually renders white instead of staying pinned to the source photo's own
+// brightness. Matches scripts/lab-color.mjs used offline to pre-render the listing
+// thumbnails, so the live canvas and the cached variants agree.
 export const RECOLOR_FRAGMENT = /* glsl */ `
 in vec2 vUV;
 out vec4 finalColor;
 uniform sampler2D uBase;
 uniform sampler2D uGarment;
-uniform vec2 uTargetAB; // target color's Lab a*, b*
+uniform vec3 uTargetLab; // target color's Lab L*, a*, b*
+uniform float uSourceAvgL; // this garment's own average Lab L, sampled offline in JS
 
 float srgbToLinear(float v) { return v <= 0.04045 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4); }
 float linearToSrgb(float v) { return v <= 0.0031308 ? v * 12.92 : 1.055 * pow(v, 1.0 / 2.4) - 0.055; }
@@ -63,6 +67,7 @@ void main() {
   }
   vec3 src = texture(uBase, vUV).rgb;
   float L = rgbToLabL(src);
-  vec3 recolored = labToRgb(L, uTargetAB.x, uTargetAB.y);
+  float newL = clamp(uTargetLab.x + (L - uSourceAvgL), 0.0, 100.0);
+  vec3 recolored = labToRgb(newL, uTargetLab.y, uTargetLab.z);
   finalColor = vec4(recolored * mask, mask);
 }`;

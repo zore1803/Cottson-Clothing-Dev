@@ -23,16 +23,19 @@ type Props = {
 const srgbToLinear = (v: number) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
 const fwdLab = (t: number) => (t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116);
 
-/** Target color's Lab a/b chroma channels (D65) — the live shader keeps the source pixel's
- * own L and replaces only these, see RECOLOR_FRAGMENT in recolor-shader.ts. */
-function hexToLabAB(h: string): [number, number] {
-  const [r, g, b] = [1, 3, 5].map((i) => srgbToLinear(parseInt(h.slice(i, i + 2), 16) / 255));
-  const X = (r * 0.4124564 + g * 0.3575761 + b * 0.1804375) / 0.95047;
-  const Y = r * 0.2126729 + g * 0.7151522 + b * 0.072175;
-  const Z = (r * 0.0193339 + g * 0.119192 + b * 0.9503041) / 1.08883;
+function rgbToLab(r: number, g: number, b: number): [number, number, number] {
+  const [R, G, B] = [r, g, b].map(srgbToLinear);
+  const X = (R * 0.4124564 + G * 0.3575761 + B * 0.1804375) / 0.95047;
+  const Y = R * 0.2126729 + G * 0.7151522 + B * 0.072175;
+  const Z = (R * 0.0193339 + G * 0.119192 + B * 0.9503041) / 1.08883;
   const fx = fwdLab(X), fy = fwdLab(Y), fz = fwdLab(Z);
-  return [500 * (fx - fy), 200 * (fy - fz)];
+  return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
 }
+
+/** Target color's Lab L, a, b (D65) — the live shader re-centers the source pixel's own L
+ * on this L and replaces a/b, see RECOLOR_FRAGMENT in recolor-shader.ts. */
+const hexToLab = (h: string) =>
+  rgbToLab(...([1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255) as [number, number, number]));
 
 function loadImage(url: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
@@ -43,27 +46,46 @@ function loadImage(url: string) {
   });
 }
 
-/** Bounding box of the garment's non-transparent pixels, for the studio's print-area placement. */
-function scanGarment(img: HTMLImageElement): { bbox: [number, number, number, number] } {
-  const canvas = document.createElement("canvas");
-  canvas.width = img.width;
-  canvas.height = img.height;
-  const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(img, 0, 0);
-  const { data } = ctx.getImageData(0, 0, img.width, img.height);
-  let x0 = img.width, y0 = img.height, x1 = 0, y1 = 0;
-  for (let y = 0; y < img.height; y++) {
-    for (let x = 0; x < img.width; x++) {
-      const i = (y * img.width + x) * 4;
-      if (data[i + 3] > 8) {
+/** Bounding box of the garment's non-transparent pixels (for the studio's print-area
+ * placement), and the garment's own average Lab L (for the live shader's uSourceAvgL — see
+ * RECOLOR_FRAGMENT in recolor-shader.ts). */
+function scanGarment(baseImg: HTMLImageElement, garmentImg: HTMLImageElement): { bbox: [number, number, number, number]; avgL: number } {
+  const { width, height } = garmentImg;
+  const garmentCanvas = document.createElement("canvas");
+  garmentCanvas.width = width;
+  garmentCanvas.height = height;
+  const garmentCtx = garmentCanvas.getContext("2d")!;
+  garmentCtx.drawImage(garmentImg, 0, 0);
+  const mask = garmentCtx.getImageData(0, 0, width, height).data;
+
+  const baseCanvas = document.createElement("canvas");
+  baseCanvas.width = width;
+  baseCanvas.height = height;
+  const baseCtx = baseCanvas.getContext("2d")!;
+  baseCtx.drawImage(baseImg, 0, 0, width, height);
+  const base = baseCtx.getImageData(0, 0, width, height).data;
+
+  let x0 = width, y0 = height, x1 = 0, y1 = 0;
+  let lSum = 0, lCount = 0;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      if (mask[i + 3] > 8) {
         if (x < x0) x0 = x;
         if (x > x1) x1 = x;
         if (y < y0) y0 = y;
         if (y > y1) y1 = y;
       }
+      if (mask[i + 3] > 128) {
+        lSum += rgbToLab(base[i] / 255, base[i + 1] / 255, base[i + 2] / 255)[0];
+        lCount++;
+      }
     }
   }
-  return { bbox: x1 > x0 ? [x0, y0, x1, y1] : [0, 0, img.width, img.height] };
+  return {
+    bbox: x1 > x0 ? [x0, y0, x1, y1] : [0, 0, width, height],
+    avgL: lCount > 0 ? lSum / lCount : 50,
+  };
 }
 
 /** Live garment recolor: a feathered-alpha "garment-layer" mask, Lab color-swapped live
@@ -104,7 +126,7 @@ export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCa
         ]);
         if (cancelled) return;
         const W = modelImg.width, H = modelImg.height;
-        const { bbox } = scanGarment(garmentImg);
+        const { bbox, avgL } = scanGarment(modelImg, garmentImg);
         const meta: GarmentMeta = { width: W, height: H, bbox };
 
         app = new PIXI.Application();
@@ -140,7 +162,8 @@ export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCa
             uBase: PIXI.Texture.from(modelImg).source,
             uGarment: PIXI.Texture.from(garmentImg).source,
             recolor: {
-              uTargetAB: { value: new Float32Array(2), type: "vec2<f32>" },
+              uTargetLab: { value: new Float32Array(3), type: "vec3<f32>" },
+              uSourceAvgL: { value: avgL, type: "f32" },
             },
           },
         });
@@ -184,7 +207,7 @@ export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCa
     if (!shader || !mesh || !app) return;
     mesh.visible = topColor !== null;
     if (topColor !== null) {
-      shader.resources.recolor.uniforms.uTargetAB.set(hexToLabAB(topColor));
+      shader.resources.recolor.uniforms.uTargetLab.set(hexToLab(topColor));
     }
     app.render();
   }, [topColor, loading]);
