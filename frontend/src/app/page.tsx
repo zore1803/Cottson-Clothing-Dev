@@ -1,12 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Check, MessageSquare, Palette, Shirt, Truck, Users } from "lucide-react";
-import { PRODUCTS, COLORS } from "@/lib/catalog";
-import { ProductCard } from "@/components/product-card";
+import { COLORS } from "@/lib/catalog";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { QuoteForm } from "@/components/quote-form";
 import { UseCases } from "@/components/use-cases";
+import { ProductTabs } from "@/components/product-tabs";
 
 export const revalidate = 3600; // ISR: rebuilt at most hourly, served from the CDN
 
@@ -161,20 +161,7 @@ export default function HomePage() {
 
       <UseCases />
 
-      {/* Products */}
-      <section className="mx-auto max-w-7xl px-4 pt-16">
-        <div className="flex items-end justify-between">
-          <h2 className="text-3xl font-semibold tracking-tight">Bestsellers</h2>
-          <Link href="/products" className="text-sm font-medium hover:underline">
-            View all
-          </Link>
-        </div>
-        <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {PRODUCTS.map((p) => (
-            <ProductCard key={p.slug} product={p} />
-          ))}
-        </div>
-      </section>
+      <ProductTabs />
 
       {/* How it works */}
       <section id="how" className="mx-auto max-w-7xl scroll-mt-24 px-4 pt-24">
