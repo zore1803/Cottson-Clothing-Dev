@@ -1,8 +1,7 @@
-// GLSL for the PixiJS recolor mesh.
-// Inputs: the product photo, and the prepared mask (R = top, G = logo/print, B = trousers).
-// For each garment: shading = pixel brightness relative to that garment's median brightness
-// (keeps folds, seams, texture), multiplied into the chosen color. Logos are never touched.
-// Kept in sync with scripts/render-variants.mjs, which pre-renders catalog colors.
+// GLSL for the PixiJS live recolor mesh.
+// The garment is pre-isolated (offline) into its own grayscale+alpha "garment-layer" PNG,
+// stacked pixel-aligned on top of the untouched product photo. Only this layer is drawn
+// here; alpha 0 lets the original photo show through unmodified outside the garment.
 
 export const RECOLOR_VERTEX = /* glsl */ `
 in vec2 aPosition;
@@ -17,76 +16,37 @@ void main() {
   vUV = aUV;
 }`;
 
+// Overlay blend: keeps shadow/highlight detail visible even on very dark or very light
+// target colors (black doesn't crush to a flat block, white doesn't blow out to it).
 export const RECOLOR_FRAGMENT = /* glsl */ `
 in vec2 vUV;
 out vec4 finalColor;
-uniform sampler2D uPhoto;
-uniform sampler2D uMask;
-uniform vec3 uTopColor;
-uniform vec3 uPantsColor;
-uniform vec4 uTopStats;    // median luminance, shading exponent, highlight peak, dark-fabric flag
-uniform vec4 uPantsStats;
-uniform vec2 uOn;          // x = recolor top, y = recolor trousers
-uniform vec2 uTexel;       // 1 / image size
-// Color-change transition: a flowing blue band sweeps down the garment, new color behind it
-uniform vec3 uTopFrom;     // previous top color
-uniform float uFromOn;     // 1 = previous color was a recolor, 0 = previous was the original photo
-uniform float uProgress;   // 0..1, 1 = transition finished
-
-vec3 toLin(vec3 c) { return pow(c, vec3(2.2)); }
-vec3 toSrgb(vec3 c) { return pow(c, vec3(1.0 / 2.2)); }
-float lum(vec3 c) { return dot(c, vec3(0.2126, 0.7152, 0.0722)); }
-
-// Very dark fabric carries mostly camera grain, so its shading is read from a blurred neighbourhood
-float smoothLum(vec2 uv) {
-  float s = 0.0;
-  for (int y = -2; y <= 2; y++)
-    for (int x = -2; x <= 2; x++)
-      s += lum(toLin(texture(uPhoto, uv + vec2(float(x), float(y)) * uTexel * 1.5).rgb));
-  return s / 25.0;
-}
-
-vec3 recolor(vec3 target, vec4 stats, float L, float Ls) {
-  vec3 T = max(toLin(target), vec3(0.006));
-  float head = min(1.0, 0.98 / (max(max(T.r, T.g), T.b) * stats.z));
-  head = head + (1.0 - head) * 0.6;                       // headroom so highlights don't clip
-  float darkT = 1.0 - smoothstep(0.02, 0.25, lum(T));     // dark colors get a soft sheen on folds
-  float l = stats.w > 0.5 ? Ls : L;
-  float s = min(pow(l / max(stats.x, 1e-4), stats.y), 4.0);
-  vec3 c = T * head * s + darkT * (max(s - 1.0, 0.0) * 0.035 + 0.004 * s);
-  return c / (1.0 + max(c - 0.9, 0.0));                   // soft highlight roll-off
-}
+uniform sampler2D uGarment;
+uniform vec3 uColor;
 
 void main() {
-  vec3 src = texture(uPhoto, vUV).rgb;
-  vec3 m = texture(uMask, vUV).rgb;
-  vec3 lin = toLin(src);
-  float garment = m.r * (1.0 - m.g);          // top garment, logos excluded
-  float wPants = m.b * uOn.y;
-  vec3 outc = lin;
-  bool animating = uProgress < 1.0;
-  if (garment + wPants > 0.002) {
-    float L = lum(lin);
-    bool needSmooth = (garment > 0.0 && uTopStats.w > 0.5) || (wPants > 0.0 && uPantsStats.w > 0.5);
-    float Ls = needSmooth ? smoothLum(vUV) : L;
-
-    vec3 newTop = uOn.x > 0.5 ? recolor(uTopColor, uTopStats, L, Ls) : lin;
-    vec3 top = newTop;
-    float glow = 0.0;
-    if (animating) {
-      vec3 oldTop = uFromOn > 0.5 ? recolor(uTopFrom, uTopStats, L, Ls) : lin;
-      // Wavy front travelling from top to bottom
-      float front = uProgress * 1.35 - 0.15;
-      float wave = 0.035 * sin(vUV.x * 13.0 + uProgress * 9.0) + 0.02 * sin(vUV.x * 29.0 - uProgress * 14.0);
-      float d = front - (vUV.y + wave);
-      top = mix(oldTop, newTop, smoothstep(-0.006, 0.006, d));
-      // Soft blue band around the front plus a fading trail behind it
-      glow = exp(-(d * d) / 0.0016) * 0.65 + smoothstep(0.0, 0.25, d) * (1.0 - smoothstep(0.0, 0.25, d)) * 0.5;
-    }
-    outc = mix(outc, top, garment);
-    vec3 blue = vec3(0.10, 0.42, 1.0);
-    outc = mix(outc, blue * (0.35 + 0.9 * L), clamp(glow * garment, 0.0, 0.75));
-    outc = mix(outc, recolor(uPantsColor, uPantsStats, L, Ls), wPants);
+  vec4 px = texture(uGarment, vUV);
+  if (px.a <= 0.0001) {
+    finalColor = vec4(0.0);
+    return;
   }
-  finalColor = vec4(toSrgb(clamp(outc, 0.0, 1.0)), 1.0);
+  float g = px.r / px.a; // un-premultiply grayscale shading (r == g == b)
+  // compress the shading range so neither black nor white targets clip to pure 0/1 —
+  // keeps soft, believable shadow depth at both ends instead of crushing to near-black
+  // blotches (white) or a flat block (black)
+  g = mix(0.22, 0.88, g);
+  vec3 low = 2.0 * uColor * g;
+  vec3 high = 1.0 - 2.0 * (1.0 - uColor) * (1.0 - g);
+  vec3 overlay = clamp(mix(low, high, vec3(step(0.5, g))), 0.0, 1.0);
+  // Pure overlay blend can't reach a target far from the source photo's own average
+  // brightness — a light target on a dark photo (or a dark target on a light photo) hits a
+  // ceiling/floor set by the source pixel's own brightness either way. Mix in some flat
+  // target color so extreme colors read correctly; scale that fraction by how far the
+  // target sits from mid-grey, so colors close to the original (already accurate from
+  // overlay alone) keep full fold/shadow realism while black/white/saturated ones give up
+  // some of it to actually look right.
+  float targetLum = dot(uColor, vec3(0.299, 0.587, 0.114));
+  float strength = mix(0.15, 0.65, abs(targetLum - 0.5) * 2.0);
+  vec3 blended = mix(overlay, uColor, strength);
+  finalColor = vec4(blended * px.a, px.a);
 }`;

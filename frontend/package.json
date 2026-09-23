@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "prepare:product": "node scripts/prepare-product.mjs",
+    "make:garment-layer": "node scripts/make-garment-layer.mjs",
+    "make:product": "node scripts/make-product-from-photo.mjs",
     "render:variants": "node scripts/render-variants.mjs"
   },
   "dependencies": {

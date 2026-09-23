@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ImagePlus, Type, Trash2, Download, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import type Konva from "konva";
-import { PRODUCTS, colorById, getProduct, formatPrice, type ProductMeta } from "@/lib/catalog";
+import { PRODUCTS, colorById, getProduct, formatPrice, type GarmentMeta } from "@/lib/catalog";
 import { useCart } from "@/lib/cart-store";
 import { CUSTOMIZATION_FEE } from "@/lib/pricing";
 import { RecolorCanvas, type RecolorHandle } from "@/components/recolor-canvas";
@@ -27,7 +27,7 @@ export function StudioEditor() {
   const [colorId, setColorId] = useState(
     params.get("color") && product.colors.includes(params.get("color")!) ? params.get("color")! : product.originalColor
   );
-  const [meta, setMeta] = useState<ProductMeta | null>(null);
+  const [meta, setMeta] = useState<GarmentMeta | null>(null);
   const [elements, setElements] = useState<DesignElement[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [size, setSize] = useState<string | null>(null);
@@ -62,11 +62,10 @@ export function StudioEditor() {
 
   const color = colorById(colorId);
   const selected = elements.find((e) => e.id === selectedId) ?? null;
-  const top = meta?.parts.top;
   // Printable chest area: middle of the garment, upper part
-  const printArea: [number, number, number, number] | null = top
+  const printArea: [number, number, number, number] | null = meta
     ? (() => {
-        const [x0, y0, x1, y1] = top.bbox;
+        const [x0, y0, x1, y1] = meta.bbox;
         const w = x1 - x0, h = y1 - y0;
         return [x0 + w * 0.22, y0 + h * 0.12, x1 - w * 0.22, y0 + h * 0.62];
       })()

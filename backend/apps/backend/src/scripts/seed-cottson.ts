@@ -22,7 +22,7 @@ type Catalog = {
   colors: { id: string; name: string; hex: string }[];
   products: {
     slug: string; title: string; category: string; description: string; price: number;
-    sizes: string[]; originalColor: string; colors: string[]; pantsColors: string[]; minBulk: number;
+    sizes: string[]; originalColor: string; colors: string[]; minBulk: number;
   }[];
 };
 
@@ -154,7 +154,6 @@ export default async function seedCottson({ container }: ExecArgs) {
           brand: "cottson",
           original_color: p.originalColor,
           color_ids: p.colors,
-          pants_color_ids: p.pantsColors,
           min_bulk: p.minBulk,
         },
         options: [{ id: colorOpt!.id }, { id: sizeOpt!.id }],

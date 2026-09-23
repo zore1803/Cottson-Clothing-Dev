@@ -12,7 +12,6 @@ export type CartItem = {
   title: string;
   colorId: string;
   colorName: string;
-  pantsColorId?: string | null;
   size: string;
   qty: number;
   /** Catalog price per piece before bulk discount; the line price is derived (see lineUnitPrice) */
@@ -47,8 +46,7 @@ export const useCart = create<CartState>()(
                 !i.design &&
                 i.slug === item.slug &&
                 i.colorId === item.colorId &&
-                i.size === item.size &&
-                i.pantsColorId === item.pantsColorId
+                i.size === item.size
             );
           if (same) return { items: s.items.map((i) => (i === same ? { ...i, qty: i.qty + item.qty } : i)) };
           return { items: [...s.items, { ...item, id: crypto.randomUUID() }] };

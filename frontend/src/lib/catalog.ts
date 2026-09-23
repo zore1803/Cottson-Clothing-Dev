@@ -13,12 +13,11 @@ export type Product = {
   sizes: string[];
   originalColor: string;
   colors: string[];
-  pantsColors: string[];
   minBulk: number;
 };
 
-export type PartStats = { avg: number; dark: boolean; exp: number; peak: number; bbox: [number, number, number, number]; coverage: number };
-export type ProductMeta = { width: number; height: number; parts: { top: PartStats | null; print: PartStats | null; pants: PartStats | null } };
+/** From the live overlay-blend recolor canvas: image size + the garment's bounding box (for print-area placement) */
+export type GarmentMeta = { width: number; height: number; bbox: [number, number, number, number] };
 
 export const COLORS: Color[] = data.colors;
 export const PRODUCTS: Product[] = data.products;
@@ -26,7 +25,7 @@ export const PRODUCTS: Product[] = data.products;
 export const colorById = (id: string) => COLORS.find((c) => c.id === id)!;
 export const getProduct = (slug: string) => PRODUCTS.find((p) => p.slug === slug);
 
-export const assetUrl = (slug: string, file: "photo.jpg" | "mask.png" | "meta.json") => `/products/${slug}/${file}`;
+export const assetUrl = (slug: string, file: "photo.jpg" | "model-photo.png" | "garment-layer.png") => `/products/${slug}/${file}`;
 // Pre-rendered catalog color (see scripts/render-variants.mjs); the original color is the photo itself
 export const variantUrl = (p: Product, colorId: string) =>
   colorId === p.originalColor ? assetUrl(p.slug, "photo.jpg") : `/products/${p.slug}/variants/${colorId}.webp`;

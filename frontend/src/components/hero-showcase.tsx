@@ -7,11 +7,11 @@ import { getProduct, colorById, variantUrl } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 
 const product = getProduct("formal-shirt-grey")!;
-const SHOWCASE = ["grey", "white", "sky", "navy", "maroon", "olive", "beige", "black"];
+const SHOWCASE = product.colors;
 
 /** Hero image: the real shirt photo in the chosen color (pre-rendered variants, instant swap) */
 export function HeroShowcase() {
-  const [color, setColor] = useState("sky");
+  const [color, setColor] = useState(product.originalColor);
 
   return (
     <div className="relative overflow-hidden rounded-3xl bg-[#b9bcc2]">
@@ -23,8 +23,8 @@ export function HeroShowcase() {
             src={variantUrl(product, id)}
             alt={`${product.title} in ${colorById(id).name}`}
             fill
-            priority={id === "sky"}
-            loading={id === "sky" ? undefined : i < 4 ? "eager" : "lazy"}
+            priority={id === product.originalColor}
+            loading={id === product.originalColor ? undefined : i < 4 ? "eager" : "lazy"}
             sizes="(min-width: 1024px) 560px, 100vw"
             className={cn("object-cover object-top transition-opacity duration-300", color === id ? "opacity-100" : "opacity-0")}
           />

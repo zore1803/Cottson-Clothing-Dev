@@ -19,17 +19,15 @@ const MENUS: Menu[] = [
         items: [
           { title: "Formal Shirts", text: "Crisp cotton oxfords for the office.", href: "/products?category=Shirts" },
           { title: "Polos", text: "Soft pique polos with a ribbed collar.", href: "/products?category=Polos" },
-          { title: "T-Shirts", text: "Everyday crew-neck tees.", href: "/products?category=T-Shirts" },
+          { title: "T-Shirts", text: "Soft cotton crew-neck essentials.", href: "/products?category=T-Shirts" },
           { title: "All products", text: "The full COTTSON collection.", href: "/products" },
-          { title: "Colors", text: "12 shades in stock, any logo on top.", href: "/products" },
         ],
       },
       {
         heading: "New Arrivals",
         items: [
-          { title: "Basic Crew T-Shirt", text: "Our newest blank tee, in 10 colors.", href: "/products/basic-tee-navy" },
-          { title: "Essential Polo", text: "Our everyday polo.", href: "/products/polo-black" },
-          { title: "Classic Formal Shirt", text: "Now in 8 colors.", href: "/products/formal-shirt-grey" },
+          { title: "Contrast Trim Shirt", text: "Our newest statement piece.", href: "/products/contrast-trim-shirt" },
+          { title: "Classic Crew Tee", text: "An everyday essential.", href: "/products/classic-white-tee" },
         ],
       },
     ],

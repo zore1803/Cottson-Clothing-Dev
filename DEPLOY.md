@@ -63,5 +63,5 @@ Plans: Postgres `basic-256mb` and the `starter` web service cost a few dollars a
 
 - **Uploaded logos are stored inside MongoDB as data URLs.** Fine for a demo; move them to Cloudflare R2 or S3 before real traffic (MongoDB documents cap at 16 MB).
 - **Payments are not connected.** Checkout uses Medusa's system provider and takes no money. Add the Razorpay (or Stripe) provider next.
-- **Product masks and color variants are committed files** under `frontend/public/products/`. New products need `npm run prepare:product` and `npm run render:variants` run locally, then committed.
+- **Product garment layers and color variants are committed files** under `frontend/public/products/`. New products need `npm run make:product -- <photo.png> <outDir>` (or `make:garment-layer` for an already-composited photo) and `npm run render:variants` run locally, then committed.
 - **Pricing rules live in two places** — `frontend/src/lib/pricing.ts` and `backend/apps/backend/src/scripts/seed-cottson-pricing.ts`. Change both, then re-run the script.
