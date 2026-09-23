@@ -6,6 +6,7 @@ import { ProductCard } from "@/components/product-card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { QuoteForm } from "@/components/quote-form";
+import { UseCases } from "@/components/use-cases";
 
 export const revalidate = 3600; // ISR: rebuilt at most hourly, served from the CDN
 
@@ -157,6 +158,8 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      <UseCases />
 
       {/* Products */}
       <section className="mx-auto max-w-7xl px-4 pt-16">
