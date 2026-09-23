@@ -18,7 +18,7 @@ export function ProductCard({ product }: { product: Product }) {
           width={1080}
           height={1440}
           sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-          className="aspect-[3/4] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          className="aspect-[3/2] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
         />
       </Link>
       <div className="mt-3 flex items-start justify-between gap-3">
