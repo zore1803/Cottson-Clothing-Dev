@@ -59,15 +59,16 @@ services:
       - key: FRONTEND_URL
         sync: false
 
+  # Key Value (Redis) stores are declared as services, not under databases: (Postgres-only)
+  - type: keyvalue
+    name: cottson-redis
+    plan: free
+    region: singapore
+    maxmemoryPolicy: noeviction # required by Medusa's job queue
+    ipAllowList: [] # internal access only
+
 databases:
   - name: cottson-postgres
     plan: basic-256mb # free plan expires after 30 days
     region: singapore
     postgresMajorVersion: "16"
-
-  - name: cottson-redis
-    type: keyvalue
-    plan: free
-    region: singapore
-    maxmemoryPolicy: noeviction # required by Medusa's job queue
-    ipAllowList: [] # internal access only
