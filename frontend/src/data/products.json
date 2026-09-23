@@ -629,6 +629,29 @@
       ],
       "minBulk": 25,
       "poses": 6
+    },
+    {
+      "slug": "formal-shirt-ice-blue",
+      "title": "Formal Shirt — Ice Blue",
+      "category": "Shirts",
+      "description": "Crisp cotton shirt with a cutaway collar, chest pocket and embroidered COTTSON mark. A pale, ice-blue take on the office classic.",
+      "price": 1499,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "sky",
+      "colors": [
+        "sky",
+        "white",
+        "grey",
+        "navy"
+      ],
+      "minBulk": 25
     }
   ]
 }
