@@ -21,3 +21,6 @@ Thumbs.db
 # Old single-page prototype (not part of the app)
 /index.html
 /assets/
+
+# Raw source photo drops (processed once by frontend/scripts/import-poses.mjs)
+/*.zip

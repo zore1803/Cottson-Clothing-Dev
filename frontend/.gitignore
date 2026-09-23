@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# raw source photos for scripts/import-poses.mjs (extracted once, not committed)
+/.import-src

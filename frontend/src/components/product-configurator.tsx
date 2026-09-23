@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { Minus, Plus, Palette, Check } from "lucide-react";
 import { toast } from "sonner";
-import { type Product, colorById, formatPrice } from "@/lib/catalog";
+import Image from "next/image";
+import { type Product, colorById, formatPrice, assetUrl } from "@/lib/catalog";
 import { useCart } from "@/lib/cart-store";
 import { bulkDiscount, garmentUnitPrice } from "@/lib/pricing";
 import { RecolorCanvas } from "@/components/recolor-canvas";
@@ -16,6 +17,7 @@ export function ProductConfigurator({ product, initialColor }: { product: Produc
   const [colorId, setColorId] = useState(initialColor);
   const [size, setSize] = useState<string | null>(null);
   const [qty, setQty] = useState(1);
+  const [pose, setPose] = useState(0);
   const add = useCart((s) => s.add);
 
   const color = colorById(colorId);
@@ -40,9 +42,27 @@ export function ProductConfigurator({ product, initialColor }: { product: Produc
         <RecolorCanvas
           slug={product.slug}
           topColor={colorId === product.originalColor ? null : color.hex}
+          pose={product.poses ? pose : undefined}
           className="rounded-2xl"
         />
         <p className="mt-2 text-center text-xs text-muted-foreground">Live preview on the real garment</p>
+        {product.poses && product.poses > 1 && (
+          <div className="mt-3 flex gap-2 overflow-x-auto">
+            {Array.from({ length: product.poses }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => setPose(i)}
+                aria-label={`Pose ${i + 1}`}
+                className={cn(
+                  "relative size-16 shrink-0 overflow-hidden rounded-lg border-2 bg-muted",
+                  pose === i ? "border-foreground" : "border-transparent hover:border-muted-foreground/40"
+                )}
+              >
+                <Image src={assetUrl(product.slug, "model-photo.png", i)} alt={`Pose ${i + 1}`} fill className="object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div>

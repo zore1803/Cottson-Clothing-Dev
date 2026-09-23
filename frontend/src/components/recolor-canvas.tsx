@@ -3,7 +3,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { Application, Mesh, Shader } from "pixi.js";
 import { RECOLOR_FRAGMENT, RECOLOR_VERTEX } from "@/lib/recolor-shader";
-import { type GarmentMeta } from "@/lib/catalog";
+import { assetUrl, type GarmentMeta } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 
 export type RecolorHandle = {
@@ -16,6 +16,8 @@ type Props = {
   slug: string;
   /** hex, or null to keep the photo's own original color */
   topColor: string | null;
+  /** Which pose's photos/<pose>/ pair to load; omit for the single-pose legacy layout. */
+  pose?: number;
   className?: string;
   onReady?: (meta: GarmentMeta) => void;
 };
@@ -91,7 +93,7 @@ function scanGarment(baseImg: HTMLImageElement, garmentImg: HTMLImageElement): {
 /** Live garment recolor: a feathered-alpha "garment-layer" mask, Lab color-swapped live
  * against the untouched product photo. Changing a color is one uniform update + one render. */
 export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCanvas(
-  { slug, topColor, className, onReady },
+  { slug, topColor, pose, className, onReady },
   ref
 ) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -110,7 +112,7 @@ export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCa
     size: () => (metaRef.current ? { width: metaRef.current.width, height: metaRef.current.height } : null),
   }));
 
-  // Build the Pixi scene once per product
+  // Build the Pixi scene once per product/pose
   useEffect(() => {
     let cancelled = false;
     let app: Application | null = null;
@@ -121,8 +123,8 @@ export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCa
       try {
         const PIXI = await import("pixi.js");
         const [modelImg, garmentImg] = await Promise.all([
-          loadImage(`/products/${slug}/model-photo.png`),
-          loadImage(`/products/${slug}/garment-layer.png`),
+          loadImage(assetUrl(slug, "model-photo.png", pose)),
+          loadImage(assetUrl(slug, "garment-layer.png", pose)),
         ]);
         if (cancelled) return;
         const W = modelImg.width, H = modelImg.height;
@@ -197,7 +199,7 @@ export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCa
       if (app) app.destroy(true, { children: true, texture: true });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug]);
+  }, [slug, pose]);
 
   // Color changes: update the uniform (or hide the overlay for the original color) and draw one frame
   useEffect(() => {

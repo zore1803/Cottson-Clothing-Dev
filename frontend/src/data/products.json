@@ -1,17 +1,70 @@
 {
   "colors": [
-    { "id": "white", "name": "White", "hex": "#f5f5f2" },
-    { "id": "black", "name": "Black", "hex": "#1c1c1c" },
-    { "id": "grey", "name": "Heather Grey", "hex": "#9ea3a8" },
-    { "id": "navy", "name": "Navy", "hex": "#1f2a44" },
-    { "id": "royal", "name": "Royal Blue", "hex": "#1d3fd6" },
-    { "id": "sky", "name": "Sky Blue", "hex": "#8fc7ec" },
-    { "id": "red", "name": "Red", "hex": "#c8102e" },
-    { "id": "maroon", "name": "Maroon", "hex": "#6d1a2c" },
-    { "id": "pink", "name": "Pink", "hex": "#ef6b9a" },
-    { "id": "olive", "name": "Olive", "hex": "#5b6632" },
-    { "id": "forest", "name": "Forest Green", "hex": "#1f5a33" },
-    { "id": "beige", "name": "Beige", "hex": "#d8c8a8" }
+    {
+      "id": "white",
+      "name": "White",
+      "hex": "#f5f5f2"
+    },
+    {
+      "id": "black",
+      "name": "Black",
+      "hex": "#1c1c1c"
+    },
+    {
+      "id": "grey",
+      "name": "Heather Grey",
+      "hex": "#9ea3a8"
+    },
+    {
+      "id": "navy",
+      "name": "Navy",
+      "hex": "#1f2a44"
+    },
+    {
+      "id": "royal",
+      "name": "Royal Blue",
+      "hex": "#1d3fd6"
+    },
+    {
+      "id": "sky",
+      "name": "Sky Blue",
+      "hex": "#8fc7ec"
+    },
+    {
+      "id": "red",
+      "name": "Red",
+      "hex": "#c8102e"
+    },
+    {
+      "id": "maroon",
+      "name": "Maroon",
+      "hex": "#6d1a2c"
+    },
+    {
+      "id": "pink",
+      "name": "Pink",
+      "hex": "#ef6b9a"
+    },
+    {
+      "id": "olive",
+      "name": "Olive",
+      "hex": "#5b6632"
+    },
+    {
+      "id": "forest",
+      "name": "Forest Green",
+      "hex": "#1f5a33"
+    },
+    {
+      "id": "beige",
+      "name": "Beige",
+      "hex": "#d8c8a8"
+    },
+    {
+      "id": "yellow",
+      "name": "Butter Yellow",
+      "hex": "#f2e08a"
+    }
   ],
   "products": [
     {
@@ -21,9 +74,21 @@
       "description": "Crisp cotton oxford with a cutaway collar, chest pocket and embroidered COTTSON mark. Made for the office and customizable for your team.",
       "price": 1499,
       "currency": "INR",
-      "sizes": ["S", "M", "L", "XL", "XXL"],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
       "originalColor": "grey",
-      "colors": ["grey", "white", "navy", "black", "maroon"],
+      "colors": [
+        "grey",
+        "white",
+        "navy",
+        "black",
+        "maroon"
+      ],
       "minBulk": 25
     },
     {
@@ -33,9 +98,21 @@
       "description": "Soft pique cotton polo with a ribbed collar and cuffs and the COTTSON wordmark embroidered on the chest.",
       "price": 999,
       "currency": "INR",
-      "sizes": ["S", "M", "L", "XL", "XXL"],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
       "originalColor": "black",
-      "colors": ["black", "white", "navy", "red", "forest"],
+      "colors": [
+        "black",
+        "white",
+        "navy",
+        "red",
+        "forest"
+      ],
       "minBulk": 25
     },
     {
@@ -45,9 +122,21 @@
       "description": "Soft cotton crew-neck tee, ready for your logo. The everyday essential in the COTTSON lineup.",
       "price": 599,
       "currency": "INR",
-      "sizes": ["S", "M", "L", "XL", "XXL"],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
       "originalColor": "white",
-      "colors": ["white", "black", "navy", "red", "grey"],
+      "colors": [
+        "white",
+        "black",
+        "navy",
+        "red",
+        "grey"
+      ],
       "minBulk": 25
     },
     {
@@ -57,10 +146,489 @@
       "description": "Crisp cotton shirt with a bold patterned collar, cuffs and pocket trim. A sharper layer for nights out or dressed-down office days.",
       "price": 1799,
       "currency": "INR",
-      "sizes": ["S", "M", "L", "XL", "XXL"],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
       "originalColor": "white",
-      "colors": ["white", "black", "navy", "maroon", "grey"],
+      "colors": [
+        "white",
+        "black",
+        "navy",
+        "maroon",
+        "grey"
+      ],
       "minBulk": 25
+    },
+    {
+      "slug": "classic-polo-black",
+      "title": "Classic Polo",
+      "category": "Polos",
+      "description": "Soft pique cotton polo with a plain collar and the COTTSON wordmark embroidered on the chest. A clean, everyday staple for your team.",
+      "price": 999,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "black",
+      "colors": [
+        "black",
+        "white",
+        "navy",
+        "red",
+        "grey"
+      ],
+      "minBulk": 25,
+      "poses": 6
+    },
+    {
+      "slug": "tipped-polo-charcoal",
+      "title": "Tipped Collar Polo",
+      "category": "Polos",
+      "description": "Pique cotton polo with a contrast-tipped collar and cuffs, embroidered with the COTTSON mark. A sportier finish for casual team days.",
+      "price": 1099,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "grey",
+      "colors": [
+        "grey",
+        "black",
+        "white",
+        "navy",
+        "sky"
+      ],
+      "minBulk": 25,
+      "poses": 6
+    },
+    {
+      "slug": "classic-polo-navy",
+      "title": "Classic Polo — Navy",
+      "category": "Polos",
+      "description": "Soft pique cotton polo with a plain collar and the COTTSON wordmark embroidered on the chest. A clean, everyday staple for your team.",
+      "price": 999,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "navy",
+      "colors": [
+        "navy",
+        "black",
+        "white",
+        "sky",
+        "red"
+      ],
+      "minBulk": 25,
+      "poses": 6
+    },
+    {
+      "slug": "relaxed-polo-black",
+      "title": "Relaxed Fit Polo",
+      "category": "Polos",
+      "description": "A longer-length pique cotton polo with side vents for a relaxed fit, embroidered with the COTTSON wordmark.",
+      "price": 999,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "black",
+      "colors": [
+        "black",
+        "white",
+        "navy",
+        "olive",
+        "beige"
+      ],
+      "minBulk": 25,
+      "poses": 6
+    },
+    {
+      "slug": "crew-tee-black",
+      "title": "Classic Crew Tee — Black",
+      "category": "T-Shirts",
+      "description": "Soft cotton crew-neck tee, ready for your logo. The everyday essential in the COTTSON lineup.",
+      "price": 599,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "black",
+      "colors": [
+        "black",
+        "white",
+        "navy",
+        "red",
+        "grey"
+      ],
+      "minBulk": 25,
+      "poses": 6
+    },
+    {
+      "slug": "pinstripe-shirt-blue",
+      "title": "Pinstripe Formal Shirt",
+      "category": "Shirts",
+      "description": "Crisp cotton shirt in a fine blue pinstripe, with a cutaway collar and embroidered chest pocket. Sharp enough for the boardroom.",
+      "price": 1699,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "sky",
+      "colors": [
+        "sky",
+        "white",
+        "grey",
+        "navy"
+      ],
+      "minBulk": 25,
+      "poses": 6
+    },
+    {
+      "slug": "formal-shirt-slate",
+      "title": "Formal Shirt — Slate Grey",
+      "category": "Shirts",
+      "description": "Crisp cotton shirt with a cutaway collar, chest pocket and embroidered COTTSON mark. Made for the office and customizable for your team.",
+      "price": 1499,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "grey",
+      "colors": [
+        "grey",
+        "white",
+        "navy",
+        "black",
+        "maroon"
+      ],
+      "minBulk": 25,
+      "poses": 6
+    },
+    {
+      "slug": "formal-shirt-skyblue",
+      "title": "Formal Shirt — Sky Blue",
+      "category": "Shirts",
+      "description": "Crisp cotton shirt with a cutaway collar, chest pocket and embroidered COTTSON mark. Made for the office and customizable for your team.",
+      "price": 1499,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "sky",
+      "colors": [
+        "sky",
+        "white",
+        "grey",
+        "navy",
+        "maroon"
+      ],
+      "minBulk": 25,
+      "poses": 6
+    },
+    {
+      "slug": "tipped-polo-skyblue",
+      "title": "Tipped Collar Polo — Sky Blue",
+      "category": "Polos",
+      "description": "Pique cotton polo with a contrast-tipped collar and cuffs, embroidered with the COTTSON mark. A sportier finish for casual team days.",
+      "price": 1099,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "sky",
+      "colors": [
+        "sky",
+        "grey",
+        "black",
+        "white",
+        "navy"
+      ],
+      "minBulk": 25,
+      "poses": 6
+    },
+    {
+      "slug": "pullover-hoodie-white",
+      "title": "Pullover Hoodie — White",
+      "category": "Hoodies",
+      "description": "Heavyweight cotton fleece pullover hoodie with a kangaroo pocket, embroidered with the COTTSON wordmark.",
+      "price": 1999,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "white",
+      "colors": [
+        "white",
+        "black",
+        "grey",
+        "navy"
+      ],
+      "minBulk": 25,
+      "poses": 6
+    },
+    {
+      "slug": "zip-hoodie-black",
+      "title": "Zip Hoodie — Black",
+      "category": "Hoodies",
+      "description": "Heavyweight cotton fleece full-zip hoodie with a kangaroo pocket, embroidered with the COTTSON wordmark.",
+      "price": 2199,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "black",
+      "colors": [
+        "black",
+        "grey",
+        "navy",
+        "white"
+      ],
+      "minBulk": 25,
+      "poses": 6
+    },
+    {
+      "slug": "hoodie-vest-black",
+      "title": "Sleeveless Hoodie Vest",
+      "category": "Hoodies",
+      "description": "A sleeveless, full-zip fleece hoodie vest, layered over a tee for cool-weather workdays. Embroidered with the COTTSON wordmark.",
+      "price": 1799,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "black",
+      "colors": [
+        "black",
+        "grey",
+        "navy",
+        "olive"
+      ],
+      "minBulk": 25,
+      "poses": 6
+    },
+    {
+      "slug": "track-jacket-black",
+      "title": "Track Jacket — Black",
+      "category": "Hoodies",
+      "description": "Full-zip cotton-fleece track jacket with a stand collar, embroidered with the COTTSON wordmark.",
+      "price": 2299,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "black",
+      "colors": [
+        "black",
+        "grey",
+        "navy",
+        "white"
+      ],
+      "minBulk": 25,
+      "poses": 6
+    },
+    {
+      "slug": "drive",
+      "title": "Everyday Tipped Polo",
+      "category": "Polos",
+      "description": "Pique cotton polo with a contrast-tipped collar and cuffs, embroidered with the COTTSON wordmark. Styled for everyday wear.",
+      "price": 1099,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "black",
+      "colors": [
+        "black",
+        "white",
+        "navy",
+        "red",
+        "grey"
+      ],
+      "minBulk": 25,
+      "poses": 6
+    },
+    {
+      "slug": "ease",
+      "title": "Weekend Polo",
+      "category": "Polos",
+      "description": "Soft pique cotton polo with a plain collar and the COTTSON wordmark embroidered on the chest. Relaxed enough for the weekend.",
+      "price": 999,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "black",
+      "colors": [
+        "black",
+        "white",
+        "navy",
+        "red",
+        "grey"
+      ],
+      "minBulk": 25,
+      "poses": 6
+    },
+    {
+      "slug": "grey-shirt",
+      "title": "Formal Shirt — Classic Grey",
+      "category": "Shirts",
+      "description": "Crisp cotton shirt with a cutaway collar, chest pocket and embroidered COTTSON mark. Made for the office and customizable for your team.",
+      "price": 1499,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "grey",
+      "colors": [
+        "grey",
+        "white",
+        "navy",
+        "black",
+        "maroon"
+      ],
+      "minBulk": 25,
+      "poses": 6
+    },
+    {
+      "slug": "yellow-shirt",
+      "title": "Formal Shirt — Butter Yellow",
+      "category": "Shirts",
+      "description": "Crisp cotton shirt with a cutaway collar, chest pocket and embroidered COTTSON mark. A warm alternative to classic office whites and blues.",
+      "price": 1499,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "yellow",
+      "colors": [
+        "yellow",
+        "white",
+        "sky",
+        "grey"
+      ],
+      "minBulk": 25,
+      "poses": 6
+    },
+    {
+      "slug": "indus-01",
+      "title": "Contrast Tipped Polo — Red Trim",
+      "category": "Polos",
+      "description": "Pique cotton polo with a bold red-and-white tipped collar and cuffs, embroidered with the COTTSON wordmark.",
+      "price": 1199,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "black",
+      "colors": [
+        "black",
+        "white",
+        "navy",
+        "red"
+      ],
+      "minBulk": 25,
+      "poses": 10
+    },
+    {
+      "slug": "indus-04",
+      "title": "Contrast Tipped Polo — Green Trim",
+      "category": "Polos",
+      "description": "Pique cotton polo with a fresh green-tipped collar and cuffs, embroidered with the COTTSON wordmark.",
+      "price": 1199,
+      "currency": "INR",
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "originalColor": "yellow",
+      "colors": [
+        "yellow",
+        "white",
+        "forest",
+        "black"
+      ],
+      "minBulk": 25,
+      "poses": 6
     }
   ]
 }
