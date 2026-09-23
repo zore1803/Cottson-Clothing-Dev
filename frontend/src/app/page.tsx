@@ -14,15 +14,6 @@ export default function HomePage() {
     <>
       {/* Hero: a white card sits over a full-bleed photo, like a storefront window display */}
       <section className="relative isolate min-h-[640px] overflow-hidden bg-[#b9bcc2]">
-        <Image
-          src="/products/polo-black/photo.jpg"
-          alt="Model wearing a COTTSON polo"
-          fill
-          priority
-          sizes="100vw"
-          className="-z-10 scale-125 object-cover object-[78%_10%]"
-        />
-
         <div className="relative mx-auto max-w-7xl px-4 pb-16">
           <div className="max-w-[500px] rounded-b-2xl bg-background px-5 pb-11 pt-11 shadow-2xl sm:px-6">
             <span className="inline-flex items-center gap-1.5 rounded-full border bg-background px-2 py-0.5 text-xs font-medium text-brand">
@@ -64,6 +55,22 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+
+        {/* Floating second product photo, filling the empty background area on the right */}
+        <Link
+          href="/products/contrast-trim-shirt"
+          className="absolute right-12 top-1/2 hidden w-72 -translate-y-1/2 overflow-hidden rounded-2xl border-4 border-background shadow-2xl transition-transform hover:scale-[1.02] lg:block"
+        >
+          <div className="relative aspect-[3/4] w-full">
+            <Image
+              src="/products/contrast-trim-shirt/photo.jpg"
+              alt="Model wearing a COTTSON contrast trim shirt"
+              fill
+              sizes="288px"
+              className="object-cover"
+            />
+          </div>
+        </Link>
 
         <Link
           href="/#bulk"
