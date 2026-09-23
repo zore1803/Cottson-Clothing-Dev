@@ -17,10 +17,11 @@ services:
     plan: free # sleeps when idle and background jobs stop while asleep; upgrade to starter to avoid that
     region: singapore # closest to India; must match the database region
     rootDir: backend
-    buildCommand: npm ci && npm run build --workspace @dtc/backend
-    # Runs after build, before the app starts serving traffic — this is where migrations
-    # belong. Without it, a fresh database has no tables and Medusa crash-loops on boot.
-    preDeployCommand: cd apps/backend && npx medusa db:migrate
+    # Migration runs as part of the build, not as a preDeployCommand: on this plan,
+    # preDeployCommand's exit after a successful one-off command gets misread as the
+    # service crashing ("Application exited early"), failing the deploy outright even
+    # though the migration itself succeeded. Bundling it into the build sidesteps that.
+    buildCommand: npm ci && npm run build --workspace @dtc/backend && cd apps/backend && npx medusa db:migrate
     startCommand: cd apps/backend/.medusa/server && npm run start
     healthCheckPath: /health
     autoDeployTrigger: commit
