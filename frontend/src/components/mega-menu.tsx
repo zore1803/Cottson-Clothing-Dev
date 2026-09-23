@@ -113,11 +113,10 @@ export function MegaMenu() {
       ))}
 
       {open && (
-        <div
-          className="absolute left-0 top-full z-50 w-[min(680px,calc(100vw-2rem))]"
-          onMouseEnter={() => show(open)}
-        >
-          <div className="flex overflow-hidden rounded-b-md border bg-background shadow-2xl">
+        // Fixed to the viewport (not the nav's own narrow width) so it spans the full page,
+        // flush against the header with no gap or rounded seam — one joined piece.
+        <div className="fixed inset-x-0 top-24 z-50 border-t bg-background shadow-xl" onMouseEnter={() => show(open)}>
+          <div className="mx-auto flex max-w-7xl overflow-hidden px-4">
             {MENUS.find((m) => m.label === open)!.columns.map((col, i) => (
               <div key={col.heading} className={cn("min-w-0", col.cols === 2 ? "flex-[2]" : "flex-1", i > 0 && "border-l")}>
                 <div className="border-b bg-muted/50 px-4 py-2.5 text-base font-semibold text-brand">
