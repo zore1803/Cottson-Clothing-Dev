@@ -113,7 +113,7 @@ export default function HomePage() {
               Try it now
             </Link>
           </div>
-          <div className="grid h-32 grid-cols-2 gap-1 p-1 [clip-path:polygon(15%_0,100%_0,100%_100%,0_100%)] sm:h-36 sm:[clip-path:polygon(20%_0,100%_0,100%_100%,0_100%)]">
+          <div className="grid h-64 grid-cols-2 gap-1 p-1 [clip-path:polygon(15%_0,100%_0,100%_100%,0_100%)] sm:h-72 sm:[clip-path:polygon(20%_0,100%_0,100%_100%,0_100%)]">
             {[
               ["/products/polo-black/photo.jpg", "Essential Polo"],
               ["/products/contrast-trim-shirt/photo.jpg", "Contrast Trim Shirt"],
