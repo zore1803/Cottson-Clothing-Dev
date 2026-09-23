@@ -28,7 +28,7 @@ export default function HomePage() {
             <span className="inline-flex items-center gap-1.5 rounded-full border bg-background px-2 py-0.5 text-xs font-medium text-brand">
               <span className="size-1.5 rounded-full bg-brand-accent" /> Custom cotton clothing
             </span>
-            <h1 className="mt-4 text-3xl font-bold leading-[1.05] tracking-tight text-brand sm:text-4xl">
+            <h1 className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight text-brand sm:text-5xl">
               Your team.
               <br />
               Your colors.
