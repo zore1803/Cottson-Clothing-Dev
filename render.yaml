@@ -18,6 +18,9 @@ services:
     region: singapore # closest to India; must match the database region
     rootDir: backend
     buildCommand: npm ci && npm run build --workspace @dtc/backend
+    # Runs after build, before the app starts serving traffic — this is where migrations
+    # belong. Without it, a fresh database has no tables and Medusa crash-loops on boot.
+    preDeployCommand: cd apps/backend && npx medusa db:migrate
     startCommand: cd apps/backend/.medusa/server && npm run start
     healthCheckPath: /health
     autoDeployTrigger: commit
