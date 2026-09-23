@@ -24,7 +24,7 @@ export default function HomePage() {
         />
 
         <div className="relative mx-auto max-w-7xl px-4 pb-16">
-          <div className="max-w-[360px] rounded-br-2xl bg-background px-5 pb-6 pt-7 shadow-2xl sm:px-6">
+          <div className="max-w-[460px] rounded-2xl bg-background px-5 pb-6 pt-7 shadow-2xl sm:px-6">
             <span className="inline-flex items-center gap-1.5 rounded-full border bg-background px-2 py-0.5 text-xs font-medium text-brand">
               <span className="size-1.5 rounded-full bg-brand-accent" /> Custom cotton clothing
             </span>
@@ -54,7 +54,7 @@ export default function HomePage() {
           </div>
 
           {/* Small badge card, peeking out below the main card like a certification tag */}
-          <div className="mt-6 inline-flex items-center gap-4 bg-background px-6 py-4 shadow-lg">
+          <div className="mt-6 inline-flex items-center gap-4 rounded-2xl bg-background px-6 py-4 shadow-lg">
             <span className="grid size-12 shrink-0 place-items-center rounded-full border-2 border-brand text-xs font-bold text-brand">
               100%
             </span>
