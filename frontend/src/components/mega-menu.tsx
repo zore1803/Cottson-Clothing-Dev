@@ -116,7 +116,7 @@ export function MegaMenu() {
             <div className="absolute left-0 top-full z-50 pt-3" onMouseEnter={() => show(open)}>
               <div className="flex overflow-hidden rounded-2xl border bg-background shadow-xl">
                 {m.columns.map((col, i) => (
-                  <div key={col.heading} className={cn("w-64 shrink-0", col.cols === 2 && "w-[420px]", i > 0 && "border-l")}>
+                  <div key={col.heading} className={cn("w-72 shrink-0", col.cols === 2 && "w-[480px]", i > 0 && "border-l")}>
                     <div className="border-b bg-muted/50 px-4 py-2.5 text-base font-semibold text-brand">
                       {col.heading}
                       <span className="text-brand-accent">.</span>
@@ -126,7 +126,7 @@ export function MegaMenu() {
                         <li key={it.title}>
                           <Link href={it.href} onClick={() => setOpen(null)} className="group block py-3">
                             <div className="text-sm font-semibold text-brand group-hover:underline">{it.title}</div>
-                            <div className="truncate text-xs text-muted-foreground">{it.text}</div>
+                            <div className="text-xs text-muted-foreground">{it.text}</div>
                           </Link>
                         </li>
                       ))}
