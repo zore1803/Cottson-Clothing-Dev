@@ -109,36 +109,35 @@ export function MegaMenu() {
           >
             {m.label}
           </button>
+
+          {open === m.label && (
+            // Anchored to this button's own wrapper, so it opens right under it
+            // instead of centered on the whole viewport.
+            <div className="absolute left-0 top-full z-50 pt-3" onMouseEnter={() => show(open)}>
+              <div className="flex overflow-hidden rounded-2xl border bg-background shadow-xl">
+                {m.columns.map((col, i) => (
+                  <div key={col.heading} className={cn("w-64 shrink-0", col.cols === 2 && "w-[420px]", i > 0 && "border-l")}>
+                    <div className="border-b bg-muted/50 px-4 py-2.5 text-base font-semibold text-brand">
+                      {col.heading}
+                      <span className="text-brand-accent">.</span>
+                    </div>
+                    <ul className={cn("grid gap-x-6 px-4 py-2", col.cols === 2 && "grid-cols-2")}>
+                      {col.items.map((it) => (
+                        <li key={it.title}>
+                          <Link href={it.href} onClick={() => setOpen(null)} className="group block py-3">
+                            <div className="text-sm font-semibold text-brand group-hover:underline">{it.title}</div>
+                            <div className="truncate text-xs text-muted-foreground">{it.text}</div>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       ))}
-
-      {open && (
-        // Fixed to the viewport (not the nav's own narrow width) so it overlays the page below
-        // instead of pushing it down, flush against the header with no gap. The card itself
-        // is only as wide as the page content — no blank strip on either side.
-        <div className="fixed inset-x-0 top-20 z-50" onMouseEnter={() => show(open)}>
-          <div className="mx-auto flex w-fit max-w-7xl overflow-hidden rounded-2xl border bg-background shadow-xl">
-            {MENUS.find((m) => m.label === open)!.columns.map((col, i) => (
-              <div key={col.heading} className={cn("w-64 shrink-0", col.cols === 2 && "w-[420px]", i > 0 && "border-l")}>
-                <div className="border-b bg-muted/50 px-4 py-2.5 text-base font-semibold text-brand">
-                  {col.heading}
-                  <span className="text-brand-accent">.</span>
-                </div>
-                <ul className={cn("grid gap-x-6 px-4 py-2", col.cols === 2 && "grid-cols-2")}>
-                  {col.items.map((it) => (
-                    <li key={it.title}>
-                      <Link href={it.href} onClick={() => setOpen(null)} className="group block py-3">
-                        <div className="text-sm font-semibold text-brand group-hover:underline">{it.title}</div>
-                        <div className="truncate text-xs text-muted-foreground">{it.text}</div>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </nav>
   );
 }
