@@ -17,35 +17,35 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b-2 border-brand-accent bg-background">
-      <div className="relative mx-auto flex h-24 max-w-7xl items-center gap-6 px-4">
-        <Link href="/" className="text-3xl font-bold tracking-tight text-brand">
+      <div className="relative mx-auto flex h-16 max-w-7xl items-center gap-5 px-4">
+        <Link href="/" className="text-xl font-bold tracking-tight text-brand">
           cottson<span className="text-brand-accent">.</span>
         </Link>
         <MegaMenu />
 
-        <div className="ml-auto flex items-center gap-2 sm:gap-6">
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-5">
           {[
             { href: "/products", label: "Catalog", Icon: BookOpen },
             { href: "/cart", label: "Basket", Icon: ShoppingCart, badge: count },
             { href: "#", label: "Login", Icon: UserRound },
           ].map(({ href, label, Icon, badge }) => (
-            <Link key={label} href={href} className="relative hidden flex-col items-center gap-1 px-2 text-xs sm:flex">
-              <Icon className="size-6 text-brand" strokeWidth={1.8} />
+            <Link key={label} href={href} className="relative hidden flex-col items-center gap-0.5 px-1.5 text-[11px] leading-none sm:flex">
+              <Icon className="size-[18px] text-brand" strokeWidth={1.6} />
               {label}
               {!!badge && (
-                <span className="absolute -top-1.5 right-1 grid size-5 place-items-center rounded-full bg-brand-accent text-[10px] font-semibold text-white">
+                <span className="absolute -top-1.5 right-0 grid size-4 place-items-center rounded-full bg-brand-accent text-[9px] font-semibold text-white">
                   {badge}
                 </span>
               )}
             </Link>
           ))}
           <Link href="/cart" className="relative p-2 sm:hidden" aria-label={`Basket, ${count} items`}>
-            <ShoppingCart className="size-6 text-brand" />
+            <ShoppingCart className="size-5 text-brand" />
             {count > 0 && (
-              <span className="absolute right-0 top-0 grid size-5 place-items-center rounded-full bg-brand-accent text-[10px] text-white">{count}</span>
+              <span className="absolute right-0 top-0 grid size-4 place-items-center rounded-full bg-brand-accent text-[9px] text-white">{count}</span>
             )}
           </Link>
-          <Link href="/#bulk" className="rounded-md bg-brand px-5 py-3.5 text-lg font-semibold text-white transition-colors hover:bg-brand/90">
+          <Link href="/#bulk" className="rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand/90">
             Talk to Sales
           </Link>
         </div>
