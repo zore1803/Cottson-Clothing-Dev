@@ -24,30 +24,30 @@ export default function HomePage() {
         />
 
         <div className="relative mx-auto max-w-7xl px-4 pb-16">
-          <div className="max-w-[560px] rounded-br-3xl bg-background px-8 pb-12 pt-14 shadow-2xl sm:px-12">
-            <span className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-sm font-medium text-brand">
-              <span className="size-2 rounded-full bg-brand-accent" /> Custom cotton clothing
+          <div className="max-w-[420px] rounded-br-2xl bg-background px-6 pb-8 pt-9 shadow-2xl sm:px-8">
+            <span className="inline-flex items-center gap-2 rounded-full border bg-background px-2.5 py-1 text-xs font-medium text-brand">
+              <span className="size-1.5 rounded-full bg-brand-accent" /> Custom cotton clothing
             </span>
-            <h1 className="mt-6 text-5xl font-bold leading-[1.05] tracking-tight text-brand sm:text-6xl">
+            <h1 className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight text-brand sm:text-[2.75rem]">
               Your team.
               <br />
               Your colors.
               <br />
               Our cotton<span className="text-brand-accent">.</span>
             </h1>
-            <ul className="mt-9 grid gap-x-8 gap-y-3 font-semibold sm:grid-cols-2">
+            <ul className="mt-6 grid gap-x-6 gap-y-2 text-sm font-semibold sm:grid-cols-2">
               {["Premium cotton", "Any color, any logo", "Live design studio", "Bulk pricing from 25", "Made to order", "Delivered in 7–10 days"].map((t) => (
-                <li key={t} className="flex items-center gap-3">
-                  <Check className="size-5 shrink-0 text-brand" strokeWidth={3} />
+                <li key={t} className="flex items-center gap-2">
+                  <Check className="size-4 shrink-0 text-brand" strokeWidth={3} />
                   {t}
                 </li>
               ))}
             </ul>
-            <div className="mt-10 grid gap-3 sm:grid-cols-2">
-              <Link href="/studio" className="grid h-14 place-items-center rounded-md bg-brand text-base font-semibold text-white shadow-sm hover:bg-brand/90">
+            <div className="mt-7 grid gap-2.5 sm:grid-cols-2">
+              <Link href="/studio" className="grid h-11 place-items-center rounded-md bg-brand text-sm font-semibold text-white shadow-sm hover:bg-brand/90">
                 Talk to us
               </Link>
-              <Link href="/products" className="grid h-14 place-items-center rounded-md bg-muted text-base font-semibold text-brand hover:bg-muted/70">
+              <Link href="/products" className="grid h-11 place-items-center rounded-md bg-muted text-sm font-semibold text-brand hover:bg-muted/70">
                 Browse catalog
               </Link>
             </div>
