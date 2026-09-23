@@ -17,7 +17,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b-2 border-brand-accent bg-background">
-      <div className="relative mx-auto flex h-16 max-w-7xl items-center gap-5 px-4">
+      <div className="relative mx-auto flex h-24 max-w-7xl items-center gap-5 px-4">
         <Link href="/" className="text-xl font-bold tracking-tight text-brand">
           cottson<span className="text-brand-accent">.</span>
         </Link>
@@ -29,7 +29,11 @@ export function SiteHeader() {
             { href: "/cart", label: "Basket", Icon: ShoppingCart, badge: count },
             { href: "#", label: "Login", Icon: UserRound },
           ].map(({ href, label, Icon, badge }) => (
-            <Link key={label} href={href} className="relative hidden flex-col items-center gap-0.5 px-1.5 text-[11px] leading-none sm:flex">
+            <Link
+              key={label}
+              href={href}
+              className="relative hidden flex-col items-center gap-0.5 rounded-lg px-3 py-1.5 text-[11px] leading-none transition-colors hover:bg-muted sm:flex"
+            >
               <Icon className="size-[18px] text-brand" strokeWidth={1.6} />
               {label}
               {!!badge && (

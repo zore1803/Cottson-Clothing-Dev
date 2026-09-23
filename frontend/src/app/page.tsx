@@ -1,67 +1,70 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Check, MessageSquare, Palette, Shirt, Truck, Users } from "lucide-react";
-import { PRODUCTS, COLORS, variantUrl } from "@/lib/catalog";
+import { PRODUCTS, COLORS } from "@/lib/catalog";
 import { ProductCard } from "@/components/product-card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { QuoteForm } from "@/components/quote-form";
-import { HeroShowcase } from "@/components/hero-showcase";
 
 export const revalidate = 3600; // ISR: rebuilt at most hourly, served from the CDN
 
 export default function HomePage() {
   return (
     <>
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-muted/60 to-background">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-12 lg:grid-cols-[1.05fr_1fr] lg:py-16">
-          <div>
+      {/* Hero: a white card sits over a full-bleed photo, like a storefront window display */}
+      <section className="relative isolate min-h-[640px] overflow-hidden bg-[#b9bcc2]">
+        <Image
+          src="/products/polo-black/photo.jpg"
+          alt="Model wearing a COTTSON polo"
+          fill
+          priority
+          sizes="100vw"
+          className="-z-10 object-cover object-[62%_12%]"
+        />
+
+        <div className="relative mx-auto max-w-7xl px-4 pb-16">
+          <div className="max-w-[560px] rounded-br-3xl bg-background px-8 pb-12 pt-14 shadow-2xl sm:px-12">
             <span className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-sm font-medium text-brand">
               <span className="size-2 rounded-full bg-brand-accent" /> Custom cotton clothing
             </span>
-            <h1 className="mt-6 text-5xl font-bold leading-[1.05] tracking-tight text-brand sm:text-6xl xl:text-7xl">
+            <h1 className="mt-6 text-5xl font-bold leading-[1.05] tracking-tight text-brand sm:text-6xl">
               Your team.
               <br />
               Your colors.
               <br />
               Our cotton<span className="text-brand-accent">.</span>
             </h1>
-            <p className="mt-6 max-w-lg text-lg text-muted-foreground">
-              Premium shirts, polos and tees in any color, with your logo. See it on the real garment before you order,
-              from a single piece to a thousand.
-            </p>
-            <ul className="mt-8 grid max-w-lg gap-x-8 gap-y-3 font-semibold sm:grid-cols-2">
+            <ul className="mt-9 grid gap-x-8 gap-y-3 font-semibold sm:grid-cols-2">
               {["Premium cotton", "Any color, any logo", "Live design studio", "Bulk pricing from 25", "Made to order", "Delivered in 7–10 days"].map((t) => (
                 <li key={t} className="flex items-center gap-3">
-                  <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand/10">
-                    <Check className="size-4 text-brand" strokeWidth={3} />
-                  </span>
+                  <Check className="size-5 shrink-0 text-brand" strokeWidth={3} />
                   {t}
                 </li>
               ))}
             </ul>
-            <div className="mt-10 flex flex-wrap gap-3">
-              <Link href="/studio" className="rounded-lg bg-brand px-7 py-4 text-lg font-semibold text-white shadow-sm hover:bg-brand/90">
-                Start designing
+            <div className="mt-10 grid gap-3 sm:grid-cols-2">
+              <Link href="/studio" className="grid h-14 place-items-center rounded-md bg-brand text-base font-semibold text-white shadow-sm hover:bg-brand/90">
+                Talk to us
               </Link>
-              <Link href="/products" className="rounded-lg border bg-background px-7 py-4 text-lg font-semibold text-brand hover:bg-muted">
+              <Link href="/products" className="grid h-14 place-items-center rounded-md bg-muted text-base font-semibold text-brand hover:bg-muted/70">
                 Browse catalog
               </Link>
             </div>
-            <div className="mt-10 flex flex-wrap gap-8 border-t pt-6">
-              {[["12", "colors in stock"], ["1+", "pieces minimum"], ["7–10", "days delivery"]].map(([n, l]) => (
-                <div key={l}>
-                  <div className="text-2xl font-bold text-brand">{n}</div>
-                  <div className="text-sm text-muted-foreground">{l}</div>
-                </div>
-              ))}
+          </div>
+
+          {/* Small badge card, peeking out below the main card like a certification tag */}
+          <div className="-mt-1 inline-flex items-center gap-4 bg-background px-6 py-4 shadow-lg">
+            <span className="grid size-12 shrink-0 place-items-center rounded-full border-2 border-brand text-xs font-bold text-brand">
+              100%
+            </span>
+            <div>
+              <div className="text-lg font-semibold text-brand">Pure cotton</div>
+              <div className="text-sm text-muted-foreground">Designed and made in India</div>
             </div>
           </div>
-          <div className="mx-auto w-full max-w-[560px]">
-            <HeroShowcase />
-          </div>
         </div>
+
         <Link
           href="/#bulk"
           aria-label="Chat with us"
