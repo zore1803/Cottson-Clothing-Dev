@@ -28,20 +28,31 @@ module.exports = defineConfig({
     disable: process.env.DISABLE_MEDUSA_ADMIN === 'true',
     backendUrl: process.env.MEDUSA_BACKEND_URL,
   },
-  // With Redis available, use it for events, job scheduling and the workflow engine
-  // (the in-memory defaults do not survive a restart and cannot scale past one instance)
-  modules: REDIS_URL
-    ? [
-        { resolve: '@medusajs/medusa/event-bus-redis', options: { redisUrl: REDIS_URL } },
-        { resolve: '@medusajs/medusa/workflow-engine-redis', options: { redis: { url: REDIS_URL } } },
-        {
-          resolve: '@medusajs/medusa/locking',
-          options: {
-            providers: [
-              { resolve: '@medusajs/medusa/locking-redis', id: 'locking-redis', is_default: true, options: { redisUrl: REDIS_URL } },
-            ],
+  modules: [
+    // Email/password login for the admin dashboard — without this the login page
+    // shows "Register an auth provider" and no form, because no provider is
+    // registered by default.
+    {
+      resolve: '@medusajs/medusa/auth',
+      options: {
+        providers: [{ resolve: '@medusajs/medusa/auth-emailpass', id: 'emailpass' }],
+      },
+    },
+    // With Redis available, use it for events, job scheduling and the workflow engine
+    // (the in-memory defaults do not survive a restart and cannot scale past one instance)
+    ...(REDIS_URL
+      ? [
+          { resolve: '@medusajs/medusa/event-bus-redis', options: { redisUrl: REDIS_URL } },
+          { resolve: '@medusajs/medusa/workflow-engine-redis', options: { redis: { url: REDIS_URL } } },
+          {
+            resolve: '@medusajs/medusa/locking',
+            options: {
+              providers: [
+                { resolve: '@medusajs/medusa/locking-redis', id: 'locking-redis', is_default: true, options: { redisUrl: REDIS_URL } },
+              ],
+            },
           },
-        },
-      ]
-    : [],
+        ]
+      : []),
+  ],
 })
