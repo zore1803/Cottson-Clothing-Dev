@@ -24,7 +24,7 @@ export default function HomePage() {
         />
 
         <div className="relative mx-auto max-w-7xl px-4 pb-16">
-          <div className="max-w-[460px] rounded-b-2xl bg-background px-5 pb-9 pt-9 shadow-2xl sm:px-6">
+          <div className="max-w-[460px] rounded-b-2xl bg-background px-5 pb-11 pt-11 shadow-2xl sm:px-6">
             <span className="inline-flex items-center gap-1.5 rounded-full border bg-background px-2 py-0.5 text-xs font-medium text-brand">
               <span className="size-1.5 rounded-full bg-brand-accent" /> Custom cotton clothing
             </span>
@@ -35,7 +35,7 @@ export default function HomePage() {
               <br />
               Our cotton<span className="text-brand-accent">.</span>
             </h1>
-            <ul className="mt-6 grid gap-x-5 gap-y-2.5 text-sm font-semibold sm:grid-cols-2">
+            <ul className="mt-7 grid gap-x-5 gap-y-3 text-sm font-semibold sm:grid-cols-2">
               {["Premium cotton", "Any color, any logo", "Live design studio", "Bulk pricing from 25", "Made to order", "Delivered in 7–10 days"].map((t) => (
                 <li key={t} className="flex items-center gap-2">
                   <Check className="size-3.5 shrink-0 text-brand" strokeWidth={3} />
@@ -43,11 +43,11 @@ export default function HomePage() {
                 </li>
               ))}
             </ul>
-            <div className="mt-7 grid gap-2 sm:grid-cols-2">
-              <Link href="/studio" className="grid h-11 place-items-center rounded-md bg-brand text-sm font-semibold text-white shadow-sm hover:bg-brand/90">
+            <div className="mt-8 grid gap-2 sm:grid-cols-2">
+              <Link href="/studio" className="grid h-12 place-items-center rounded-md bg-brand text-sm font-semibold text-white shadow-sm hover:bg-brand/90">
                 Talk to us
               </Link>
-              <Link href="/products" className="grid h-11 place-items-center rounded-md bg-muted text-sm font-semibold text-brand hover:bg-muted/70">
+              <Link href="/products" className="grid h-12 place-items-center rounded-md bg-muted text-sm font-semibold text-brand hover:bg-muted/70">
                 Browse catalog
               </Link>
             </div>
