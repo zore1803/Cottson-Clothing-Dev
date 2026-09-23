@@ -67,12 +67,12 @@ export default function HomePage() {
 
         {/* Floating second product photo, standing on the ground at the bottom of the hero */}
         <Link
-          href="/products/contrast-trim-shirt"
+          href="/products/polo-black"
           className="absolute bottom-0 right-8 hidden h-[560px] w-[420px] transition-transform hover:scale-[1.02] lg:block"
         >
           <Image
-            src="/products/contrast-trim-shirt/cutout.png"
-            alt="Model wearing a COTTSON contrast trim shirt"
+            src="/products/polo-black/cutout.png"
+            alt="Model wearing a COTTSON essential polo"
             fill
             sizes="420px"
             unoptimized
