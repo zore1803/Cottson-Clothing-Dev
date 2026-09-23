@@ -113,10 +113,11 @@ export function MegaMenu() {
       ))}
 
       {open && (
-        // Fixed to the viewport (not the nav's own narrow width) so it spans the full page,
-        // flush against the header with no gap or rounded seam — one joined piece.
-        <div className="fixed inset-x-0 top-24 z-50 border-t bg-background shadow-xl" onMouseEnter={() => show(open)}>
-          <div className="mx-auto flex max-w-7xl overflow-hidden px-4">
+        // Fixed to the viewport (not the nav's own narrow width) so it overlays the page below
+        // instead of pushing it down, flush against the header with no gap. The card itself
+        // is only as wide as the page content — no blank strip on either side.
+        <div className="fixed inset-x-0 top-20 z-50" onMouseEnter={() => show(open)}>
+          <div className="mx-auto flex max-w-7xl overflow-hidden border-t bg-background shadow-xl">
             {MENUS.find((m) => m.label === open)!.columns.map((col, i) => (
               <div key={col.heading} className={cn("min-w-0", col.cols === 2 ? "flex-[2]" : "flex-1", i > 0 && "border-l")}>
                 <div className="border-b bg-muted/50 px-4 py-2.5 text-base font-semibold text-brand">
