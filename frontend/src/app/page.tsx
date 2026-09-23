@@ -68,15 +68,16 @@ export default function HomePage() {
         {/* Floating second product photo, filling the empty background area on the right */}
         <Link
           href="/products/contrast-trim-shirt"
-          className="absolute right-12 top-1/2 hidden w-72 -translate-y-1/2 overflow-hidden rounded-2xl border-4 border-background shadow-2xl transition-transform hover:scale-[1.02] lg:block"
+          className="absolute right-12 top-1/2 hidden w-72 -translate-y-1/2 transition-transform hover:scale-[1.02] lg:block"
         >
           <div className="relative aspect-[3/4] w-full">
             <Image
-              src="/products/contrast-trim-shirt/photo.jpg"
+              src="/products/contrast-trim-shirt/cutout.png"
               alt="Model wearing a COTTSON contrast trim shirt"
               fill
               sizes="288px"
-              className="object-cover"
+              unoptimized
+              className="object-contain"
             />
           </div>
         </Link>
