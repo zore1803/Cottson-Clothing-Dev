@@ -14,6 +14,15 @@ export default function HomePage() {
     <>
       {/* Hero: a white card sits over a full-bleed photo, like a storefront window display */}
       <section className="relative isolate min-h-[640px] overflow-hidden bg-[#b9bcc2]">
+        <Image
+          src="/hero-bg.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="-z-10 object-cover"
+        />
+
         <div className="relative mx-auto max-w-7xl px-4 pb-16">
           <div className="max-w-[500px] rounded-b-2xl bg-background px-5 pb-11 pt-11 shadow-2xl sm:px-6">
             <span className="inline-flex items-center gap-1.5 rounded-full border bg-background px-2 py-0.5 text-xs font-medium text-brand">
