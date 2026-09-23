@@ -128,6 +128,36 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* One solution for all your needs */}
+      <section className="mx-auto max-w-7xl px-4 pt-20">
+        <h2 className="text-3xl font-bold tracking-tight text-brand sm:text-4xl">
+          One solution for all your needs<span className="text-brand-accent">.</span>
+        </h2>
+        <p className="mt-4 max-w-2xl text-muted-foreground">
+          Make merchandising simple, by centralizing the entire process through us — from design and fabric selection,
+          to bulk production, quality checks and delivery. We&apos;re with you all the way.
+        </p>
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { Icon: Palette, border: "border-l-blue-400", title: "Tailored garments.", text: "Say goodbye to generic sizing. Design unique pieces that truly represent your brand.", href: "/studio" },
+            { Icon: Truck, border: "border-l-amber-400", title: "Pan-India delivery.", text: "No storage or shipping headaches. We make, pack and ship your order in 7–10 days.", href: "/#how" },
+            { Icon: Users, border: "border-l-brand", title: "Bulk order pricing.", text: "Mix sizes and colors in one order, with automatic discounts from 25 pieces.", href: "/#bulk" },
+            { Icon: Shirt, border: "border-l-rose-400", title: "Premium cotton.", text: "Every piece is made to order from pure, breathable cotton — built to last.", href: "/products" },
+          ].map(({ Icon, border, title, text, href }) => (
+            <div key={title} className="rounded-2xl bg-muted/40 p-6">
+              <span className="grid size-12 place-items-center rounded-full bg-background text-brand">
+                <Icon className="size-6" strokeWidth={1.6} />
+              </span>
+              <h3 className={cn("mt-5 border-l-4 pl-3 text-lg font-semibold text-brand", border)}>{title}</h3>
+              <p className="mt-3 text-sm text-muted-foreground">{text}</p>
+              <Link href={href} className="mt-4 inline-block text-sm font-medium text-brand hover:underline">
+                Learn more
+              </Link>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Products */}
       <section className="mx-auto max-w-7xl px-4 pt-16">
         <div className="flex items-end justify-between">
