@@ -20,7 +20,7 @@ export default function HomePage() {
           fill
           priority
           sizes="100vw"
-          className="-z-10 object-cover object-[62%_12%]"
+          className="-z-10 scale-125 object-cover object-[78%_10%]"
         />
 
         <div className="relative mx-auto max-w-7xl px-4 pb-16">
