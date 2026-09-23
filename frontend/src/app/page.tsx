@@ -54,7 +54,7 @@ export default function HomePage() {
           </div>
 
           {/* Small badge card, peeking out below the main card like a certification tag */}
-          <div className="-mt-1 inline-flex items-center gap-4 bg-background px-6 py-4 shadow-lg">
+          <div className="mt-6 inline-flex items-center gap-4 bg-background px-6 py-4 shadow-lg">
             <span className="grid size-12 shrink-0 place-items-center rounded-full border-2 border-brand text-xs font-bold text-brand">
               100%
             </span>
