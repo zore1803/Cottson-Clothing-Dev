@@ -114,22 +114,22 @@ export function MegaMenu() {
 
       {open && (
         <div
-          className="absolute left-1/2 top-full z-50 w-[min(1160px,calc(100vw-2rem))] -translate-x-1/2"
+          className="absolute left-1/2 top-full z-50 w-[min(880px,calc(100vw-2rem))] -translate-x-1/2"
           onMouseEnter={() => show(open)}
         >
           <div className="flex overflow-hidden rounded-b-md border bg-background shadow-2xl">
             {MENUS.find((m) => m.label === open)!.columns.map((col, i) => (
               <div key={col.heading} className={cn("min-w-0", col.cols === 2 ? "flex-[2]" : "flex-1", i > 0 && "border-l")}>
-                <div className="border-b bg-muted/50 px-5 py-5 text-3xl font-semibold text-brand">
+                <div className="border-b bg-muted/50 px-4 py-3 text-lg font-semibold text-brand">
                   {col.heading}
                   <span className="text-brand-accent">.</span>
                 </div>
-                <ul className={cn("grid gap-x-8 px-5 py-3", col.cols === 2 && "grid-cols-2")}>
+                <ul className={cn("grid gap-x-6 px-4 py-1.5", col.cols === 2 && "grid-cols-2")}>
                   {col.items.map((it) => (
                     <li key={it.title}>
-                      <Link href={it.href} onClick={() => setOpen(null)} className="group block py-4">
-                        <div className="text-xl font-semibold text-brand group-hover:underline">{it.title}</div>
-                        <div className="truncate text-muted-foreground">{it.text}</div>
+                      <Link href={it.href} onClick={() => setOpen(null)} className="group block py-2.5">
+                        <div className="text-sm font-semibold text-brand group-hover:underline">{it.title}</div>
+                        <div className="truncate text-xs text-muted-foreground">{it.text}</div>
                       </Link>
                     </li>
                   ))}
