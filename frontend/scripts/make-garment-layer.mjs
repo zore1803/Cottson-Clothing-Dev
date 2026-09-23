@@ -82,7 +82,56 @@ function refine(full) {
   return core;
 }
 
-const top = refine(maskOf(['Upper-clothes', 'Dress']));
+// Fills small interior holes (a button, a deep shadow crease) the segmentation model
+// misreads as non-fabric — without this, that spot skips recoloring entirely and shows
+// the original photo's color through, standing out as a stray light/dark speck. Small
+// radius so it doesn't bridge legitimate large gaps like the collar opening or a hand
+// resting on the fabric.
+function dilate(m, r) {
+  let cur = m;
+  for (let i = 0; i < r; i++) {
+    const next = new Uint8Array(n);
+    for (let p = 0; p < n; p++) {
+      if (cur[p]) { next[p] = 1; continue; }
+      const x = p % W;
+      if ((x > 0 && cur[p - 1]) || (x < W - 1 && cur[p + 1]) || (p >= W && cur[p - W]) || (p < n - W && cur[p + W])) next[p] = 1;
+    }
+    cur = next;
+  }
+  return cur;
+}
+function erode(m, r) {
+  let cur = m;
+  for (let i = 0; i < r; i++) {
+    const next = new Uint8Array(n);
+    for (let p = W; p < n - W; p++) {
+      const x = p % W;
+      if (cur[p] && x > 0 && x < W - 1 && cur[p - 1] && cur[p + 1] && cur[p - W] && cur[p + W]) next[p] = 1;
+    }
+    cur = next;
+  }
+  return cur;
+}
+const closeGaps = (m, r) => erode(dilate(m, r), r);
+
+// The segmentation model's own mask sometimes stops short of the garment's true edge — a
+// sleeve hem or cuff band never gets included in the first place (not just eroded away),
+// so refine()'s re-inclusion pass (which only restores pixels the raw mask already flagged)
+// can't recover it. This instead searches outward from the confirmed fabric by color: any
+// pixel within reach that's close in Lab to the fabric gets pulled in, regardless of what
+// the raw model output said there.
+function growByColor(m, radius, threshold) {
+  const zone = dilate(m, radius);
+  const lab = fabricLab(m);
+  if (!lab) return m;
+  const out = new Uint8Array(m);
+  for (let p = 0; p < n; p++) {
+    if (zone[p] && !out[p] && labDist(toLab(rgb[p * 3], rgb[p * 3 + 1], rgb[p * 3 + 2]), lab) < threshold) out[p] = 1;
+  }
+  return out;
+}
+
+const top = closeGaps(growByColor(refine(maskOf(['Upper-clothes', 'Dress'])), 15, 18), 5);
 let coverage = 0;
 for (let p = 0; p < n; p++) coverage += top[p];
 console.log(`garment coverage: ${((coverage / n) * 100).toFixed(1)}% of image`);

@@ -10,6 +10,19 @@ import fs from 'node:fs/promises';
 import sharp from 'sharp';
 import { pipeline, RawImage } from '@huggingface/transformers';
 
+const toLin = (v) => Math.pow(v / 255, 2.2);
+function toLab(r, g, b) {
+  const R = toLin(r), G = toLin(g), B = toLin(b);
+  let X = (R * 0.4124 + G * 0.3576 + B * 0.1805) / 0.95047;
+  let Y = R * 0.2126 + G * 0.7152 + B * 0.0722;
+  let Z = (R * 0.0193 + G * 0.1192 + B * 0.9505) / 1.08883;
+  const f = (t) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+  X = f(X); Y = f(Y); Z = f(Z);
+  return [116 * Y - 16, 500 * (X - Y), 200 * (Y - Z)];
+}
+const labDist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const median = (a) => a.slice().sort((x, y) => x - y)[a.length >> 1];
+
 const [photoPath, outDir, backdropHexArg = 'bac1c5'] = process.argv.slice(2);
 if (!photoPath || !outDir) {
   console.error('Usage: node scripts/make-product-from-photo.mjs <photo.png> <outDir> [backdropHex]');
@@ -90,13 +103,33 @@ function erode(m, r) {
 }
 const closeGaps = (m, r) => erode(dilate(m, r), r);
 
+function fabricLab(m) {
+  const L = [], A = [], B = [];
+  for (let p = 0; p < n; p += 7) if (m[p]) { const lab = toLab(rgb[p * 3], rgb[p * 3 + 1], rgb[p * 3 + 2]); L.push(lab[0]); A.push(lab[1]); B.push(lab[2]); }
+  return L.length ? [median(L), median(A), median(B)] : null;
+}
+// The segmentation model's own mask sometimes stops short of the garment's true edge (a
+// sleeve hem or cuff band never gets included in the first place). This searches outward
+// from the confirmed fabric by color: any pixel within reach that's close in Lab to the
+// fabric gets pulled in, regardless of what the raw model output said there.
+function growByColor(m, radius, threshold) {
+  const zone = dilate(m, radius);
+  const lab = fabricLab(m);
+  if (!lab) return m;
+  const out = new Uint8Array(m);
+  for (let p = 0; p < n; p++) {
+    if (zone[p] && !out[p] && labDist(toLab(rgb[p * 3], rgb[p * 3 + 1], rgb[p * 3 + 2]), lab) < threshold) out[p] = 1;
+  }
+  return out;
+}
+
 const person = closeGaps(personMask(), 6);
 let personCov = 0;
 for (let p = 0; p < n; p++) personCov += person[p];
 console.log(`person coverage: ${((personCov / n) * 100).toFixed(1)}%`);
 if (personCov < n * 0.1) throw new Error('Segmentation found almost no person — refusing to proceed.');
 
-const top = garmentMask(['Upper-clothes', 'Dress']);
+const top = closeGaps(growByColor(garmentMask(['Upper-clothes', 'Dress']), 15, 18), 5);
 let topCov = 0;
 for (let p = 0; p < n; p++) topCov += top[p];
 console.log(`garment coverage: ${((topCov / n) * 100).toFixed(1)}%`);
