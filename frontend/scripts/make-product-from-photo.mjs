@@ -157,10 +157,16 @@ await sharp(composed, { raw: { width: W, height: H, channels: 3 } }).jpeg({ qual
 console.log('Wrote model-photo.png and photo.jpg');
 
 // ---- garment layer: grayscale luminance of the (original, uncomposited) photo, alpha = garment mask ----
+// Pull the alpha edge a couple of pixels INSIDE the garment before feathering: the raw
+// segmentation edge tends to include a rim of bright background pixels, which light up as a
+// speckled halo once the garment is recolored. Eroding first keeps the recolor strictly on
+// real fabric so the border stays clean.
+const EDGE_TRIM = 3;
+const topEdge = erode(top, EDGE_TRIM);
 const topAlphaRaw = Buffer.alloc(n);
-for (let p = 0; p < n; p++) topAlphaRaw[p] = top[p] ? 255 : 0;
+for (let p = 0; p < n; p++) topAlphaRaw[p] = topEdge[p] ? 255 : 0;
 const topAlpha = await sharp(topAlphaRaw, { raw: { width: W, height: H, channels: 1 } })
-  .blur(1.2)
+  .blur(2.0)
   .extractChannel(0)
   .raw()
   .toBuffer();
