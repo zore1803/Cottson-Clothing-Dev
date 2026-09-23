@@ -103,7 +103,7 @@ export function MegaMenu() {
             aria-expanded={open === m.label}
             onClick={() => setOpen(open === m.label ? null : m.label)}
             className={cn(
-              "rounded-md px-4 py-2 text-sm font-semibold leading-none transition-colors",
+              "rounded-md px-4 py-2.5 text-base font-semibold leading-none transition-colors",
               open === m.label ? "bg-muted text-brand" : "hover:text-brand"
             )}
           >
