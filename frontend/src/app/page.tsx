@@ -102,25 +102,25 @@ export default function HomePage() {
       {/* Design Studio promo */}
       <section className="mx-auto max-w-7xl px-4 pt-16">
         <div className="grid overflow-hidden rounded-2xl border bg-[#c7ddd3] sm:grid-cols-2">
-          <div className="flex flex-col justify-center px-8 py-12 sm:px-12">
-            <h2 className="text-3xl font-bold leading-tight tracking-tight text-brand sm:text-4xl">
+          <div className="flex flex-col justify-center px-8 py-8 sm:px-12">
+            <h2 className="text-2xl font-bold leading-tight tracking-tight text-brand sm:text-3xl">
               Instant designs with Design Studio<span className="text-brand-accent">.</span>
             </h2>
-            <p className="mt-4 max-w-sm text-muted-foreground">
+            <p className="mt-3 max-w-sm text-sm text-muted-foreground">
               Your live DIY tool for creating branded merch in real time. Try it out and see your logo on the fabric instantly.
             </p>
-            <Link href="/studio" className="mt-6 inline-flex h-11 w-fit items-center rounded-md bg-brand px-6 text-sm font-semibold text-white shadow-sm hover:bg-brand/90">
+            <Link href="/studio" className="mt-5 inline-flex h-10 w-fit items-center rounded-md bg-brand px-5 text-sm font-semibold text-white shadow-sm hover:bg-brand/90">
               Try it now
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-1 p-1 [clip-path:polygon(15%_0,100%_0,100%_100%,0_100%)] sm:[clip-path:polygon(20%_0,100%_0,100%_100%,0_100%)]">
+          <div className="grid h-48 grid-cols-2 gap-1 p-1 [clip-path:polygon(15%_0,100%_0,100%_100%,0_100%)] sm:h-56 sm:[clip-path:polygon(20%_0,100%_0,100%_100%,0_100%)]">
             {[
               ["/products/polo-black/photo.jpg", "Essential Polo"],
               ["/products/contrast-trim-shirt/photo.jpg", "Contrast Trim Shirt"],
               ["/products/classic-white-tee/photo.jpg", "Classic Crew Tee"],
               ["/products/formal-shirt-grey/photo.jpg", "Classic Formal Shirt"],
             ].map(([src, alt]) => (
-              <div key={src} className="relative aspect-square overflow-hidden">
+              <div key={src} className="relative overflow-hidden">
                 <Image src={src} alt={alt} fill sizes="200px" className="object-cover" />
               </div>
             ))}
