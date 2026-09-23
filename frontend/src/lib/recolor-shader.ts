@@ -1,7 +1,7 @@
 // GLSL for the PixiJS live recolor mesh.
-// The garment is pre-isolated (offline) into its own grayscale+alpha "garment-layer" PNG,
-// stacked pixel-aligned on top of the untouched product photo. Only this layer is drawn
-// here; alpha 0 lets the original photo show through unmodified outside the garment.
+// The garment mask is pre-isolated (offline) into a feathered-alpha "garment-layer" PNG,
+// pixel-aligned with the untouched product photo (uBase). Only pixels under that mask are
+// touched here; alpha 0 lets the original photo show through unmodified outside the garment.
 
 export const RECOLOR_VERTEX = /* glsl */ `
 in vec2 aPosition;
@@ -16,46 +16,53 @@ void main() {
   vUV = aUV;
 }`;
 
-// Overlay blend: keeps shadow/highlight detail visible even on very dark or very light
-// target colors (black doesn't crush to a flat block, white doesn't blow out to it).
+// Lab color-swap: convert the source pixel to CIE Lab, keep its own L (lightness) untouched
+// and replace only a*/b* (color) with the target's — the same trick as Photoshop's "Color"
+// blend mode. Folds, shadows and fabric texture come straight from the photo's own
+// brightness; only hue/saturation change. Matches scripts/lab-color.mjs used offline to
+// pre-render the listing thumbnails, so the live canvas and the cached variants agree.
 export const RECOLOR_FRAGMENT = /* glsl */ `
 in vec2 vUV;
 out vec4 finalColor;
+uniform sampler2D uBase;
 uniform sampler2D uGarment;
-uniform vec3 uColor;
-uniform float uSourceLum; // this photo's own average garment brightness, 0-1
+uniform vec2 uTargetAB; // target color's Lab a*, b*
+
+float srgbToLinear(float v) { return v <= 0.04045 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4); }
+float linearToSrgb(float v) { return v <= 0.0031308 ? v * 12.92 : 1.055 * pow(v, 1.0 / 2.4) - 0.055; }
+float fwdLab(float t) { return t > 216.0 / 24389.0 ? pow(t, 1.0 / 3.0) : (24389.0 / 27.0 * t + 16.0) / 116.0; }
+float invLab(float t) { return t > 6.0 / 29.0 ? t * t * t : 3.0 * pow(6.0 / 29.0, 2.0) * (t - 4.0 / 29.0); }
+
+const vec3 D65 = vec3(0.95047, 1.0, 1.08883);
+
+float rgbToLabL(vec3 c) {
+  vec3 lin = vec3(srgbToLinear(c.r), srgbToLinear(c.g), srgbToLinear(c.b));
+  float Y = (lin.r * 0.2126729 + lin.g * 0.7151522 + lin.b * 0.072175) / D65.y;
+  return 116.0 * fwdLab(Y) - 16.0;
+}
+
+vec3 labToRgb(float L, float a, float b) {
+  float fy = (L + 16.0) / 116.0;
+  float fx = fy + a / 500.0;
+  float fz = fy - b / 200.0;
+  vec3 xyz = vec3(invLab(fx) * D65.x, invLab(fy) * D65.y, invLab(fz) * D65.z);
+  vec3 lin = vec3(
+    dot(xyz, vec3(3.2404542, -1.5371385, -0.4985314)),
+    dot(xyz, vec3(-0.969266, 1.8760108, 0.041556)),
+    dot(xyz, vec3(0.0556434, -0.2040259, 1.0572252))
+  );
+  lin = clamp(lin, 0.0, 1.0);
+  return vec3(linearToSrgb(lin.r), linearToSrgb(lin.g), linearToSrgb(lin.b));
+}
 
 void main() {
-  vec4 px = texture(uGarment, vUV);
-  if (px.a <= 0.0001) {
+  float mask = texture(uGarment, vUV).a;
+  if (mask <= 0.0001) {
     finalColor = vec4(0.0);
     return;
   }
-  float g = px.r / px.a; // un-premultiply grayscale shading (r == g == b)
-  // compress the shading range so neither black nor white targets clip to pure 0/1 —
-  // keeps soft, believable shadow depth at both ends instead of crushing to near-black
-  // blotches (white) or a flat block (black)
-  g = mix(0.22, 0.88, g);
-  vec3 low = 2.0 * uColor * g;
-  vec3 high = 1.0 - 2.0 * (1.0 - uColor) * (1.0 - g);
-  vec3 overlay = clamp(mix(low, high, vec3(step(0.5, g))), 0.0, 1.0);
-  // Pure overlay blend can't reach a target far from the source photo's own average
-  // brightness — a light target on a dark photo (or a dark target on a light photo) hits a
-  // ceiling/floor set by the source pixel's own brightness either way. Mix in some flat
-  // target color so extreme colors read correctly; scale that fraction by how far the
-  // target sits from mid-grey, so colors close to the original (already accurate from
-  // overlay alone) keep full fold/shadow realism while black/white/saturated ones give up
-  // some of it to actually look right.
-  float targetLum = dot(uColor, vec3(0.299, 0.587, 0.114));
-  float strength = mix(0.15, 0.65, abs(targetLum - 0.5) * 2.0);
-  // A light target needs much less of that flat-color help when the source photo is
-  // already naturally bright (overlay alone already lands close to it) — without this,
-  // a light target on an already-bright photo gets pushed past the real photo into a
-  // flat, overexposed block. Only light targets are dampened; dark targets and darker
-  // source photos (where overlay alone can't get there) are unaffected.
-  if (targetLum > 0.5) {
-    strength *= mix(1.0, 0.35, uSourceLum);
-  }
-  vec3 blended = mix(overlay, uColor, strength);
-  finalColor = vec4(blended * px.a, px.a);
+  vec3 src = texture(uBase, vUV).rgb;
+  float L = rgbToLabL(src);
+  vec3 recolored = labToRgb(L, uTargetAB.x, uTargetAB.y);
+  finalColor = vec4(recolored * mask, mask);
 }`;

@@ -20,7 +20,19 @@ type Props = {
   onReady?: (meta: GarmentMeta) => void;
 };
 
-const hexToRgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+const srgbToLinear = (v: number) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+const fwdLab = (t: number) => (t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116);
+
+/** Target color's Lab a/b chroma channels (D65) — the live shader keeps the source pixel's
+ * own L and replaces only these, see RECOLOR_FRAGMENT in recolor-shader.ts. */
+function hexToLabAB(h: string): [number, number] {
+  const [r, g, b] = [1, 3, 5].map((i) => srgbToLinear(parseInt(h.slice(i, i + 2), 16) / 255));
+  const X = (r * 0.4124564 + g * 0.3575761 + b * 0.1804375) / 0.95047;
+  const Y = r * 0.2126729 + g * 0.7151522 + b * 0.072175;
+  const Z = (r * 0.0193339 + g * 0.119192 + b * 0.9503041) / 1.08883;
+  const fx = fwdLab(X), fy = fwdLab(Y), fz = fwdLab(Z);
+  return [500 * (fx - fy), 200 * (fy - fz)];
+}
 
 function loadImage(url: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
@@ -31,10 +43,8 @@ function loadImage(url: string) {
   });
 }
 
-/** Bounding box of the garment's non-transparent pixels (for the studio's print-area
- * placement), and the garment's own average brightness (for the recolor shader's
- * light-target dampening — see uSourceLum in recolor-shader.ts). */
-function scanGarment(img: HTMLImageElement): { bbox: [number, number, number, number]; avgLum: number } {
+/** Bounding box of the garment's non-transparent pixels, for the studio's print-area placement. */
+function scanGarment(img: HTMLImageElement): { bbox: [number, number, number, number] } {
   const canvas = document.createElement("canvas");
   canvas.width = img.width;
   canvas.height = img.height;
@@ -42,7 +52,6 @@ function scanGarment(img: HTMLImageElement): { bbox: [number, number, number, nu
   ctx.drawImage(img, 0, 0);
   const { data } = ctx.getImageData(0, 0, img.width, img.height);
   let x0 = img.width, y0 = img.height, x1 = 0, y1 = 0;
-  let lumSum = 0, count = 0;
   for (let y = 0; y < img.height; y++) {
     for (let x = 0; x < img.width; x++) {
       const i = (y * img.width + x) * 4;
@@ -51,19 +60,14 @@ function scanGarment(img: HTMLImageElement): { bbox: [number, number, number, nu
         if (x > x1) x1 = x;
         if (y < y0) y0 = y;
         if (y > y1) y1 = y;
-        lumSum += data[i];
-        count++;
       }
     }
   }
-  return {
-    bbox: x1 > x0 ? [x0, y0, x1, y1] : [0, 0, img.width, img.height],
-    avgLum: count > 0 ? lumSum / count / 255 : 0.5,
-  };
+  return { bbox: x1 > x0 ? [x0, y0, x1, y1] : [0, 0, img.width, img.height] };
 }
 
-/** Live garment recolor: a grayscale "garment-layer" PNG, overlay-blended and stacked on
- * the untouched product photo. Changing a color is one uniform update + one render. */
+/** Live garment recolor: a feathered-alpha "garment-layer" mask, Lab color-swapped live
+ * against the untouched product photo. Changing a color is one uniform update + one render. */
 export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCanvas(
   { slug, topColor, className, onReady },
   ref
@@ -100,7 +104,7 @@ export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCa
         ]);
         if (cancelled) return;
         const W = modelImg.width, H = modelImg.height;
-        const { bbox, avgLum } = scanGarment(garmentImg);
+        const { bbox } = scanGarment(garmentImg);
         const meta: GarmentMeta = { width: W, height: H, bbox };
 
         app = new PIXI.Application();
@@ -133,10 +137,10 @@ export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCa
         const shader = PIXI.Shader.from({
           gl: { vertex: RECOLOR_VERTEX, fragment: RECOLOR_FRAGMENT },
           resources: {
+            uBase: PIXI.Texture.from(modelImg).source,
             uGarment: PIXI.Texture.from(garmentImg).source,
             recolor: {
-              uColor: { value: new Float32Array(3), type: "vec3<f32>" },
-              uSourceLum: { value: avgLum, type: "f32" },
+              uTargetAB: { value: new Float32Array(2), type: "vec2<f32>" },
             },
           },
         });
@@ -180,7 +184,7 @@ export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCa
     if (!shader || !mesh || !app) return;
     mesh.visible = topColor !== null;
     if (topColor !== null) {
-      shader.resources.recolor.uniforms.uColor.set(hexToRgb(topColor));
+      shader.resources.recolor.uniforms.uTargetAB.set(hexToLabAB(topColor));
     }
     app.render();
   }, [topColor, loading]);

@@ -2,81 +2,53 @@
 //
 //   node scripts/render-variants.mjs
 //
-// Reads model-photo.png + garment-layer.png (the same two assets the live overlay-blend
-// PixiJS shader uses, src/lib/recolor-shader.ts) and writes
-// public/products/<slug>/variants/<colorId>.webp so listing images match the live product
-// page exactly. In production this runs in a background worker and uploads to R2/S3.
+// Reads model-photo.png (untouched photo) + garment-layer.png (the cached segmentation mask,
+// see scripts/make-garment-layer.mjs) and writes public/products/<slug>/variants/<colorId>.webp.
+//
+// Recolor method: convert each garment pixel to CIE Lab, replace only a*/b* (color) with the
+// target color's a*/b*, and leave L* (that pixel's own lightness) untouched. This is the same
+// trick as Photoshop's "Color" blend mode — folds, shadows and fabric texture come straight
+// from the source photo's own brightness, only the hue/saturation changes. The mask's alpha is
+// already feathered (blurred) at generation time, so compositing by alpha here blends the
+// recolored garment into the untouched photo without a cutout look.
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 import { fileURLToPath } from 'node:url';
+import { rgbToLab, labToRgb, hexToLab } from './lab-color.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const catalog = JSON.parse(await fs.readFile(path.join(root, 'src/data/products.json'), 'utf8'));
 const colorHex = Object.fromEntries(catalog.colors.map((c) => [c.id, c.hex]));
 
-const hexToNorm = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
-
-// Same overlay blend as the fragment shader — operated on plain sRGB bytes (no gamma
-// linearization), since that's exactly what the GPU's texture sample gives it too.
-function overlayBlend(colorNorm, g) {
-  const low = 2 * colorNorm * g;
-  const high = 1 - 2 * (1 - colorNorm) * (1 - g);
-  return g < 0.5 ? low : high;
-}
-
-const luminance = ([r, g, b]) => 0.299 * r + 0.587 * g + 0.114 * b;
-// Same adaptive strength as the shader: colors far from mid-grey (black, white, saturated
-// hues) need some flat color mixed in to actually read as that color on a photo whose own
-// brightness sits far from that target; colors close to the original stay pure overlay.
-// A light target additionally gets dampened on a photo that's already naturally bright —
-// overlay alone already lands close to it there, so the same fixed light-target strength
-// would overshoot into a flat, overexposed block (sourceLum, computed per photo below).
-function blendStrength(colorNorm, sourceLum) {
-  const targetLum = luminance(colorNorm);
-  let strength = 0.15 + (0.65 - 0.15) * Math.abs(targetLum - 0.5) * 2;
-  if (targetLum > 0.5) strength *= 1 - 0.65 * sourceLum;
-  return strength;
-}
-
 for (const product of catalog.products) {
   const dir = path.join(root, 'public/products', product.slug);
   const { data: base, info } = await sharp(path.join(dir, 'model-photo.png')).removeAlpha().raw().toBuffer({ resolveWithObject: true });
   const W = info.width, H = info.height, n = W * H;
+  // Only the mask's alpha channel is used — the garment's own color per pixel is read straight
+  // from the untouched base photo, not from the layer's stored grayscale.
   const { data: garment } = await sharp(path.join(dir, 'garment-layer.png')).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-
-  let sourceLumSum = 0, sourceLumCount = 0;
-  for (let p = 0; p < n; p++) {
-    if (garment[p * 4 + 3] > 128) {
-      sourceLumSum += garment[p * 4] / 255;
-      sourceLumCount++;
-    }
-  }
-  const sourceLum = sourceLumCount > 0 ? sourceLumSum / sourceLumCount : 0.5;
 
   await fs.mkdir(path.join(dir, 'variants'), { recursive: true });
   for (const colorId of product.colors) {
     if (colorId === product.originalColor) continue;
-    const colorNorm = hexToNorm(colorHex[colorId]);
-    const strength = blendStrength(colorNorm, sourceLum);
+    const [, targetA, targetB] = hexToLab(colorHex[colorId]);
     const out = Buffer.alloc(n * 3);
     for (let p = 0; p < n; p++) {
       const a = garment[p * 4 + 3] / 255;
+      const r0 = base[p * 3], g0 = base[p * 3 + 1], b0 = base[p * 3 + 2];
       if (a <= 0.03) {
-        out[p * 3] = base[p * 3];
-        out[p * 3 + 1] = base[p * 3 + 1];
-        out[p * 3 + 2] = base[p * 3 + 2];
+        out[p * 3] = r0;
+        out[p * 3 + 1] = g0;
+        out[p * 3 + 2] = b0;
         continue;
       }
-      const g = 0.22 + 0.66 * (garment[p * 4] / 255); // matches mix(0.22, 0.88, g) in the shader
-      for (let ch = 0; ch < 3; ch++) {
-        const overlay = Math.min(1, Math.max(0, overlayBlend(colorNorm[ch], g)));
-        const blended = overlay * (1 - strength) + colorNorm[ch] * strength;
-        const baseNorm = base[p * 3 + ch] / 255;
-        const v = baseNorm * (1 - a) + blended * a;
-        out[p * 3 + ch] = Math.round(Math.min(1, Math.max(0, v)) * 255);
-      }
+      const [L] = rgbToLab(r0, g0, b0);
+      const [rr, rg, rb] = labToRgb(L, targetA, targetB);
+      out[p * 3] = Math.round(r0 * (1 - a) + rr * a);
+      out[p * 3 + 1] = Math.round(g0 * (1 - a) + rg * a);
+      out[p * 3 + 2] = Math.round(b0 * (1 - a) + rb * a);
     }
     await sharp(out, { raw: { width: W, height: H, channels: 3 } }).webp({ quality: 90 }).toFile(path.join(dir, 'variants', `${colorId}.webp`));
     console.log(`${product.slug}/${colorId}.webp`);
