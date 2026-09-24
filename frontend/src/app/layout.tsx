@@ -23,8 +23,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Suspense fallback={null}>
             <RouteProgress />
           </Suspense>
-          <TrustTicker />
-          <SiteHeader />
+          <div className="sticky top-0 z-40">
+            <TrustTicker />
+            <SiteHeader />
+          </div>
           <main className="flex-1">{children}</main>
           <SiteFooter />
         </Providers>
