@@ -4,7 +4,8 @@ import { NeedsGrid } from "@/components/needs-grid";
 
 const CLIENTS = [
   "OMS", "Morgan Stanley", "Mullenlowe Lintas Group", "NDTS India", "Aurum", "Western", "Hoshizaki",
-  "Cutis Healthcare", "Essens Renewable", "Supreme Allied Services", "Tubestar", "Dry Chem", "Walplast", "Aurum PropTech",
+  "Antony Waste", "Chemco", "Lupin", "Uniclan Healthcare", "Glocutis Healthcare", "Essens Renewable",
+  "Supreme Allied Services", "Tubestar", "Dry Chem", "Walplast", "Aurum PropTech",
 ];
 
 const WHATSAPP = "https://wa.me/919892297764?text=Hi%2C%20I%20have%20a%20requirement";
