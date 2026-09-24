@@ -34,7 +34,7 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center justify-center gap-6 sm:justify-between">
-            <div className="relative hidden aspect-[3/4] w-[180px] shrink-0 overflow-hidden rounded-2xl bg-muted sm:block">
+            <div className="relative hidden aspect-[3/4] w-[180px] shrink-0 sm:block">
               <Image src="/shirt2.png" alt="COTTSON shirt" fill sizes="180px" className="object-cover" />
             </div>
 
@@ -63,7 +63,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="relative hidden aspect-[3/4] w-[180px] shrink-0 overflow-hidden rounded-2xl bg-muted sm:block">
+            <div className="relative hidden aspect-[3/4] w-[180px] shrink-0 sm:block">
               <Image src="/shirt1.png" alt="COTTSON shirt" fill sizes="180px" className="object-cover" />
             </div>
           </div>
