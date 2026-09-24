@@ -101,7 +101,15 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
 
         {/* Right: title, design studio CTA, trim color, sizes, price + add to cart */}
         <div className="p-6 sm:p-8">
-          <h1 className="text-3xl font-bold text-brand">{product.title}</h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-3xl font-bold text-brand">{product.title}</h1>
+            <Link
+              href="/studio"
+              className="flex shrink-0 items-center gap-1.5 rounded-lg border border-brand px-3 py-2 text-xs font-semibold text-brand hover:bg-muted"
+            >
+              <Palette className="size-3.5" /> Design Studio
+            </Link>
+          </div>
           <p className="mt-2 text-sm text-muted-foreground">{product.description}</p>
 
           <Link
