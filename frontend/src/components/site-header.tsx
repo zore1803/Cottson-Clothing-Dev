@@ -13,6 +13,7 @@ const NAV = [
   ["Home", "/"],
   ["About Us", "/about"],
   ["Products", "/products"],
+  ["Mockup", "/mockup"],
   ["Customisation", "/studio"],
   ["Clients", "/clients"],
   ["Resources", "/resources"],
