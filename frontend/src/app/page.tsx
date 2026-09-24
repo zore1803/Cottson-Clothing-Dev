@@ -78,7 +78,11 @@ export default function HomePage() {
           >
             <ChevronLeft className="size-4" />
           </button>
-          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 py-1 [scrollbar-width:none]" />
+          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 py-1 [scrollbar-width:none]">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <ImageSlot key={i} className="aspect-[3/4] w-40 shrink-0 snap-start sm:w-44" />
+            ))}
+          </div>
           <button
             type="button"
             aria-label="Next"
