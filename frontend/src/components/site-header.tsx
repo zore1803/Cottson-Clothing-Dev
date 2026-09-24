@@ -66,9 +66,9 @@ export function SiteHeader() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Chat on WhatsApp"
-            className="grid size-10 place-items-center hover:opacity-80"
+            className="grid size-10 place-items-center overflow-hidden hover:opacity-80"
           >
-            <Image src="/whatsapp.png" alt="WhatsApp" width={52} height={52} className="size-[52px]" />
+            <Image src="/whatsapp.png" alt="WhatsApp" width={40} height={40} className="size-10 scale-125" />
           </a>
           <Link href="/cart" className="relative grid size-10 place-items-center hover:opacity-80" aria-label={`Basket, ${count} items`}>
             <Image src="/cart.png" alt="Cart" width={40} height={40} className="size-10" />
