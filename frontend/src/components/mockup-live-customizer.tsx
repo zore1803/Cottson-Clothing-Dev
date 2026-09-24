@@ -22,23 +22,44 @@ const SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"];
 const MIN_ORDER = 25;
 const UNIT_PRICE = 499;
 
+function TrimPhoto({ preset }: { preset: (typeof PRESETS)[number] }) {
+  if (!preset.photo) {
+    return (
+      <div className="grid size-full place-items-center border-2 border-dashed bg-muted text-muted-foreground">
+        <div className="text-center">
+          <ImageIcon className="mx-auto size-6" strokeWidth={1.5} />
+          <p className="mt-2 text-xs">{preset.name} photo coming soon</p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <Image src={preset.photo} alt={`Essential Polo — ${preset.name}`} fill sizes="600px" className="object-contain" />
+  );
+}
+
 export function MockupLiveCustomizer() {
   const [selected, setSelected] = useState<(typeof PRESETS)[number]>(PRESETS[0]);
-  // What's actually drawn lags `selected` by one blur cycle: a blurred overlay covers the
-  // swap, the new photo loads in behind it, then the blur clears to reveal it sharp.
-  const [displayed, setDisplayed] = useState<(typeof PRESETS)[number]>(PRESETS[0]);
-  const [blurred, setBlurred] = useState(false);
-  const [sizes, setSizes] = useState<Record<string, number>>({});
+  // The base photo stays put; `incoming` sweeps in over it left-to-right behind a single
+  // soft wave band, then becomes the new base once the sweep finishes.
+  const [base, setBase] = useState<(typeof PRESETS)[number]>(PRESETS[0]);
+  const [incoming, setIncoming] = useState<(typeof PRESETS)[number] | null>(null);
+  const [swept, setSwept] = useState(false);
 
   const selectPreset = (p: (typeof PRESETS)[number]) => {
     if (p.hex === selected.hex) return;
     setSelected(p);
-    setBlurred(true);
+    setIncoming(p);
+    setSwept(false);
+    requestAnimationFrame(() => requestAnimationFrame(() => setSwept(true)));
     window.setTimeout(() => {
-      setDisplayed(p);
-      requestAnimationFrame(() => requestAnimationFrame(() => setBlurred(false)));
-    }, 200);
+      setBase(p);
+      setIncoming(null);
+      setSwept(false);
+    }, 650);
   };
+
+  const [sizes, setSizes] = useState<Record<string, number>>({});
 
   const totalQty = Object.values(sizes).reduce((n, q) => n + q, 0);
   const setSize = (s: string, qty: number) => setSizes((prev) => ({ ...prev, [s]: Math.max(0, qty) }));
@@ -56,38 +77,24 @@ export function MockupLiveCustomizer() {
       {/* Left: big product photo with carousel-style controls (single view for now) */}
       <div className="relative bg-muted">
         <div className="relative aspect-[3/4] w-full overflow-hidden">
-          {displayed.photo ? (
-            <Image
-              key={displayed.photo}
-              src={displayed.photo}
-              alt={`Essential Polo — ${displayed.name}`}
-              fill
-              sizes="600px"
-              className={cn(
-                "object-contain transition-[filter,opacity,transform] duration-300 ease-out",
-                blurred ? "scale-105 opacity-60 blur-xl" : "scale-100 opacity-100 blur-0"
-              )}
-            />
-          ) : (
+          <TrimPhoto preset={base} />
+
+          {incoming && (
             <div
-              className={cn(
-                "grid size-full place-items-center border-2 border-dashed text-muted-foreground transition-[filter,opacity] duration-300 ease-out",
-                blurred ? "opacity-60 blur-xl" : "opacity-100 blur-0"
-              )}
+              className="absolute inset-0 transition-[clip-path] duration-[650ms] ease-in-out"
+              style={{ clipPath: `inset(0 ${swept ? "0%" : "100%"} 0 0)` }}
             >
-              <div className="text-center">
-                <ImageIcon className="mx-auto size-6" strokeWidth={1.5} />
-                <p className="mt-2 text-xs">{displayed.name} photo coming soon</p>
-              </div>
+              <TrimPhoto preset={incoming} />
             </div>
           )}
-          {/* Extra opaque wash on top while swapping, so the transition reads as one solid step */}
-          <div
-            className={cn(
-              "pointer-events-none absolute inset-0 bg-background/40 backdrop-blur-md transition-opacity duration-300",
-              blurred ? "opacity-100" : "opacity-0"
-            )}
-          />
+
+          {/* A single soft wave band rides the sweep's leading edge, instead of blurring the whole photo */}
+          {incoming && (
+            <div
+              className="pointer-events-none absolute inset-y-0 w-16 -translate-x-1/2 bg-gradient-to-r from-transparent via-background/70 to-transparent blur-md transition-[left] duration-[650ms] ease-in-out"
+              style={{ left: swept ? "100%" : "0%" }}
+            />
+          )}
         </div>
         <button
           type="button"
