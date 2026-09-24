@@ -110,6 +110,53 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* T-Shirts, Polos & Shirts for Your Team — logo mark + product carousel (added later) */}
+      <section className="mx-auto max-w-7xl px-4 pt-20 text-center">
+        <div className="mx-auto grid size-14 place-items-center rounded-full border-2 border-dashed text-muted-foreground">
+          <ImageIcon className="size-6" strokeWidth={1.5} />
+        </div>
+        <h2 className="mt-6 text-3xl font-bold tracking-tight text-brand sm:text-4xl">T-Shirts, Polos &amp; Shirts for Your Team</h2>
+        <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
+          Built for corporate events, office staff and team outings. Find your fabric and order a free swatch before
+          you commit.
+        </p>
+
+        <div className="relative mt-10">
+          <button
+            type="button"
+            aria-label="Previous"
+            className="absolute -left-4 top-1/2 z-10 grid size-9 -translate-y-1/2 place-items-center rounded-full border bg-background shadow-sm hover:bg-muted"
+          >
+            <ChevronLeft className="size-4" />
+          </button>
+          <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 py-1 text-left [scrollbar-width:none]">
+            {["Edge", "Stride", "Cosmo", "Evolve", "Elite"].map((name, i) => (
+              <div key={name} className="relative w-52 shrink-0 snap-start">
+                {i === 4 && (
+                  <span className="absolute left-3 top-3 z-10 rounded-full bg-brand-accent px-2.5 py-1 text-[11px] font-semibold text-white">
+                    Best Seller
+                  </span>
+                )}
+                <ImageSlot className="aspect-[3/4] w-full" />
+                <p className="mt-3 text-sm font-medium text-brand">{name} - Full Sleeve Formal Shirt</p>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            aria-label="Next"
+            className="absolute -right-4 top-1/2 z-10 grid size-9 -translate-y-1/2 place-items-center rounded-full border bg-background shadow-sm hover:bg-muted"
+          >
+            <ChevronRight className="size-4" />
+          </button>
+        </div>
+      </section>
+
+      {/* Trusted by 250+ companies across Mumbai */}
+      <section className="mx-auto max-w-7xl px-4 pt-20 text-center">
+        <h2 className="text-3xl font-bold tracking-tight text-brand sm:text-4xl">Trusted by 250+ companies across Mumbai</h2>
+      </section>
     </>
   );
 }
