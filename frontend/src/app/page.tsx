@@ -27,12 +27,12 @@ export default function HomePage() {
     <>
       {/* Hero: headline centered between two flanking product photos (added later) */}
       <section className="relative isolate overflow-hidden bg-background pb-14 pt-14">
-        {/* Shirt photos bleed to the viewport edges, sitting behind/beside the centered text */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[260px] lg:block xl:w-[340px]">
-          <Image src="/shirt2.png" alt="COTTSON shirt" fill sizes="340px" className="object-cover object-right" />
+        {/* Shirt photos bleed to the viewport edges, staggered like the reference (not aligned to the same top) */}
+        <div className="pointer-events-none absolute left-0 top-24 hidden w-[260px] lg:block xl:w-[340px]">
+          <Image src="/shirt2.png" alt="COTTSON shirt" width={399} height={417} sizes="340px" className="h-auto w-full object-contain" />
         </div>
-        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[200px] lg:block xl:w-[260px]">
-          <Image src="/shirt1.png" alt="COTTSON shirt" fill sizes="260px" className="object-cover object-left" />
+        <div className="pointer-events-none absolute right-0 top-0 hidden w-[200px] lg:block xl:w-[260px]">
+          <Image src="/shirt1.png" alt="COTTSON shirt" width={368} height={417} sizes="260px" className="h-auto w-full object-contain" />
         </div>
 
         <div className="mx-auto max-w-7xl px-4">
