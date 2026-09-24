@@ -61,7 +61,9 @@ export default function HomePage() {
               </div>
             </div>
 
-            <ImageSlot className="hidden aspect-[3/4] w-[180px] shrink-0 sm:grid" />
+            <div className="relative hidden aspect-[3/4] w-[180px] shrink-0 overflow-hidden rounded-2xl bg-muted sm:block">
+              <Image src="/shirt1.png" alt="COTTSON shirt" fill sizes="180px" className="object-cover" />
+            </div>
           </div>
 
           <ImageSlot className="mx-auto mt-8 aspect-[4/3] h-[180px] rotate-180" />
