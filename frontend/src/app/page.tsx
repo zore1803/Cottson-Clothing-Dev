@@ -92,6 +92,24 @@ export default function HomePage() {
           </button>
         </div>
       </section>
+
+      {/* Real Teams. Real Events. Real Cottson. — two scrollable rows of client/event photos (added later) */}
+      <section className="mx-auto max-w-7xl px-4 pt-20">
+        <h2 className="text-center text-3xl font-bold tracking-tight text-brand sm:text-4xl">
+          Real Teams. Real Events. Real Cottson.
+        </h2>
+        <p className="mt-3 text-center text-muted-foreground">Trusted by Mumbai&apos;s leading companies.</p>
+
+        <div className="mt-8 space-y-3">
+          {[0, 1].map((row) => (
+            <div key={row} className="flex gap-3 overflow-x-auto px-1 py-1 [scrollbar-width:none]">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <ImageSlot key={i} className="aspect-[4/3] w-64 shrink-0 sm:w-72" />
+              ))}
+            </div>
+          ))}
+        </div>
+      </section>
     </>
   );
 }
