@@ -24,7 +24,21 @@ const UNIT_PRICE = 499;
 
 export function MockupLiveCustomizer() {
   const [selected, setSelected] = useState<(typeof PRESETS)[number]>(PRESETS[0]);
+  // What's actually drawn lags `selected` by one blur cycle: a blurred overlay covers the
+  // swap, the new photo loads in behind it, then the blur clears to reveal it sharp.
+  const [displayed, setDisplayed] = useState<(typeof PRESETS)[number]>(PRESETS[0]);
+  const [blurred, setBlurred] = useState(false);
   const [sizes, setSizes] = useState<Record<string, number>>({});
+
+  const selectPreset = (p: (typeof PRESETS)[number]) => {
+    if (p.hex === selected.hex) return;
+    setSelected(p);
+    setBlurred(true);
+    window.setTimeout(() => {
+      setDisplayed(p);
+      requestAnimationFrame(() => requestAnimationFrame(() => setBlurred(false)));
+    }, 200);
+  };
 
   const totalQty = Object.values(sizes).reduce((n, q) => n + q, 0);
   const setSize = (s: string, qty: number) => setSizes((prev) => ({ ...prev, [s]: Math.max(0, qty) }));
@@ -41,24 +55,39 @@ export function MockupLiveCustomizer() {
     <div className="grid gap-10 overflow-hidden rounded-2xl border lg:grid-cols-2">
       {/* Left: big product photo with carousel-style controls (single view for now) */}
       <div className="relative bg-muted">
-        <div className="relative aspect-[3/4] w-full">
-          {selected.photo ? (
+        <div className="relative aspect-[3/4] w-full overflow-hidden">
+          {displayed.photo ? (
             <Image
-              key={selected.photo}
-              src={selected.photo}
-              alt={`Essential Polo — ${selected.name}`}
+              key={displayed.photo}
+              src={displayed.photo}
+              alt={`Essential Polo — ${displayed.name}`}
               fill
               sizes="600px"
-              className="animate-in fade-in object-contain duration-200"
+              className={cn(
+                "object-contain transition-[filter,opacity,transform] duration-300 ease-out",
+                blurred ? "scale-105 opacity-60 blur-xl" : "scale-100 opacity-100 blur-0"
+              )}
             />
           ) : (
-            <div className="grid size-full place-items-center border-2 border-dashed text-muted-foreground">
+            <div
+              className={cn(
+                "grid size-full place-items-center border-2 border-dashed text-muted-foreground transition-[filter,opacity] duration-300 ease-out",
+                blurred ? "opacity-60 blur-xl" : "opacity-100 blur-0"
+              )}
+            >
               <div className="text-center">
                 <ImageIcon className="mx-auto size-6" strokeWidth={1.5} />
-                <p className="mt-2 text-xs">{selected.name} photo coming soon</p>
+                <p className="mt-2 text-xs">{displayed.name} photo coming soon</p>
               </div>
             </div>
           )}
+          {/* Extra opaque wash on top while swapping, so the transition reads as one solid step */}
+          <div
+            className={cn(
+              "pointer-events-none absolute inset-0 bg-background/40 backdrop-blur-md transition-opacity duration-300",
+              blurred ? "opacity-100" : "opacity-0"
+            )}
+          />
         </div>
         <button
           type="button"
@@ -101,7 +130,7 @@ export function MockupLiveCustomizer() {
               <button
                 key={p.hex}
                 type="button"
-                onClick={() => setSelected(p)}
+                onClick={() => selectPreset(p)}
                 aria-label={p.name}
                 title={p.name}
                 className={cn(
