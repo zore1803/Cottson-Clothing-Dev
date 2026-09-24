@@ -9,7 +9,7 @@ import type Konva from "konva";
 import { PRODUCTS, colorById, getProduct, formatPrice, type GarmentMeta } from "@/lib/catalog";
 import { useCart } from "@/lib/cart-store";
 import { CUSTOMIZATION_FEE } from "@/lib/pricing";
-import { RecolorCanvas, type RecolorHandle } from "@/components/recolor-canvas";
+import { VariantImage, type VariantHandle } from "@/components/variant-image";
 import { ColorSwatches } from "@/components/color-swatches";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,7 @@ export function StudioEditor() {
   const [pickedSide, setPickedSide] = useState<"front" | "back">("front");
   const [showStartModal, setShowStartModal] = useState(true);
 
-  const recolorRef = useRef<RecolorHandle>(null);
+  const recolorRef = useRef<VariantHandle>(null);
   const stageRef = useRef<Konva.Stage | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -119,7 +119,7 @@ export function StudioEditor() {
 
   const update = (el: DesignElement) => setElements((els) => els.map((x) => (x.id === el.id ? el : x)));
 
-  /** Garment (PixiJS canvas) + design (Konva stage) flattened at full photo resolution */
+  /** Garment (pre-rendered color variant) + design (Konva stage) flattened at full photo resolution */
   const compose = (maxWidth?: number) => {
     const garment = recolorRef.current?.getCanvas();
     const stage = stageRef.current;
@@ -186,11 +186,11 @@ export function StudioEditor() {
     <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 lg:grid-cols-[1fr_380px]">
       <div>
         <div ref={boxRef} className="relative mx-auto w-full max-w-[640px] overflow-hidden rounded-2xl">
-          <RecolorCanvas
+          <VariantImage
             key={product.slug}
             ref={recolorRef}
-            slug={product.slug}
-            topColor={colorId === product.originalColor ? null : color.hex}
+            product={product}
+            colorId={colorId}
             onReady={setMeta}
           />
           {meta && displayWidth > 0 && (

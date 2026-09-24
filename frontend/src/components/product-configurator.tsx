@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { type Product, colorById, formatPrice } from "@/lib/catalog";
 import { useCart } from "@/lib/cart-store";
 import { bulkDiscount, garmentUnitPrice } from "@/lib/pricing";
-import { RecolorCanvas } from "@/components/recolor-canvas";
+import { VariantImage } from "@/components/variant-image";
 import { ColorSwatches } from "@/components/color-swatches";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -37,11 +37,7 @@ export function ProductConfigurator({ product, initialColor }: { product: Produc
   return (
     <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 lg:grid-cols-[1.1fr_1fr]">
       <div className="lg:sticky lg:top-28 lg:self-start">
-        <RecolorCanvas
-          slug={product.slug}
-          topColor={colorId === product.originalColor ? null : color.hex}
-          className="rounded-2xl"
-        />
+        <VariantImage product={product} colorId={colorId} className="rounded-2xl" />
         <p className="mt-2 text-center text-xs text-muted-foreground">Live preview on the real garment</p>
       </div>
 

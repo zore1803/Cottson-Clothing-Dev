@@ -1,6 +1,6 @@
 # COTTSON frontend
 
-Custom-apparel frontend: catalog, product pages with live garment recoloring, a design studio for logos/text, cart and checkout.
+Custom-apparel frontend: catalog, product pages with pre-rendered garment color variants, a design studio for logos/text, cart and checkout.
 
 ## Run
 
@@ -15,7 +15,7 @@ npm run dev                      # http://localhost:3000
 | --- | --- |
 | App | Next.js 16 (App Router) + TypeScript, SSR/ISR |
 | UI | Tailwind CSS v4 + shadcn/ui |
-| Live recolor | **PixiJS v8** mesh + custom shader (`src/lib/recolor-shader.ts`, `src/components/recolor-canvas.tsx`) |
+| Color variants | Pre-rendered per-color photos, cross-faded on swap (`src/components/variant-image.tsx`) |
 | Design studio | Konva / react-konva (`src/components/studio/`) |
 | State | Zustand (cart, persisted), TanStack Query (ready for API data) |
 | Catalog | `src/data/products.json` via `src/lib/catalog.ts` (swap for Medusa Store API) |
@@ -32,7 +32,7 @@ npm run render:variants                                        # -> variants/<co
 
 - `mask.png`: R = top garment, G = logo/print (never recolored), B = trousers.
 - `meta.json`: shading stats per part (median brightness, contrast, highlight peak, dark-fabric flag).
-- Listing and home pages show the **pre-rendered** variants (CDN-cacheable); product pages and the studio recolor **live** with PixiJS. Both use the same math.
+- Every page — listings, product pages, and the studio — shows the same **pre-rendered** variants (CDN-cacheable); switching color just swaps and cross-fades to a different variant image.
 
 Today `prepare-product.mjs` runs SegFormer (clothes) with transformers.js on the CPU. In production it becomes the Python SAM 2 GPU worker (FastAPI + Modal/RunPod) writing the same two files to R2/S3.
 
