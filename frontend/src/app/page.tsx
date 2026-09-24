@@ -3,6 +3,7 @@ import { ImageIcon, MessageSquare, ChevronLeft, ChevronRight } from "lucide-reac
 import { NeedsGrid } from "@/components/needs-grid";
 import { DesignShowcase } from "@/components/design-showcase";
 import { StatsRow } from "@/components/stats-row";
+import { FaqAccordion } from "@/components/faq-accordion";
 
 const CLIENTS = [
   "OMS", "Morgan Stanley", "Mullenlowe Lintas Group", "NDTS India", "Aurum", "Western", "Hoshizaki",
@@ -201,6 +202,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <FaqAccordion />
     </>
   );
 }
