@@ -26,10 +26,7 @@ export default function HomePage() {
             <ImageSlot className="hidden aspect-[3/4] w-[180px] shrink-0 sm:grid" />
 
             <div className="mt-6 w-full max-w-2xl text-center sm:mt-0">
-              <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium text-brand">
-                <span className="size-1.5 rounded-full bg-brand-accent" /> Custom corporate clothing
-              </span>
-              <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-brand sm:text-5xl">
+              <h1 className="text-3xl font-bold leading-tight tracking-tight text-brand sm:text-5xl">
                 Custom Corporate Clothing for Mumbai Companies<span className="text-brand-accent">.</span>
               </h1>
               <p className="mx-auto mt-4 max-w-lg text-sm text-muted-foreground sm:text-base">
