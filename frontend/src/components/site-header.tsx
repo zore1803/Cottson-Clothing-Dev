@@ -66,12 +66,12 @@ export function SiteHeader() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Chat on WhatsApp"
-            className="grid size-10 place-items-center rounded-full hover:opacity-90"
+            className="grid size-10 place-items-center rounded-full bg-muted hover:bg-muted/70"
           >
-            <Image src="/whatsapp.png" alt="WhatsApp" width={40} height={40} className="size-10" />
+            <Image src="/whatsapp.png" alt="WhatsApp" width={22} height={22} className="size-[22px]" />
           </a>
-          <Link href="/cart" className="relative grid size-10 place-items-center rounded-full hover:opacity-90" aria-label={`Basket, ${count} items`}>
-            <Image src="/cart.png" alt="Cart" width={40} height={40} className="size-10" />
+          <Link href="/cart" className="relative grid size-10 place-items-center rounded-full bg-muted hover:bg-muted/70" aria-label={`Basket, ${count} items`}>
+            <Image src="/cart.png" alt="Cart" width={22} height={22} className="size-[22px]" />
             {count > 0 && (
               <span className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-brand-accent text-[9px] font-semibold text-white">
                 {count}
