@@ -4,7 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
-import { ShoppingBag } from "lucide-react";
 import { useCart, cartCount } from "@/lib/cart-store";
 import { cn } from "@/lib/utils";
 
@@ -71,8 +70,8 @@ export function SiteHeader() {
           >
             <Image src="/whatsapp.png" alt="WhatsApp" width={40} height={40} className="size-10" />
           </a>
-          <Link href="/cart" className="relative grid size-10 place-items-center rounded-full bg-brand text-white hover:bg-brand/90" aria-label={`Basket, ${count} items`}>
-            <ShoppingBag className="size-4" />
+          <Link href="/cart" className="relative grid size-10 place-items-center rounded-full hover:opacity-90" aria-label={`Basket, ${count} items`}>
+            <Image src="/cart.png" alt="Cart" width={40} height={40} className="size-10" />
             {count > 0 && (
               <span className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-brand-accent text-[9px] font-semibold text-white">
                 {count}
