@@ -41,7 +41,7 @@ export default function HomePage() {
                 <br />
                 for Mumbai Companies<span className="text-brand-accent">.</span>
               </h1>
-              <p className="mx-auto mt-4 max-w-lg text-sm text-muted-foreground sm:text-base">
+              <p className="mx-auto mt-4 max-w-2xl text-sm text-muted-foreground sm:whitespace-nowrap sm:text-base">
                 Branded T-shirts, polos &amp; shirts for events, office staff &amp; team outings. MOQ 25 pieces.
                 Delivered in 7–10 days.
               </p>
