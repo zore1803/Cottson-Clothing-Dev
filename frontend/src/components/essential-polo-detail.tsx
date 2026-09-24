@@ -50,15 +50,8 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <div className="text-sm text-muted-foreground">
-        <Link href="/products" className="hover:underline">
-          Shop
-        </Link>{" "}
-        / {product.category}
-      </div>
-
-      <div className="mt-6 grid gap-10 overflow-hidden rounded-2xl border lg:grid-cols-2">
+    <div className="mx-auto max-w-6xl px-4 py-6">
+      <div className="grid gap-10 overflow-hidden rounded-2xl border lg:grid-cols-2">
         {/* Left: photo with the wave-sweep color swap */}
         <div className="relative bg-muted">
           <div className="relative aspect-square w-full overflow-hidden">
