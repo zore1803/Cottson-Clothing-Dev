@@ -27,48 +27,50 @@ export default function HomePage() {
     <>
       {/* Hero: headline centered between two flanking product photos (added later) */}
       <section className="relative isolate overflow-hidden bg-background pb-14 pt-14">
-        <div className="mx-auto max-w-7xl px-4">
-          <div className="mx-auto grid max-w-xs grid-cols-2 gap-3 sm:hidden">
-            <ImageSlot className="aspect-[3/4] w-full" />
-            <ImageSlot className="aspect-[3/4] w-full" />
-          </div>
+        {/* Shirt photos bleed to the viewport edges, sitting behind/beside the centered text */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[260px] lg:block xl:w-[340px]">
+          <Image src="/shirt2.png" alt="COTTSON shirt" fill sizes="340px" className="object-cover object-right" />
+        </div>
+        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[260px] lg:block xl:w-[340px]">
+          <Image src="/shirt1.png" alt="COTTSON shirt" fill sizes="340px" className="object-cover object-left" />
+        </div>
 
-          <div className="flex items-center justify-center gap-6 sm:justify-between">
-            <div className="relative hidden aspect-[3/4] w-[180px] shrink-0 sm:block">
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="mx-auto grid max-w-xs grid-cols-2 gap-3 lg:hidden">
+            <div className="relative aspect-[3/4] w-full">
               <Image src="/shirt2.png" alt="COTTSON shirt" fill sizes="180px" className="object-cover" />
             </div>
-
-            <div className="mt-6 w-full max-w-3xl text-center sm:mt-0">
-              <h1 className="text-3xl font-bold leading-tight tracking-tight text-brand sm:text-5xl">
-                Custom Corporate Clothing
-                <br />
-                for Mumbai Companies<span className="text-brand-accent">.</span>
-              </h1>
-              <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground sm:text-base">
-                Branded T-shirts, polos &amp; shirts for events, office staff &amp; team outings.
-                <br /> MOQ 25 pieces. Delivered in 7–10 days.
-              </p>
-              <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-                <a
-                  href={WHATSAPP}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="grid h-11 place-items-center rounded-full bg-brand px-7 text-sm font-semibold text-white shadow-sm hover:bg-brand/90"
-                >
-                  Talk To Our Team
-                </a>
-                <Link href="/products" className="grid h-11 place-items-center rounded-full border border-brand px-7 text-sm font-semibold text-brand hover:bg-muted">
-                  View Products
-                </Link>
-              </div>
-            </div>
-
-            <div className="relative hidden aspect-[3/4] w-[180px] shrink-0 sm:block">
+            <div className="relative aspect-[3/4] w-full">
               <Image src="/shirt1.png" alt="COTTSON shirt" fill sizes="180px" className="object-cover" />
             </div>
           </div>
 
-          <ImageSlot className="mx-auto mt-8 aspect-[4/3] h-[180px] rotate-180" />
+          <div className="relative mx-auto mt-6 max-w-2xl text-center lg:mt-0">
+            <h1 className="text-3xl font-bold leading-tight tracking-tight text-brand sm:text-5xl">
+              Custom Corporate Clothing
+              <br />
+              for Mumbai Companies<span className="text-brand-accent">.</span>
+            </h1>
+            <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground sm:text-base">
+              Branded T-shirts, polos &amp; shirts for events, office staff &amp; team outings.
+              <br /> MOQ 25 pieces. Delivered in 7–10 days.
+            </p>
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+              <a
+                href={WHATSAPP}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="grid h-11 place-items-center rounded-full bg-brand px-7 text-sm font-semibold text-white shadow-sm hover:bg-brand/90"
+              >
+                Talk To Our Team
+              </a>
+              <Link href="/products" className="grid h-11 place-items-center rounded-full border border-brand px-7 text-sm font-semibold text-brand hover:bg-muted">
+                View Products
+              </Link>
+            </div>
+          </div>
+
+          <ImageSlot className="relative mx-auto mt-8 aspect-[4/3] h-[180px] rotate-180" />
         </div>
 
         <a
