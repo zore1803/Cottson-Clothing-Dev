@@ -119,8 +119,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <DesignShowcase />
-
       {/* T-Shirts, Polos & Shirts for Your Team — logo mark + product carousel (added later) */}
       <section className="mx-auto max-w-7xl px-4 pt-20 text-center">
         <div className="mx-auto grid size-14 place-items-center rounded-full border-2 border-dashed text-muted-foreground">
@@ -176,6 +174,8 @@ export default function HomePage() {
       </section>
 
       <NeedsGrid />
+
+      <DesignShowcase />
     </>
   );
 }
