@@ -31,8 +31,8 @@ export default function HomePage() {
         <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[260px] lg:block xl:w-[340px]">
           <Image src="/shirt2.png" alt="COTTSON shirt" fill sizes="340px" className="object-cover object-right" />
         </div>
-        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[260px] lg:block xl:w-[340px]">
-          <Image src="/shirt1.png" alt="COTTSON shirt" fill sizes="340px" className="object-cover object-left" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[200px] lg:block xl:w-[260px]">
+          <Image src="/shirt1.png" alt="COTTSON shirt" fill sizes="260px" className="object-cover object-left" />
         </div>
 
         <div className="mx-auto max-w-7xl px-4">
