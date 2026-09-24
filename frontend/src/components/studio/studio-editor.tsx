@@ -32,6 +32,9 @@ export function StudioEditor() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [size, setSize] = useState<string | null>(null);
   const [displayWidth, setDisplayWidth] = useState(0);
+  const [printSide, setPrintSide] = useState<"front" | "back">("front");
+  const [pickedSide, setPickedSide] = useState<"front" | "back">("front");
+  const [showStartModal, setShowStartModal] = useState(true);
 
   const recolorRef = useRef<RecolorHandle>(null);
   const stageRef = useRef<Konva.Stage | null>(null);
@@ -62,12 +65,14 @@ export function StudioEditor() {
 
   const color = colorById(colorId);
   const selected = elements.find((e) => e.id === selectedId) ?? null;
-  // Printable chest area: middle of the garment, upper part
+  // Printable area: chest for a front print, a narrower yoke band for a back print
   const printArea: [number, number, number, number] | null = meta
     ? (() => {
         const [x0, y0, x1, y1] = meta.bbox;
         const w = x1 - x0, h = y1 - y0;
-        return [x0 + w * 0.22, y0 + h * 0.12, x1 - w * 0.22, y0 + h * 0.62];
+        return printSide === "back"
+          ? [x0 + w * 0.3, y0 + h * 0.06, x1 - w * 0.3, y0 + h * 0.3]
+          : [x0 + w * 0.22, y0 + h * 0.12, x1 - w * 0.22, y0 + h * 0.62];
       })()
     : null;
 
@@ -165,7 +170,7 @@ export function StudioEditor() {
     addToCart({
       designId,
       slug: product.slug,
-      title: product.title + (customized ? " (custom)" : ""),
+      title: product.title + (customized ? ` (custom, ${printSide} print)` : ""),
       colorId,
       colorName: color.name,
       size,
@@ -202,8 +207,72 @@ export function StudioEditor() {
             />
           )}
         </div>
+        <div className="mt-3 flex justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              setPickedSide(printSide);
+              setShowStartModal(true);
+            }}
+            className="rounded-full border px-4 py-1.5 text-xs font-medium capitalize hover:bg-muted"
+          >
+            Print area: {printSide}
+          </button>
+        </div>
         <p className="mt-2 text-center text-xs text-muted-foreground">Dashed box = print area · drag to move · corners to resize and rotate · Delete to remove</p>
       </div>
+
+      {showStartModal && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-background p-8 shadow-2xl">
+            <div className="flex items-start justify-between">
+              <h2 className="text-2xl font-bold text-brand">
+                Choose what to start with<span className="text-brand-accent">.</span>
+              </h2>
+              <button
+                type="button"
+                aria-label="Close"
+                onClick={() => setShowStartModal(false)}
+                className="grid size-8 shrink-0 place-items-center rounded-md hover:bg-muted"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              {(["back", "front"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setPickedSide(s)}
+                  className={cn(
+                    "overflow-hidden rounded-xl border-2 text-left transition-colors",
+                    pickedSide === s ? "border-brand" : "border-transparent"
+                  )}
+                >
+                  <div className="relative aspect-square bg-muted">
+                    <img
+                      src={`/products/${product.slug}/photo.jpg`}
+                      alt={`${s} print`}
+                      className={cn("absolute inset-0 size-full object-cover", s === "back" ? "object-top" : "object-bottom")}
+                    />
+                  </div>
+                  <div className="p-3 text-sm font-semibold capitalize text-brand">{s} print</div>
+                </button>
+              ))}
+            </div>
+            <Button
+              size="lg"
+              className="mt-6 h-11 w-full"
+              onClick={() => {
+                setPrintSide(pickedSide);
+                setShowStartModal(false);
+              }}
+            >
+              Start designing
+            </Button>
+          </div>
+        </div>
+      )}
 
       <aside className="space-y-7">
         <div>
