@@ -10,13 +10,15 @@ import { cn } from "@/lib/utils";
 // Fixed set of pre-made collar-trim photos — swapped between directly, no live pixel
 // recolor. Only the ones with a photo are wired up; the rest show a placeholder until
 // those photos are made.
-const PRESETS = [
+type Preset = { name: string; hex: string; photo: string | null };
+
+const PRESETS: Preset[] = [
   { name: "Green Trim", hex: "#7ac142", photo: "/mockup/polo-green.png" },
   { name: "Black Trim", hex: "#1c1c1c", photo: "/mockup/polo-black.png" },
   { name: "Navy Trim", hex: "#1f2a44", photo: "/mockup/polo-navy.png" },
   { name: "Red Trim", hex: "#c8102e", photo: "/mockup/polo-red.png" },
-  { name: "White Trim", hex: "#f5f5f2", photo: null },
-] as const;
+  { name: "White Trim", hex: "#f5f5f2", photo: "/mockup/polo-white.png" },
+];
 
 const SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"];
 const MIN_ORDER = 25;
