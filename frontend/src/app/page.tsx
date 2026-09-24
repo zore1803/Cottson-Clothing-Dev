@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { ImageIcon, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react";
+import { NeedsGrid } from "@/components/needs-grid";
+
+const CLIENTS = [
+  "OMS", "Morgan Stanley", "Mullenlowe Lintas Group", "NDTS India", "Aurum", "Western", "Hoshizaki",
+  "Cutis Healthcare", "Essens Renewable", "Supreme Allied Services", "Tubestar", "Dry Chem", "Walplast", "Aurum PropTech",
+];
 
 const WHATSAPP = "https://wa.me/919892297764?text=Hi%2C%20I%20have%20a%20requirement";
 
@@ -153,10 +159,19 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Trusted by 250+ companies across Mumbai */}
+      {/* Trusted by 250+ companies across Mumbai — client word-marks (logos to come later) */}
       <section className="mx-auto max-w-7xl px-4 pt-20 text-center">
         <h2 className="text-3xl font-bold tracking-tight text-brand sm:text-4xl">Trusted by 250+ companies across Mumbai</h2>
+        <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4 lg:grid-cols-7">
+          {CLIENTS.map((name) => (
+            <div key={name} className="text-sm font-semibold text-muted-foreground">
+              {name}
+            </div>
+          ))}
+        </div>
       </section>
+
+      <NeedsGrid />
     </>
   );
 }
