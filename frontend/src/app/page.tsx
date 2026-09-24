@@ -26,18 +26,20 @@ export default function HomePage() {
     <>
       {/* Hero: headline centered between two flanking product photos (added later) */}
       <section className="relative isolate overflow-hidden bg-background pb-14 pt-14">
-        <div className="mx-auto max-w-5xl px-4">
+        <div className="mx-auto max-w-7xl px-4">
           <div className="mx-auto grid max-w-xs grid-cols-2 gap-3 sm:hidden">
             <ImageSlot className="aspect-[3/4] w-full" />
             <ImageSlot className="aspect-[3/4] w-full" />
           </div>
 
-          <div className="flex items-center justify-center gap-6">
+          <div className="flex items-center justify-center gap-6 sm:justify-between">
             <ImageSlot className="hidden aspect-[3/4] w-[180px] shrink-0 sm:grid" />
 
-            <div className="mt-6 w-full max-w-2xl text-center sm:mt-0">
+            <div className="mt-6 w-full max-w-3xl text-center sm:mt-0">
               <h1 className="text-3xl font-bold leading-tight tracking-tight text-brand sm:text-5xl">
-                Custom Corporate Clothing for Mumbai Companies<span className="text-brand-accent">.</span>
+                Custom Corporate Clothing
+                <br />
+                for Mumbai Companies<span className="text-brand-accent">.</span>
               </h1>
               <p className="mx-auto mt-4 max-w-lg text-sm text-muted-foreground sm:text-base">
                 Branded T-shirts, polos &amp; shirts for events, office staff &amp; team outings. MOQ 25 pieces.
