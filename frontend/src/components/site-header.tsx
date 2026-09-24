@@ -43,7 +43,7 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="mx-auto hidden w-fit items-center gap-1 rounded-full bg-brand px-2 py-1.5 lg:flex">
+        <nav className="fixed left-1/2 top-4 z-40 hidden w-fit -translate-x-1/2 items-center gap-1 rounded-full bg-brand px-2 py-1.5 shadow-lg lg:flex">
           {NAV.map(([label, href]) => {
             const active = href === "/" ? pathname === "/" : pathname === href;
             return (
