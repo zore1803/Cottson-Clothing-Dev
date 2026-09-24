@@ -1,13 +1,18 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Check, MessageSquare, Palette, Shirt, Truck, Users } from "lucide-react";
+import { Check, MessageSquare } from "lucide-react";
 import { COLORS } from "@/lib/catalog";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { QuoteForm } from "@/components/quote-form";
-import { UseCases } from "@/components/use-cases";
 import { ProductTabs } from "@/components/product-tabs";
 import { DesignShowcase } from "@/components/design-showcase";
+import { TrustTicker } from "@/components/trust-ticker";
+import { NeedsGrid } from "@/components/needs-grid";
+import { StatsRow } from "@/components/stats-row";
+import { FaqAccordion } from "@/components/faq-accordion";
+
+const WHATSAPP = "https://wa.me/919892297764?text=Hi%2C%20I%20have%20a%20requirement";
 
 export const revalidate = 3600; // ISR: rebuilt at most hourly, served from the CDN
 
@@ -28,29 +33,26 @@ export default function HomePage() {
         <div className="relative mx-auto max-w-7xl px-4 pb-16">
           <div className="max-w-[500px] rounded-b-2xl bg-background px-5 pb-11 pt-11 shadow-2xl sm:px-6">
             <span className="inline-flex items-center gap-1.5 rounded-full border bg-background px-2 py-0.5 text-xs font-medium text-brand">
-              <span className="size-1.5 rounded-full bg-brand-accent" /> Custom cotton clothing
+              <span className="size-1.5 rounded-full bg-brand-accent" /> Custom corporate clothing
             </span>
             <h1 className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight text-brand sm:text-5xl">
-              Your team.
-              <br />
-              Your colors.
-              <br />
-              Our cotton<span className="text-brand-accent">.</span>
+              Custom Corporate Clothing for Mumbai Companies<span className="text-brand-accent">.</span>
             </h1>
-            <ul className="mt-7 grid gap-x-5 gap-y-3 text-sm font-semibold sm:grid-cols-2">
-              {["Premium cotton", "Any color, any logo", "Live design studio", "Bulk pricing from 25", "Made to order", "Delivered in 7–10 days"].map((t) => (
-                <li key={t} className="flex items-center gap-2">
-                  <Check className="size-3.5 shrink-0 text-brand" strokeWidth={3} />
-                  {t}
-                </li>
-              ))}
-            </ul>
+            <p className="mt-4 text-sm text-muted-foreground sm:text-base">
+              Branded T-shirts, polos &amp; shirts for events, office staff &amp; team outings. MOQ 25 pieces.
+              Delivered in 7–10 days.
+            </p>
             <div className="mt-8 grid gap-2 sm:grid-cols-2">
-              <Link href="/studio" className="grid h-12 place-items-center rounded-md bg-brand text-sm font-semibold text-white shadow-sm hover:bg-brand/90">
-                Talk to us
-              </Link>
+              <a
+                href={WHATSAPP}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="grid h-12 place-items-center rounded-md bg-brand text-sm font-semibold text-white shadow-sm hover:bg-brand/90"
+              >
+                Talk To Our Team
+              </a>
               <Link href="/products" className="grid h-12 place-items-center rounded-md bg-muted text-sm font-semibold text-brand hover:bg-muted/70">
-                Browse catalog
+                View Products
               </Link>
             </div>
           </div>
@@ -82,118 +84,69 @@ export default function HomePage() {
           />
         </Link>
 
-        <Link
-          href="/#bulk"
-          aria-label="Chat with us"
+        <a
+          href={WHATSAPP}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Chat with us on WhatsApp"
           className="fixed bottom-6 right-6 z-50 grid size-16 place-items-center rounded-full bg-brand text-white shadow-lg hover:bg-brand/90"
         >
           <MessageSquare className="size-7" />
-        </Link>
+        </a>
       </section>
 
-      {/* Color strip */}
-      <section className="border-y bg-muted/30">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-3 px-4 py-6">
-          <span className="mr-2 text-sm text-muted-foreground">{COLORS.length} colors in stock:</span>
-          {COLORS.map((c) => (
-            <span key={c.id} title={c.name} className="size-6 rounded-full ring-1 ring-border" style={{ background: c.hex }} />
-          ))}
-        </div>
-      </section>
+      <TrustTicker />
 
-      {/* Design Studio promo */}
-      <section className="mx-auto max-w-7xl px-4 pt-16">
-        <div className="grid overflow-hidden rounded-2xl border bg-[#c7ddd3] sm:grid-cols-2">
-          <div className="flex flex-col justify-center px-8 py-5 sm:px-12">
-            <h2 className="text-xl font-bold leading-tight tracking-tight text-brand sm:text-2xl">
-              Instant designs with Design Studio<span className="text-brand-accent">.</span>
-            </h2>
-            <p className="mt-2 max-w-sm text-xs text-muted-foreground sm:text-sm">
-              Your live DIY tool for creating branded merch in real time. Try it out and see your logo on the fabric instantly.
-            </p>
-            <Link href="/studio" className="mt-4 inline-flex h-9 w-fit items-center rounded-md bg-brand px-5 text-sm font-semibold text-white shadow-sm hover:bg-brand/90">
-              Try it now
-            </Link>
-          </div>
-          <div className="grid h-64 grid-cols-2 gap-1 p-1 [clip-path:polygon(15%_0,100%_0,100%_100%,0_100%)] sm:h-72 sm:[clip-path:polygon(20%_0,100%_0,100%_100%,0_100%)]">
-            {[
-              ["/products/polo-black/photo.jpg", "Essential Polo"],
-              ["/products/contrast-trim-shirt/photo.jpg", "Contrast Trim Shirt"],
-              ["/products/classic-white-tee/photo.jpg", "Classic Crew Tee"],
-              ["/products/formal-shirt-grey/photo.jpg", "Classic Formal Shirt"],
-            ].map(([src, alt]) => (
-              <div key={src} className="relative overflow-hidden">
-                <Image src={src} alt={alt} fill sizes="200px" className="object-cover" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* One solution for all your needs */}
-      <section className="mx-auto max-w-7xl px-4 pt-20">
+      {/* Your Brand. Your Colours. Your Style */}
+      <section className="mx-auto max-w-7xl px-4 pt-16 text-center">
         <h2 className="text-3xl font-bold tracking-tight text-brand sm:text-4xl">
-          One solution for all your needs<span className="text-brand-accent">.</span>
+          Your Brand. Your Colours. Your Style<span className="text-brand-accent">.</span>
         </h2>
-        <p className="mt-4 max-w-2xl text-muted-foreground">
-          Make merchandising simple, by centralizing the entire process through us — from design and fabric selection,
-          to bulk production, quality checks and delivery. We&apos;re with you all the way.
-        </p>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { Icon: Palette, border: "border-l-blue-400", title: "Tailored garments.", text: "Say goodbye to generic sizing. Design unique pieces that truly represent your brand.", href: "/studio" },
-            { Icon: Truck, border: "border-l-amber-400", title: "Pan-India delivery.", text: "No storage or shipping headaches. We make, pack and ship your order in 7–10 days.", href: "/#how" },
-            { Icon: Users, border: "border-l-brand", title: "Bulk order pricing.", text: "Mix sizes and colors in one order, with automatic discounts from 25 pieces.", href: "/#bulk" },
-            { Icon: Shirt, border: "border-l-rose-400", title: "Premium cotton.", text: "Every piece is made to order from pure, breathable cotton — built to last.", href: "/products" },
-          ].map(({ Icon, border, title, text, href }) => (
-            <div key={title} className="rounded-2xl bg-muted/40 p-6">
-              <span className="grid size-12 place-items-center rounded-full bg-background text-brand">
-                <Icon className="size-6" strokeWidth={1.6} />
-              </span>
-              <h3 className={cn("mt-5 border-l-4 pl-3 text-lg font-semibold text-brand", border)}>{title}</h3>
-              <p className="mt-3 text-sm text-muted-foreground">{text}</p>
-              <Link href={href} className="mt-4 inline-block text-sm font-medium text-brand hover:underline">
-                Learn more
-              </Link>
-            </div>
+        <p className="mt-3 text-muted-foreground">Classic polos, custom collars and everything in between.</p>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          {COLORS.map((c) => (
+            <span key={c.id} title={c.name} className="size-8 rounded-full ring-1 ring-border" style={{ background: c.hex }} />
           ))}
         </div>
       </section>
-
-      <UseCases />
 
       <ProductTabs />
 
-      <DesignShowcase />
-
-      {/* How it works */}
-      <section id="how" className="mx-auto max-w-7xl scroll-mt-24 px-4 pt-24">
-        <h2 className="text-3xl font-semibold tracking-tight">How it works</h2>
-        <div className="mt-8 grid gap-6 md:grid-cols-4">
-          {[
-            [Shirt, "Pick a product", "Shirts and polos in premium cotton."],
-            [Palette, "Choose any color", "See it on the real garment, folds and all."],
-            [Users, "Add your logo", "Upload your artwork, place and size it."],
-            [Truck, "We make & ship", "Printed or embroidered, delivered in 7–10 days."],
-          ].map(([Icon, title, text], i) => {
-            const I = Icon as typeof Shirt;
-            return (
-              <div key={i} className="rounded-2xl border p-6">
-                <div className="flex items-center gap-3">
-                  <span className="grid size-10 place-items-center rounded-full bg-muted">
-                    <I className="size-5" />
-                  </span>
-                  <span className="text-sm text-muted-foreground">Step {i + 1}</span>
-                </div>
-                <div className="mt-4 font-medium">{title as string}</div>
-                <p className="mt-1 text-sm text-muted-foreground">{text as string}</p>
-              </div>
-            );
-          })}
+      {/* Trusted by 250+ companies */}
+      <section className="mx-auto max-w-7xl px-4 pt-16">
+        <div className="rounded-2xl border bg-muted/30 py-6 text-center">
+          <p className="text-sm font-semibold uppercase tracking-wider text-brand">Trusted by 250+ companies across Mumbai</p>
         </div>
       </section>
 
-      {/* Bulk */}
+      <NeedsGrid />
+
+      <DesignShowcase />
+
+      <StatsRow />
+
+      {/* Final CTA */}
+      <section className="mx-auto max-w-7xl px-4 pt-20">
+        <div className="rounded-3xl bg-foreground px-8 py-14 text-center text-background">
+          <p className="text-sm font-semibold uppercase tracking-wider opacity-70">Ready To Create Your Corporate Clothing?</p>
+          <h2 className="mx-auto mt-3 max-w-2xl text-2xl font-semibold tracking-tight sm:text-3xl">
+            Talk to our team to discuss your requirements, explore customisation options and get a tailored solution
+            for your business.
+          </h2>
+          <a
+            href={WHATSAPP}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(buttonVariants({ variant: "secondary", size: "lg" }), "mt-8 h-11 px-8")}
+          >
+            Talk To Our Team
+          </a>
+        </div>
+      </section>
+
+      <FaqAccordion />
+
+      {/* Bulk pricing + quote form */}
       <section id="bulk" className="mx-auto max-w-7xl scroll-mt-24 px-4 pt-24">
         <div className="grid items-center gap-10 overflow-hidden rounded-3xl bg-foreground p-10 text-background lg:grid-cols-2">
           <div>

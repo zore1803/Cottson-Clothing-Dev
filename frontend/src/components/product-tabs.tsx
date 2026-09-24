@@ -22,11 +22,11 @@ export function ProductTabs() {
       <div className="flex items-end justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-brand sm:text-4xl">
-            The right product for any use case<span className="text-brand-accent">.</span>
+            T-Shirts, Polos &amp; Shirts for Your Team<span className="text-brand-accent">.</span>
           </h2>
           <p className="mt-3 max-w-2xl text-muted-foreground">
-            Choose from our growing catalog of formal shirts, polos and tees — every piece made to order in your
-            colors, with your logo.
+            Built for corporate events, office staff and team outings. Find your fabric and order a free swatch
+            before you commit.
           </p>
         </div>
         <Link href="/products" className="hidden shrink-0 text-sm font-medium hover:underline sm:block">

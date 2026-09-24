@@ -21,11 +21,13 @@ export function DesignShowcase() {
       <div className="grid items-center gap-10 overflow-hidden rounded-2xl border bg-muted/20 p-8 lg:grid-cols-2 lg:p-12">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-brand sm:text-4xl">
-            Design unique pieces<span className="text-brand-accent">.</span>
+            Design Before Production<span className="text-brand-accent">.</span>
           </h2>
           <p className="mt-4 max-w-md text-muted-foreground">
-            Design merchandise as unique as your brand. Tell us what you need in the studio, and we bring it to
-            life on real cotton.
+            Use our Design Studio to visualise your corporate t-shirts and uniforms before production begins. Create,
+            review and refine your designs, check logo placement and colours, and get clarity before moving to
+            sampling and manufacturing. This reduces errors, speeds up approvals and ensures your final product
+            matches your expectations.
           </p>
           <ul className="mt-6 space-y-4">
             {POINTS.map((p) => (
