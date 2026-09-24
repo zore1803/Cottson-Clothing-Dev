@@ -32,7 +32,7 @@ export function SiteHeader() {
 
   return (
     <header className="bg-background">
-      <div className="mx-auto flex h-24 max-w-7xl items-center gap-6 px-4">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4">
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
           {/* Logo mark — placeholder until the real asset is added */}
           <span className="grid size-9 shrink-0 place-items-center rounded-full border-2 border-brand" aria-hidden />
