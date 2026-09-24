@@ -34,7 +34,9 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center justify-center gap-6 sm:justify-between">
-            <ImageSlot className="hidden aspect-[3/4] w-[180px] shrink-0 sm:grid" />
+            <div className="relative hidden aspect-[3/4] w-[180px] shrink-0 overflow-hidden rounded-2xl bg-muted sm:block">
+              <Image src="/shirt2.png" alt="COTTSON shirt" fill sizes="180px" className="object-cover" />
+            </div>
 
             <div className="mt-6 w-full max-w-3xl text-center sm:mt-0">
               <h1 className="text-3xl font-bold leading-tight tracking-tight text-brand sm:text-5xl">
