@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ImageIcon, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react";
+import Image from "next/image";
+import { ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { NeedsGrid } from "@/components/needs-grid";
 import { DesignShowcase } from "@/components/design-showcase";
 import { StatsRow } from "@/components/stats-row";
@@ -69,9 +70,9 @@ export default function HomePage() {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Chat with us on WhatsApp"
-          className="fixed bottom-6 right-6 z-50 grid size-16 place-items-center rounded-full bg-brand text-white shadow-lg hover:bg-brand/90"
+          className="fixed bottom-6 right-6 z-50 grid size-16 place-items-center rounded-full shadow-lg hover:opacity-90"
         >
-          <MessageSquare className="size-7" />
+          <Image src="/whatsapp.png" alt="WhatsApp" width={64} height={64} className="size-16" />
         </a>
       </section>
 

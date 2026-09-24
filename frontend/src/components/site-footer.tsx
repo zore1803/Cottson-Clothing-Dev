@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const WHATSAPP = "https://wa.me/919892297764?text=Hi%2C%20I%20have%20a%20requirement";
 
@@ -69,8 +70,9 @@ export function SiteFooter() {
             href={WHATSAPP}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 inline-grid h-10 place-items-center rounded-full bg-background px-6 text-sm font-semibold text-brand hover:bg-background/90"
+            className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-background px-5 text-sm font-semibold text-brand hover:bg-background/90"
           >
+            <Image src="/whatsapp.png" alt="" width={20} height={20} className="size-5" />
             WhatsApp
           </a>
           <div className="mt-5 text-xs font-semibold uppercase tracking-wider opacity-60">Social</div>

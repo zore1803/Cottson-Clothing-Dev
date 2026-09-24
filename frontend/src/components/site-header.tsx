@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
-import { MessageCircle, ShoppingBag } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { useCart, cartCount } from "@/lib/cart-store";
 import { cn } from "@/lib/utils";
 
@@ -66,9 +67,9 @@ export function SiteHeader() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Chat on WhatsApp"
-            className="grid size-10 place-items-center rounded-full bg-[#25D366] text-white hover:opacity-90"
+            className="grid size-10 place-items-center rounded-full hover:opacity-90"
           >
-            <MessageCircle className="size-5" fill="currentColor" strokeWidth={0} />
+            <Image src="/whatsapp.png" alt="WhatsApp" width={40} height={40} className="size-10" />
           </a>
           <Link href="/cart" className="relative grid size-10 place-items-center rounded-full bg-brand text-white hover:bg-brand/90" aria-label={`Basket, ${count} items`}>
             <ShoppingBag className="size-4" />
