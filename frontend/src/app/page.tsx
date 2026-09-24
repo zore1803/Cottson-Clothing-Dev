@@ -137,7 +137,7 @@ export default function HomePage() {
             <ChevronLeft className="size-4" />
           </button>
           <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 py-1 text-left [scrollbar-width:none]">
-            {["Edge", "Stride", "Cosmo", "Evolve", "Elite"].map((name, i) => (
+            {["Edge", "Stride", "Cosmo", "Evolve", "Elite", "Prime"].map((name, i) => (
               <div key={name} className="relative w-52 shrink-0 snap-start">
                 {i === 4 && (
                   <span className="absolute left-3 top-3 z-10 rounded-full bg-brand-accent px-2.5 py-1 text-[11px] font-semibold text-white">
