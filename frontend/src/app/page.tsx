@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ImageIcon, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react";
 import { NeedsGrid } from "@/components/needs-grid";
 import { DesignShowcase } from "@/components/design-showcase";
+import { StatsRow } from "@/components/stats-row";
 
 const CLIENTS = [
   "OMS", "Morgan Stanley", "Mullenlowe Lintas Group", "NDTS India", "Aurum", "Western", "Hoshizaki",
@@ -176,6 +177,30 @@ export default function HomePage() {
       <NeedsGrid />
 
       <DesignShowcase />
+
+      <StatsRow />
+
+      {/* Ready To Create Your Corporate Clothing? — garment rack photo (added later) + CTA */}
+      <section className="mx-auto max-w-7xl px-4 pt-20">
+        <div className="grid items-center gap-8 overflow-hidden rounded-2xl border lg:grid-cols-2">
+          <ImageSlot className="aspect-[4/3] rounded-none border-0 lg:aspect-auto lg:h-full" />
+          <div className="px-6 py-10 text-center sm:px-10">
+            <h2 className="text-2xl font-bold tracking-tight text-brand sm:text-3xl">Ready To Create Your Corporate Clothing?</h2>
+            <p className="mx-auto mt-4 max-w-md text-muted-foreground">
+              Talk to our team to discuss your requirements, explore customisation options and get a tailored
+              solution for your business.
+            </p>
+            <a
+              href={WHATSAPP}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 inline-grid h-11 place-items-center rounded-full bg-brand px-8 text-sm font-semibold text-white shadow-sm hover:bg-brand/90"
+            >
+              Talk To Our Team
+            </a>
+          </div>
+        </div>
+      </section>
     </>
   );
 }
