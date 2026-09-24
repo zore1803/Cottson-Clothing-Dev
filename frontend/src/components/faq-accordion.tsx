@@ -87,7 +87,7 @@ export function FaqAccordion() {
               <button
                 type="button"
                 onClick={() => setOpen(isOpen ? null : q)}
-                className="flex w-full items-center justify-between gap-4 py-4 text-left text-sm font-semibold text-brand"
+                className="flex w-full items-center justify-between gap-4 py-4 text-left text-sm font-semibold text-foreground"
               >
                 {q}
                 <ChevronDown className={cn("size-4 shrink-0 transition-transform", isOpen && "rotate-180")} />
