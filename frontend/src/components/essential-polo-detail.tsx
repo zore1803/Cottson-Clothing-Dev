@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Palette, Plus, Minus } from "lucide-react";
+import { ChevronLeft, ChevronRight, ImagePlus, Palette, Plus, Minus, X } from "lucide-react";
 import { type Product, colorById, variantUrl, formatPrice } from "@/lib/catalog";
 import { useCart } from "@/lib/cart-store";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,43 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
   const [incomingColorId, setIncomingColorId] = useState<string | null>(null);
   const [swept, setSwept] = useState(false);
   const [sizes, setSizes] = useState<Record<string, number>>({});
+
+  // Logo overlay: a sibling layer on top of the photo, independent of which color image
+  // is showing underneath — so it stays put across color swaps without any extra work.
+  const [logoSrc, setLogoSrc] = useState<string | null>(null);
+  const [logoPos, setLogoPos] = useState({ x: 50, y: 42 }); // % of the photo container
+  const [logoSize, setLogoSize] = useState(80); // px
+  const [application, setApplication] = useState<"print" | "embroidery">("print");
+  const photoRef = useRef<HTMLDivElement>(null);
+  const draggingRef = useRef(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const onLogoFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => setLogoSrc(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const movePointerTo = (clientX: number, clientY: number) => {
+    const rect = photoRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = Math.min(95, Math.max(5, ((clientX - rect.left) / rect.width) * 100));
+    const y = Math.min(95, Math.max(5, ((clientY - rect.top) / rect.height) * 100));
+    setLogoPos({ x, y });
+  };
+
+  const onLogoPointerDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    draggingRef.current = true;
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+  const onLogoPointerMove = (e: React.PointerEvent) => {
+    if (!draggingRef.current) return;
+    movePointerTo(e.clientX, e.clientY);
+  };
+  const onLogoPointerUp = () => {
+    draggingRef.current = false;
+  };
 
   const color = colorById(colorId);
   const totalQty = Object.values(sizes).reduce((n, q) => n + q, 0);
@@ -54,7 +91,7 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
       <div className="grid gap-10 overflow-hidden rounded-2xl border lg:grid-cols-2">
         {/* Left: photo with the wave-sweep color swap */}
         <div className="relative bg-muted">
-          <div className="relative aspect-square w-full overflow-hidden">
+          <div ref={photoRef} className="relative aspect-square w-full overflow-hidden">
             <Image
               src={variantUrl(product, baseColorId)}
               alt={`${product.title} — ${colorById(baseColorId).name}`}
@@ -80,6 +117,31 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
               <div
                 className="pointer-events-none absolute inset-y-0 w-16 -translate-x-1/2 bg-gradient-to-r from-transparent via-background/70 to-transparent blur-md transition-[left] duration-[650ms] ease-in-out"
                 style={{ left: swept ? "100%" : "0%" }}
+              />
+            )}
+
+            {/* Logo overlay: independent of the color layers below, so it carries over to
+                every trim color automatically — never baked into a specific photo. */}
+            {logoSrc && (
+              <img
+                src={logoSrc}
+                alt="Your logo"
+                onPointerDown={onLogoPointerDown}
+                onPointerMove={onLogoPointerMove}
+                onPointerUp={onLogoPointerUp}
+                className={cn(
+                  "absolute -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none select-none active:cursor-grabbing",
+                  application === "embroidery" && "contrast-110 saturate-75"
+                )}
+                style={{
+                  left: `${logoPos.x}%`,
+                  top: `${logoPos.y}%`,
+                  width: logoSize,
+                  filter:
+                    application === "embroidery"
+                      ? "drop-shadow(0 1px 0.5px rgba(0,0,0,0.45)) drop-shadow(0 0 0.5px rgba(255,255,255,0.6))"
+                      : "drop-shadow(0 1px 2px rgba(0,0,0,0.25))",
+                }}
               />
             )}
           </div>
@@ -120,7 +182,69 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
           </Link>
 
           <div className="mt-8">
-            <div className="text-sm font-semibold text-brand">1. Collar color — {color.name}</div>
+            <div className="text-sm font-semibold text-brand">1. Add your logo</div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/svg+xml,image/webp"
+              hidden
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) onLogoFile(f);
+                e.target.value = "";
+              }}
+            />
+            {!logoSrc ? (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="mt-3 flex items-center gap-2 rounded-lg border border-dashed px-4 py-3 text-sm font-medium text-muted-foreground hover:border-brand hover:text-brand"
+              >
+                <ImagePlus className="size-4" /> Upload logo
+              </button>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">Drag the logo on the photo to place it.</p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {(["print", "embroidery"] as const).map((a) => (
+                    <button
+                      key={a}
+                      type="button"
+                      onClick={() => setApplication(a)}
+                      className={cn(
+                        "rounded-full border px-3 py-1.5 text-xs font-semibold capitalize",
+                        application === a ? "border-brand bg-brand text-white" : "text-muted-foreground hover:border-brand"
+                      )}
+                    >
+                      {a === "embroidery" ? "Stitched (Embroidery)" : "Print"}
+                    </button>
+                  ))}
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                    Size
+                    <input
+                      type="range"
+                      min={40}
+                      max={160}
+                      value={logoSize}
+                      onChange={(e) => setLogoSize(Number(e.target.value))}
+                      className="w-20"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setLogoSrc(null)}
+                    aria-label="Remove logo"
+                    className="grid size-7 place-items-center rounded-full text-muted-foreground hover:bg-muted"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="mt-8">
+            <div className="text-sm font-semibold text-brand">2. Collar color — {color.name}</div>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               {product.colors.map((id) => {
                 const c = colorById(id);
@@ -143,7 +267,7 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
           </div>
 
           <div className="mt-8">
-            <div className="text-sm font-semibold text-brand">2. Choose sizes (min. order {product.minBulk})</div>
+            <div className="text-sm font-semibold text-brand">3. Choose sizes (min. order {product.minBulk})</div>
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
               {product.sizes.map((s) => (
                 <div key={s} className="flex items-center justify-between rounded-lg border px-3 py-2">
