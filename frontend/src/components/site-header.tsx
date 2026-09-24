@@ -11,12 +11,12 @@ const WHATSAPP = "https://wa.me/919892297764?text=Hi%2C%20I%20have%20a%20require
 
 const NAV = [
   ["Home", "/"],
-  ["About Us", "#"],
+  ["About Us", "/about"],
   ["Products", "/products"],
   ["Customisation", "/studio"],
-  ["Clients", "#"],
-  ["Resources", "#"],
-  ["Process", "#"],
+  ["Clients", "/clients"],
+  ["Resources", "/resources"],
+  ["Process", "/process"],
   ["Contact Us", "/#contact"],
 ];
 
@@ -30,7 +30,7 @@ export function SiteHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="border-b bg-background">
+    <header className="bg-background">
       <div className="mx-auto flex h-24 max-w-7xl items-center gap-6 px-4">
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
           {/* Logo mark — placeholder until the real asset is added */}
