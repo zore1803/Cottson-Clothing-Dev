@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { QuoteForm } from "@/components/quote-form";
 import { UseCases } from "@/components/use-cases";
 import { ProductTabs } from "@/components/product-tabs";
+import { DesignShowcase } from "@/components/design-showcase";
 
 export const revalidate = 3600; // ISR: rebuilt at most hourly, served from the CDN
 
@@ -162,6 +163,8 @@ export default function HomePage() {
       <UseCases />
 
       <ProductTabs />
+
+      <DesignShowcase />
 
       {/* How it works */}
       <section id="how" className="mx-auto max-w-7xl scroll-mt-24 px-4 pt-24">
