@@ -65,7 +65,7 @@ export default function HomePage() {
             <ImageSlot className="hidden aspect-[3/4] w-[180px] shrink-0 sm:grid" />
           </div>
 
-          <ImageSlot className="mx-auto mt-14 aspect-[3/4] w-[180px]" />
+          <ImageSlot className="mx-auto mt-8 aspect-[21/9] w-full max-w-2xl" />
         </div>
 
         <a
