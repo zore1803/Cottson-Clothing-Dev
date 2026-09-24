@@ -78,7 +78,7 @@ export default function HomePage() {
       </section>
 
       {/* Your Brand. Your Colours. Your Style — garment photos go in later */}
-      <section className="mx-auto max-w-7xl px-4 pt-8 text-center">
+      <section className="mx-auto max-w-7xl px-4 pt-32 text-center">
         <h2 className="mt-8 text-3xl font-bold tracking-tight text-brand sm:text-4xl">
           Your Brand. Your Colours. Your Style
         </h2>
