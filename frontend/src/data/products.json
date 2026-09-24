@@ -1,4 +1,23 @@
 {
-  "colors": [],
-  "products": []
+  "colors": [
+    { "id": "green", "name": "Green Trim", "hex": "#7ac142" },
+    { "id": "black", "name": "Black Trim", "hex": "#1c1c1c" },
+    { "id": "navy", "name": "Navy Trim", "hex": "#1f2a44" },
+    { "id": "red", "name": "Red Trim", "hex": "#c8102e" },
+    { "id": "white", "name": "White Trim", "hex": "#f5f5f2" }
+  ],
+  "products": [
+    {
+      "slug": "essential-polo",
+      "title": "Essential Polo",
+      "category": "Polos",
+      "description": "A classic pique polo with a tipped collar and sleeve trim, available in your choice of trim color. Made to order for corporate events, office staff and team outings.",
+      "price": 499,
+      "currency": "INR",
+      "sizes": ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
+      "originalColor": "green",
+      "colors": ["green", "black", "navy", "red", "white"],
+      "minBulk": 25
+    }
+  ]
 }
