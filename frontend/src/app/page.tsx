@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ImageIcon, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react";
 import { NeedsGrid } from "@/components/needs-grid";
+import { DesignShowcase } from "@/components/design-showcase";
 
 const CLIENTS = [
   "OMS", "Morgan Stanley", "Mullenlowe Lintas Group", "NDTS India", "Aurum", "Western", "Hoshizaki",
@@ -117,6 +118,8 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      <DesignShowcase />
 
       {/* T-Shirts, Polos & Shirts for Your Team — logo mark + product carousel (added later) */}
       <section className="mx-auto max-w-7xl px-4 pt-20 text-center">
