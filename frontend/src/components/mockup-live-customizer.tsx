@@ -12,8 +12,8 @@ import { cn } from "@/lib/utils";
 // those photos are made.
 const PRESETS = [
   { name: "Green Trim", hex: "#7ac142", photo: "/mockup/polo-green.png" },
-  { name: "Black Trim", hex: "#1c1c1c", photo: null },
-  { name: "Navy Trim", hex: "#1f2a44", photo: null },
+  { name: "Black Trim", hex: "#1c1c1c", photo: "/mockup/polo-black.png" },
+  { name: "Navy Trim", hex: "#1f2a44", photo: "/mockup/polo-navy.png" },
   { name: "Red Trim", hex: "#c8102e", photo: "/mockup/polo-red.png" },
   { name: "White Trim", hex: "#f5f5f2", photo: null },
 ] as const;
