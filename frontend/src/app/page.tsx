@@ -42,10 +42,9 @@ export default function HomePage() {
                 <br />
                 for Mumbai Companies<span className="text-brand-accent">.</span>
               </h1>
-              <p className="mx-auto mt-4 max-w-lg text-sm text-muted-foreground sm:text-base">
-                Branded T-shirts, polos &amp; shirts for events, office staff &amp; team outings. MOQ 25 pieces.
-                <br />
-                Delivered in 7–10 days.
+              <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground sm:whitespace-nowrap sm:text-base">
+                Branded T-shirts, polos &amp; shirts for events, office staff &amp; team outings.
+                <br className="sm:hidden" /> MOQ 25 pieces. Delivered in 7–10 days.
               </p>
               <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
                 <a
@@ -65,7 +64,7 @@ export default function HomePage() {
             <ImageSlot className="hidden aspect-[3/4] w-[180px] shrink-0 sm:grid" />
           </div>
 
-          <ImageSlot className="mx-auto mt-8 aspect-[21/9] w-full max-w-2xl" />
+          <ImageSlot className="mx-auto mt-8 aspect-[3/4] w-[180px] rotate-180" />
         </div>
 
         <a
