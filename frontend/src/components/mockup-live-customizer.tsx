@@ -1,93 +1,31 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Palette, Plus, Minus } from "lucide-react";
+import { ChevronLeft, ChevronRight, ImageIcon, Palette, Plus, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const BASE = "/mockup/polo-green.png";
-const MASK = "/mockup/polo-trim-mask.png";
-
+// Fixed set of pre-made collar-trim photos — swapped between directly, no live pixel
+// recolor. Only the ones with a photo are wired up; the rest show a placeholder until
+// those photos are made.
 const PRESETS = [
-  { name: "Green Trim", hex: "#7ac142" },
-  { name: "Black Trim", hex: "#1c1c1c" },
-  { name: "Navy Trim", hex: "#1f2a44" },
-  { name: "Red Trim", hex: "#c8102e" },
-  { name: "White Trim", hex: "#f5f5f2" },
-];
+  { name: "Green Trim", hex: "#7ac142", photo: "/mockup/polo-green.png" },
+  { name: "Black Trim", hex: "#1c1c1c", photo: null },
+  { name: "Navy Trim", hex: "#1f2a44", photo: null },
+  { name: "Red Trim", hex: "#c8102e", photo: "/mockup/polo-red.png" },
+  { name: "White Trim", hex: "#f5f5f2", photo: null },
+] as const;
 
 const SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL"];
 const MIN_ORDER = 25;
 const UNIT_PRICE = 499;
 
-function loadImage(src: string) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
-}
-
-const hexToRgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
-
-/** Live collar/sleeve trim recolor: overlay-blends the picked color with the trim's own
- * grayscale luminance (polo-trim-mask.png, see scripts/make-collar-mask.mjs) on a 2D
- * canvas, then clips back to the mask's alpha — same technique as the Studio's live
- * recolor shader, so shading/folds stay intact instead of flattening to one flat color. */
 export function MockupLiveCustomizer() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imagesRef = useRef<{ base: HTMLImageElement; mask: HTMLImageElement } | null>(null);
-  const [color, setColor] = useState(PRESETS[0].hex);
-  const [ready, setReady] = useState(false);
+  const [selected, setSelected] = useState<(typeof PRESETS)[number]>(PRESETS[0]);
   const [sizes, setSizes] = useState<Record<string, number>>({});
 
-  useEffect(() => {
-    let cancelled = false;
-    Promise.all([loadImage(BASE), loadImage(MASK)]).then(([base, mask]) => {
-      if (cancelled) return;
-      imagesRef.current = { base, mask };
-      const canvas = canvasRef.current;
-      if (canvas) {
-        canvas.width = base.width;
-        canvas.height = base.height;
-      }
-      setReady(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const imgs = imagesRef.current;
-    if (!canvas || !imgs || !ready) return;
-    const { base, mask } = imgs;
-    const W = base.width, H = base.height;
-
-    const ctx = canvas.getContext("2d")!;
-    ctx.clearRect(0, 0, W, H);
-    ctx.drawImage(base, 0, 0);
-
-    const layer = document.createElement("canvas");
-    layer.width = W;
-    layer.height = H;
-    const lctx = layer.getContext("2d")!;
-
-    lctx.drawImage(mask, 0, 0);
-    lctx.globalCompositeOperation = "overlay";
-    const [r, g, b] = hexToRgb(color);
-    lctx.fillStyle = `rgb(${r},${g},${b})`;
-    lctx.fillRect(0, 0, W, H);
-    lctx.globalCompositeOperation = "destination-in";
-    lctx.drawImage(mask, 0, 0);
-
-    ctx.drawImage(layer, 0, 0);
-  }, [color, ready]);
-
-  const activePreset = PRESETS.find((p) => p.hex === color);
   const totalQty = Object.values(sizes).reduce((n, q) => n + q, 0);
   const setSize = (s: string, qty: number) => setSizes((prev) => ({ ...prev, [s]: Math.max(0, qty) }));
 
@@ -96,7 +34,7 @@ export function MockupLiveCustomizer() {
       toast.error(`Minimum order is ${MIN_ORDER} pieces (you have ${totalQty})`);
       return;
     }
-    toast.success(`Added ${totalQty} × Essential Polo (${activePreset?.name ?? "custom trim"}) to basket`);
+    toast.success(`Added ${totalQty} × Essential Polo (${selected.name}) to basket`);
   };
 
   return (
@@ -104,7 +42,23 @@ export function MockupLiveCustomizer() {
       {/* Left: big product photo with carousel-style controls (single view for now) */}
       <div className="relative bg-muted">
         <div className="relative aspect-[3/4] w-full">
-          <canvas ref={canvasRef} className="size-full object-contain" />
+          {selected.photo ? (
+            <Image
+              key={selected.photo}
+              src={selected.photo}
+              alt={`Essential Polo — ${selected.name}`}
+              fill
+              sizes="600px"
+              className="animate-in fade-in object-contain duration-200"
+            />
+          ) : (
+            <div className="grid size-full place-items-center border-2 border-dashed text-muted-foreground">
+              <div className="text-center">
+                <ImageIcon className="mx-auto size-6" strokeWidth={1.5} />
+                <p className="mt-2 text-xs">{selected.name} photo coming soon</p>
+              </div>
+            </div>
+          )}
         </div>
         <button
           type="button"
@@ -141,38 +95,22 @@ export function MockupLiveCustomizer() {
         </Link>
 
         <div className="mt-8">
-          <div className="text-sm font-semibold text-brand">
-            1. Collar color — {activePreset?.name ?? "Custom"}
-          </div>
+          <div className="text-sm font-semibold text-brand">1. Collar color — {selected.name}</div>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             {PRESETS.map((p) => (
               <button
                 key={p.hex}
                 type="button"
-                onClick={() => setColor(p.hex)}
+                onClick={() => setSelected(p)}
                 aria-label={p.name}
                 title={p.name}
                 className={cn(
                   "size-9 rounded-full ring-1 ring-border transition-shadow",
-                  color === p.hex && "ring-2 ring-offset-2 ring-brand"
+                  selected.hex === p.hex && "ring-2 ring-offset-2 ring-brand"
                 )}
                 style={{ background: p.hex }}
               />
             ))}
-            <label
-              htmlFor="trim-color"
-              className="grid size-9 cursor-pointer place-items-center rounded-full border border-dashed text-muted-foreground"
-              title="Custom color"
-            >
-              <input
-                id="trim-color"
-                type="color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                className="size-0 opacity-0"
-              />
-              +
-            </label>
           </div>
         </div>
 
