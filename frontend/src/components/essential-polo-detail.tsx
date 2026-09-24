@@ -61,7 +61,7 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
       <div className="mt-6 grid gap-10 overflow-hidden rounded-2xl border lg:grid-cols-2">
         {/* Left: photo with the wave-sweep color swap */}
         <div className="relative bg-muted">
-          <div className="relative aspect-[3/4] w-full overflow-hidden">
+          <div className="relative aspect-square w-full overflow-hidden">
             <Image
               src={variantUrl(product, baseColorId)}
               alt={`${product.title} — ${colorById(baseColorId).name}`}
