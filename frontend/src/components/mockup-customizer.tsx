@@ -23,26 +23,6 @@ export function MockupCustomizer() {
 
   return (
     <div className="grid gap-10 lg:grid-cols-2">
-      <div className="relative mx-auto aspect-[3/4] w-full max-w-md overflow-hidden rounded-2xl bg-muted">
-        {selected.image ? (
-          <Image
-            key={selected.id}
-            src={selected.image}
-            alt={`Essential Polo — ${selected.name}`}
-            fill
-            sizes="480px"
-            className="animate-in fade-in object-contain duration-300"
-          />
-        ) : (
-          <div className="grid size-full place-items-center border-2 border-dashed text-muted-foreground">
-            <div className="text-center">
-              <ImageIcon className="mx-auto size-6" strokeWidth={1.5} />
-              <p className="mt-2 text-xs">{selected.name} photo coming soon</p>
-            </div>
-          </div>
-        )}
-      </div>
-
       <div>
         <h2 className="text-2xl font-semibold text-brand">Essential Polo</h2>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -70,6 +50,27 @@ export function MockupCustomizer() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Live preview: the half-mannequin product photo updates to the selected trim color */}
+      <div className="relative mx-auto aspect-[3/4] w-full max-w-md overflow-hidden rounded-2xl bg-muted">
+        {selected.image ? (
+          <Image
+            key={selected.id}
+            src={selected.image}
+            alt={`Essential Polo — ${selected.name}`}
+            fill
+            sizes="480px"
+            className="animate-in fade-in object-contain duration-300"
+          />
+        ) : (
+          <div className="grid size-full place-items-center border-2 border-dashed text-muted-foreground">
+            <div className="text-center">
+              <ImageIcon className="mx-auto size-6" strokeWidth={1.5} />
+              <p className="mt-2 text-xs">{selected.name} photo coming soon</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
