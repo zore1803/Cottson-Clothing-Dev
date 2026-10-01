@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useCart, cartTotal, unitPriceOf } from "@/lib/cart-store";
@@ -19,6 +19,27 @@ export default function CheckoutPage() {
   const mounted = useMounted();
   const [placed, setPlaced] = useState<{ displayId: number; total: number } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [prefill, setPrefill] = useState<Record<string, string>>({});
+
+  // Signed-in customers get their saved details filled in
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then(({ customer: c }) => {
+        if (!c) return;
+        const a = c.addresses?.find((x: { is_default_shipping: boolean }) => x.is_default_shipping) ?? c.addresses?.[0];
+        setPrefill({
+          name: [c.first_name, c.last_name].filter(Boolean).join(" "),
+          email: c.email,
+          phone: a?.phone || c.phone || "",
+          address: [a?.address_1, a?.address_2].filter(Boolean).join(", "),
+          city: a?.city ?? "",
+          pincode: a?.postal_code ?? "",
+        });
+      })
+      .catch(() => {});
+  }, []);
+
   if (!mounted) return null;
 
   const subtotal = cartTotal(items);
@@ -81,7 +102,7 @@ export default function CheckoutPage() {
           {fields.map(([id, label, type]) => (
             <div key={id} className={cn("grid gap-2", (id === "address" || id === "name") && "sm:col-span-2")}>
               <Label htmlFor={id}>{label}</Label>
-              <Input id={id} name={id} type={type} required className="h-10" />
+              <Input key={`${id}-${prefill[id] ? 1 : 0}`} id={id} name={id} type={type} required defaultValue={prefill[id] ?? ""} className="h-10" />
             </div>
           ))}
         </div>

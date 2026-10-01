@@ -4,7 +4,7 @@ import { useState, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X, ShoppingBag } from "lucide-react";
+import { Menu, X, ShoppingBag, User } from "lucide-react";
 import { useCart, cartCount } from "@/lib/cart-store";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,47 @@ const NAV = [
   { label: "Mockup", href: "/mockup-lab" },
 ];
 
+type Me = { first_name: string | null; last_name: string | null; email: string; avatar?: string } | null;
+
+// Account link; when signed in it shows the user's initial and a hover card with name and email
+function AccountButton({ customer, className }: { customer: Me; className?: string }) {
+  const name = customer ? [customer.first_name, customer.last_name].filter(Boolean).join(" ") : "";
+  const [broken, setBroken] = useState<string | null>(null);
+  return (
+    <div className="group relative shrink-0">
+      <Link
+        href="/account"
+        aria-label={customer ? `My account, ${name || customer.email}` : "Sign in"}
+        className={cn(
+          "flex shrink-0 items-center justify-center rounded-full bg-white text-[#113858] transition duration-200",
+          className
+        )}
+      >
+        {customer?.avatar && broken !== customer.avatar ? (
+          <img src={customer.avatar} alt="" onError={() => setBroken(customer.avatar ?? null)} className="size-full rounded-full object-cover" />
+        ) : customer ? (
+          <span className="text-[14px] font-bold uppercase">{(customer.first_name || customer.email)[0]}</span>
+        ) : (
+          <User size={16} strokeWidth={2.2} />
+        )}
+      </Link>
+      <div
+        role="tooltip"
+        className="pointer-events-none invisible absolute right-0 top-[calc(100%+10px)] z-50 w-max max-w-[240px] translate-y-1 rounded-xl bg-white px-4 py-3 text-left opacity-0 shadow-xl shadow-[#113858]/25 transition duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100"
+      >
+        {customer ? (
+          <>
+            {name && <p className="truncate text-[14px] font-semibold text-[#113858]">{name}</p>}
+            <p className="truncate text-[13px] text-[#607487]">{customer.email}</p>
+          </>
+        ) : (
+          <p className="text-[13px] font-medium text-[#113858]">Sign in</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 const useMounted = () => useSyncExternalStore(() => () => {}, () => true, () => false);
 
 export function SiteHeader() {
@@ -29,6 +70,24 @@ export function SiteHeader() {
   const mounted = useMounted();
   const count = mounted ? cartCount(items) : 0;
   const pathname = usePathname();
+  const [customer, setCustomer] = useState<Me>(null);
+
+  // Re-check on every navigation so the header updates right after sign in / sign out
+  useEffect(() => {
+    let live = true;
+    const load = () =>
+      fetch("/api/auth/me")
+        .then((r) => r.json())
+        .then((d) => live && setCustomer(d.customer ?? null))
+        .catch(() => live && setCustomer(null));
+    load();
+    // The account page announces profile / photo edits so the header updates without a reload
+    window.addEventListener("cottson:account-updated", load);
+    return () => {
+      live = false;
+      window.removeEventListener("cottson:account-updated", load);
+    };
+  }, [pathname]);
 
   useEffect(() => {
     let ticking = false;
@@ -112,6 +171,8 @@ export function SiteHeader() {
               <Image src="/whatsapp.png" alt="WhatsApp" width={22} height={22} className="size-5" />
             </a>
 
+            <AccountButton customer={customer} className="h-9 w-9 hover:bg-[#F2F6F9] active:scale-95" />
+
             {/* Cart Link with Badge */}
             <Link
               href="/cart"
@@ -137,6 +198,7 @@ export function SiteHeader() {
 
           {/* Mobile Menu Button */}
           <div className="flex shrink-0 items-center gap-2 lg:hidden">
+            <AccountButton customer={customer} className="h-9 w-9" />
             <Link
               href="/cart"
               aria-label={`Basket, ${count} items`}

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectMongo, Design } from "@/lib/mongo";
 import { COLORS } from "@/lib/catalog";
+import { getToken } from "@/lib/auth";
 
 // Turns the browser cart into a Medusa order:
 // cart -> line items -> address -> shipping method -> payment session -> complete.
@@ -10,10 +11,10 @@ const MEDUSA = process.env.NEXT_PUBLIC_MEDUSA_URL!;
 const KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY!;
 const REGION = process.env.NEXT_PUBLIC_MEDUSA_REGION_ID!;
 
-async function store<T = Record<string, unknown>>(path: string, body?: unknown): Promise<T> {
+async function store<T = Record<string, unknown>>(path: string, body?: unknown, token?: string): Promise<T> {
   const res = await fetch(`${MEDUSA}/store${path}`, {
     method: body === undefined ? "GET" : "POST",
-    headers: { "content-type": "application/json", "x-publishable-api-key": KEY },
+    headers: { "content-type": "application/json", "x-publishable-api-key": KEY, ...(token ? { authorization: `Bearer ${token}` } : {}) },
     body: body === undefined ? undefined : JSON.stringify(body),
     cache: "no-store",
   });
@@ -59,12 +60,13 @@ export async function POST(req: Request) {
       phone: customer.phone,
     };
 
-    const { cart } = await store<{ cart: { id: string } }>("/carts", {
-      region_id: REGION,
-      email: customer.email,
-      shipping_address: address,
-      billing_address: address,
-    });
+    // Signed-in customers: attach the cart to their account so the order shows in their history
+    const token = await getToken();
+    const { cart } = await store<{ cart: { id: string } }>(
+      "/carts",
+      { region_id: REGION, email: customer.email, shipping_address: address, billing_address: address },
+      token
+    );
 
     for (const i of items) {
       const v = variantFor(i);
