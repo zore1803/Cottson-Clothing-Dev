@@ -5,11 +5,9 @@ import Image from "next/image";
 import { useState } from "react";
 import { type Product, variantUrl, formatPrice } from "@/lib/catalog";
 import { ColorSwatches } from "@/components/color-swatches";
-import { categoryAccent } from "@/lib/shop-palette";
 
 /** Listing card: swaps between pre-rendered color images from the CDN (no live rendering here) */
-/** `colorful` (products page) tints the category label with that category's accent colour */
-export function ProductCard({ product, colorful = false }: { product: Product; colorful?: boolean }) {
+export function ProductCard({ product }: { product: Product }) {
   const [color, setColor] = useState(product.originalColor);
   const href = `/products/${product.slug}?color=${color}`;
   return (
@@ -34,13 +32,7 @@ export function ProductCard({ product, colorful = false }: { product: Product; c
         </div>
       </div>
       <div className="flex flex-1 flex-col px-5 pb-5 pt-4">
-        <p
-          className={`flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] ${colorful ? "" : "text-[#607487]"}`}
-          style={colorful ? { color: categoryAccent(product.category) } : undefined}
-        >
-          {colorful && <span aria-hidden className="size-1.5 rounded-full bg-current" />}
-          {product.category}
-        </p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[color:var(--shop-muted,#607487)]">{product.category}</p>
         <Link href={href} className="mt-1 text-[17px] font-bold leading-snug tracking-[-0.01em] text-[#113858] hover:underline">
           {product.title}
         </Link>

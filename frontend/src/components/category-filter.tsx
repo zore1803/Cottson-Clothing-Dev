@@ -1,6 +1,5 @@
 "use client";
 
-import { categoryAccent } from "@/lib/shop-palette";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, Clock, ShoppingCart, SlidersHorizontal, X, Check } from "lucide-react";
 import { type Product } from "@/lib/catalog";
@@ -114,7 +113,7 @@ function FilterButton({
       {icon}
       {label}
       {count > 0 && (
-        <span className="grid size-5 place-items-center rounded-full bg-[#C8426B] text-[11px] font-bold text-white">{count}</span>
+        <span className="grid size-5 place-items-center rounded-full bg-white text-[11px] font-bold text-[#113858]">{count}</span>
       )}
     </button>
   );
@@ -229,10 +228,8 @@ export function CategoryFilter({ products }: { products: Product[] }) {
       {/* Header band */}
       <header className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[var(--shop-tint)] via-[var(--shop-surface)] to-white px-6 py-10 ring-1 ring-inset ring-[#D6E1EC] sm:rounded-[32px] sm:px-10 sm:py-12">
         <div aria-hidden className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-[#1F5A8C]/[0.07]" />
-        <div aria-hidden className="pointer-events-none absolute -bottom-24 right-24 size-56 rounded-full bg-[#C8426B]/[0.06]" />
         <p
-          className="relative mb-3 text-[11px] font-bold uppercase tracking-[0.22em] sm:text-[12px]"
-          style={{ color: categoryAccent(active) }}
+          className="relative mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--shop-muted)] sm:text-[12px]"
         >
           {active ? "Category" : "Catalogue"}
         </p>
@@ -276,14 +273,11 @@ export function CategoryFilter({ products }: { products: Product[] }) {
                     aria-pressed={on}
                     className={cn(
                       "flex w-full items-center justify-between gap-3 rounded-full px-4 py-2.5 text-[14px] font-semibold transition-colors",
-                      on ? "bg-[#113858] text-white" : "text-[#113858] hover:bg-[var(--shop-tint)]"
+                      on ? "bg-[var(--shop-tint)] text-[#113858] ring-1 ring-inset ring-[var(--shop-line-strong)]" : "text-[#113858] hover:bg-[var(--shop-tint)]"
                     )}
                   >
-                    <span className="flex items-center gap-2.5">
-                      {c && <span aria-hidden className="size-2 rounded-full" style={{ background: on ? "#fff" : categoryAccent(c) }} />}
-                      {c ?? "Show all"}
-                    </span>
-                    <span className={cn("text-[12px] font-medium", on ? "text-white/70" : "text-[color:var(--shop-muted)]")}>{n}</span>
+                    <span>{c ?? "Show all"}</span>
+                    <span className={cn("text-[12px] font-medium", on ? "text-[#113858]" : "text-[color:var(--shop-muted)]")}>{n}</span>
                   </button>
                 </li>
               );
@@ -339,7 +333,7 @@ export function CategoryFilter({ products }: { products: Product[] }) {
           {visible.length > 0 ? (
             <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {visible.map((p) => (
-                <ProductCard key={p.slug} product={p} colorful />
+                <ProductCard key={p.slug} product={p} />
               ))}
             </div>
           ) : (

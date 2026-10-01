@@ -1,33 +1,28 @@
-import { Feather, Shirt, Sparkles, Wind } from "lucide-react";
-
 const FEATURES = [
-  { icon: Sparkles, label: "Super Soft", text: "Gentle on skin for all-day comfort." },
-  { icon: Wind, label: "Breathable", text: "Keeps your team cool through long shifts." },
-  { icon: Feather, label: "Featherlight", text: "Lightweight fabric that never feels heavy." },
-  { icon: Shirt, label: "100% Cotton", text: "Premium cotton that lasts wash after wash." },
+  { label: "Super soft", text: "Gentle on the skin, comfortable through a full day." },
+  { label: "Breathable", text: "Lets air through, so the team stays cool on long shifts." },
+  { label: "Featherlight", text: "Light fabric that never feels heavy to wear." },
+  { label: "100% cotton", text: "Premium cotton that holds up wash after wash." },
 ];
 
-/** Fabric-quality strip: icon, label and a one-line benefit, each in its own card. */
+/** Fabric qualities: four short columns, each under its own rule. */
 export function FabricFeatures() {
   return (
-    <section className="mx-auto max-w-6xl px-4 py-12">
-      <div className="mx-auto max-w-2xl text-center">
-        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#607487] sm:text-[12px]">The fabric</p>
-        <h2 className="text-[30px] font-bold leading-[1.12] tracking-[-0.025em] text-[#113858] sm:text-[40px]">
-          Made to be worn <span className="text-[#113858]/45">every day.</span>
-        </h2>
+    <section className="mx-auto max-w-6xl px-4 py-16">
+      <div className="grid gap-6 lg:grid-cols-[1fr_2fr] lg:gap-16">
+        <h2 className="text-[28px] font-bold leading-tight tracking-[-0.02em] text-[#113858] sm:text-[32px]">The fabric</h2>
+        <p className="max-w-lg text-[16px] leading-relaxed text-[#607487] lg:pt-1.5">
+          What your team notices first when they put it on: how it feels, how it breathes and how long it lasts.
+        </p>
       </div>
-      <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {FEATURES.map(({ icon: Icon, label, text }) => (
-          <div key={label} className="group flex flex-col items-center gap-3 rounded-[24px] bg-[#F5F8FA] px-5 py-9 text-center transition-colors hover:bg-[#E9F0F5]">
-            <span className="grid size-16 place-items-center rounded-full bg-[#E9F0F5] text-[#113858] transition-colors group-hover:bg-[#113858] group-hover:text-white">
-              <Icon className="size-7" strokeWidth={1.6} />
-            </span>
-            <span className="text-[17px] font-bold text-[#113858]">{label}</span>
-            <span className="text-[13px] leading-relaxed text-[#607487]">{text}</span>
-          </div>
+      <ul className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+        {FEATURES.map(({ label, text }) => (
+          <li key={label} className="border-t-2 border-[#113858] pt-5">
+            <p className="text-[20px] font-bold tracking-[-0.01em] text-[#113858]">{label}</p>
+            <p className="mt-3 text-[15px] leading-[1.7] text-[#607487]">{text}</p>
+          </li>
         ))}
-      </div>
+      </ul>
     </section>
   );
 }
