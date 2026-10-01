@@ -1,6 +1,6 @@
 "use client";
 
-import { FILTER_TONES, categoryAccent, categoryGlow, categoryWash } from "@/lib/shop-palette";
+import { categoryAccent } from "@/lib/shop-palette";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, Clock, ShoppingCart, SlidersHorizontal, X, Check } from "lucide-react";
 import { type Product } from "@/lib/catalog";
@@ -91,14 +91,12 @@ function FilterButton({
   label,
   count,
   open,
-  tone,
   onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   count: number;
   open?: boolean;
-  tone?: string;
   onClick: () => void;
 }) {
   return (
@@ -113,7 +111,7 @@ function FilterButton({
           : "border-[var(--shop-line)] bg-white text-[#113858] hover:border-[var(--shop-line-strong)] hover:bg-[var(--shop-tint)]"
       )}
     >
-      <span className={cn("grid place-items-center", !(count > 0 || open) && tone)}>{icon}</span>
+      {icon}
       {label}
       {count > 0 && (
         <span className="grid size-5 place-items-center rounded-full bg-[#C8426B] text-[11px] font-bold text-white">{count}</span>
@@ -126,13 +124,11 @@ function PillDropdown({
   icon,
   label,
   count,
-  tone,
   children,
 }: {
   icon: React.ReactNode;
   label: string;
   count: number;
-  tone?: string;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -152,7 +148,7 @@ function PillDropdown({
   }, [open]);
   return (
     <div ref={ref} className="relative">
-      <FilterButton icon={icon} label={label} count={count} open={open} tone={tone} onClick={() => setOpen((o) => !o)} />
+      <FilterButton icon={icon} label={label} count={count} open={open} onClick={() => setOpen((o) => !o)} />
       {open && (
         <div className="absolute left-0 top-full z-30 mt-2 min-w-[240px] rounded-[20px] border border-[var(--shop-line)] bg-white p-3 shadow-[0_20px_50px_rgba(17,56,88,0.16)] sm:left-auto sm:right-0">
           {children}
@@ -214,11 +210,10 @@ export function CategoryFilter({ products }: { products: Product[] }) {
     .filter((p) => flags.every((f) => p[f] === true));
 
   const chips = [
-    ...days.map((d) => ({ id: `d${d}`, tone: FILTER_TONES.days.chip, label: `${d} days or less`, remove: () => toggleIn(setDays, d) })),
-    ...qty.map((q) => ({ id: `q${q}`, tone: FILTER_TONES.qty.chip, label: MIN_QTY.find((o) => o.value === q)!.label, remove: () => toggleIn(setQty, q) })),
+    ...days.map((d) => ({ id: `d${d}`, label: `${d} days or less`, remove: () => toggleIn(setDays, d) })),
+    ...qty.map((q) => ({ id: `q${q}`, label: MIN_QTY.find((o) => o.value === q)!.label, remove: () => toggleIn(setQty, q) })),
     ...flags.map((f) => ({
       id: f,
-      tone: FILTER_TONES.flags.chip,
       label: TOGGLES.find((t) => t.key === f)!.title.replace(" only", ""),
       remove: () => toggleIn(setFlags, f),
     })),
@@ -232,14 +227,8 @@ export function CategoryFilter({ products }: { products: Product[] }) {
   return (
     <div style={SHOP_PALETTE}>
       {/* Header band */}
-      <header className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[var(--shop-tint)] via-[var(--shop-surface)] to-white px-6 py-10 ring-1 ring-inset ring-[#D6E1EC] sm:rounded-[32px] sm:px-10 sm:py-12"
-        style={active ? { background: `linear-gradient(135deg, ${categoryGlow(active)}, ${categoryWash(active)} 55%, #fff)` } : undefined}
-      >
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-[#1F5A8C]/[0.07]"
-          style={active ? { background: `color-mix(in srgb, ${categoryAccent(active)} 10%, transparent)` } : undefined}
-        />
+      <header className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[var(--shop-tint)] via-[var(--shop-surface)] to-white px-6 py-10 ring-1 ring-inset ring-[#D6E1EC] sm:rounded-[32px] sm:px-10 sm:py-12">
+        <div aria-hidden className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-[#1F5A8C]/[0.07]" />
         <div aria-hidden className="pointer-events-none absolute -bottom-24 right-24 size-56 rounded-full bg-[#C8426B]/[0.06]" />
         <p
           className="relative mb-3 text-[11px] font-bold uppercase tracking-[0.22em] sm:text-[12px]"
@@ -287,9 +276,8 @@ export function CategoryFilter({ products }: { products: Product[] }) {
                     aria-pressed={on}
                     className={cn(
                       "flex w-full items-center justify-between gap-3 rounded-full px-4 py-2.5 text-[14px] font-semibold transition-colors",
-                      on ? (c ? "text-white" : "bg-[#113858] text-white") : "text-[#113858] hover:bg-[var(--shop-tint)]"
+                      on ? "bg-[#113858] text-white" : "text-[#113858] hover:bg-[var(--shop-tint)]"
                     )}
-                    style={on && c ? { background: categoryAccent(c) } : undefined}
                   >
                     <span className="flex items-center gap-2.5">
                       {c && <span aria-hidden className="size-2 rounded-full" style={{ background: on ? "#fff" : categoryAccent(c) }} />}
@@ -310,17 +298,16 @@ export function CategoryFilter({ products }: { products: Product[] }) {
               {visible.length} {visible.length === 1 ? "result" : "results"}
             </p>
             <div className="flex flex-wrap gap-2">
-              <PillDropdown icon={<Clock className="size-4" />} label="Production time" count={days.length} tone={FILTER_TONES.days.icon}>
+              <PillDropdown icon={<Clock className="size-4" />} label="Production time" count={days.length}>
                 <CheckList items={PRODUCTION} selected={days} onToggle={(v) => toggleIn(setDays, v)} />
               </PillDropdown>
-              <PillDropdown icon={<ShoppingCart className="size-4" />} label="Min. quantity" count={qty.length} tone={FILTER_TONES.qty.icon}>
+              <PillDropdown icon={<ShoppingCart className="size-4" />} label="Min. quantity" count={qty.length}>
                 <CheckList items={MIN_QTY} selected={qty} onToggle={(v) => toggleIn(setQty, v)} />
               </PillDropdown>
               <FilterButton
                 icon={<SlidersHorizontal className="size-4" />}
                 label="More filters"
                 count={flags.length}
-                tone={FILTER_TONES.flags.icon}
                 onClick={() => setDrawer(true)}
               />
             </div>
@@ -333,7 +320,7 @@ export function CategoryFilter({ products }: { products: Product[] }) {
                   key={c.id}
                   type="button"
                   onClick={c.remove}
-                  className={cn("flex items-center gap-1.5 rounded-full py-1.5 pl-3.5 pr-2.5 text-[13px] font-semibold transition-colors", c.tone)}
+                  className="flex items-center gap-1.5 rounded-full bg-[var(--shop-tint)] py-1.5 pl-3.5 pr-2.5 text-[13px] font-semibold text-[#113858] transition-colors hover:bg-[var(--shop-tint-2)]"
                 >
                   {c.label}
                   <X className="size-3.5" />
