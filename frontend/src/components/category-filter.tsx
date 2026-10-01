@@ -287,15 +287,28 @@ export function CategoryFilter({ products }: { products: Product[] }) {
                     aria-pressed={on}
                     className={cn(
                       "flex w-full items-center justify-between gap-3 rounded-full px-4 py-2.5 text-[14px] font-semibold transition-colors",
-                      on ? (c ? "text-white" : "bg-[#113858] text-white") : "text-[#113858] hover:bg-[var(--shop-tint)]"
+                      !on && "text-[#113858] hover:bg-[var(--shop-tint)]"
                     )}
-                    style={on && c ? { background: categoryAccent(c) } : undefined}
+                    style={
+                      on
+                        ? {
+                            background: categoryGlow(c),
+                            color: categoryAccent(c),
+                            boxShadow: `inset 0 0 0 1.5px color-mix(in srgb, ${categoryAccent(c)} 35%, transparent)`,
+                          }
+                        : undefined
+                    }
                   >
                     <span className="flex items-center gap-2.5">
-                      {c && <span aria-hidden className="size-2 rounded-full" style={{ background: on ? "#fff" : categoryAccent(c) }} />}
+                      {c && <span aria-hidden className="size-2 rounded-full" style={{ background: categoryAccent(c) }} />}
                       {c ?? "Show all"}
                     </span>
-                    <span className={cn("text-[12px] font-medium", on ? "text-white/70" : "text-[color:var(--shop-muted)]")}>{n}</span>
+                    <span
+                      className={cn("min-w-6 rounded-full px-1.5 text-center text-[12px] font-semibold", !on && "text-[color:var(--shop-muted)]")}
+                      style={on ? { background: `color-mix(in srgb, ${categoryAccent(c)} 18%, #fff)` } : undefined}
+                    >
+                      {n}
+                    </span>
                   </button>
                 </li>
               );
