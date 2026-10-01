@@ -5,16 +5,21 @@ import Image from "next/image";
 import { useState } from "react";
 import { type Product, variantUrl, formatPrice } from "@/lib/catalog";
 import { ColorSwatches } from "@/components/color-swatches";
-import { categoryAccent } from "@/lib/shop-palette";
+import { UNITS_BADGE, categoryAccent, categoryWash, daysBadge } from "@/lib/shop-palette";
 
 /** Listing card: swaps between pre-rendered color images from the CDN (no live rendering here) */
 /** `colorful` (products page) tints the category label with that category's accent colour */
 export function ProductCard({ product, colorful = false }: { product: Product; colorful?: boolean }) {
   const [color, setColor] = useState(product.originalColor);
   const href = `/products/${product.slug}?color=${color}`;
+  const accent = categoryAccent(product.category);
+  const days = product.productionDays ?? 28;
   return (
-    <div className="group flex w-full flex-col overflow-hidden rounded-[24px] border border-[var(--shop-line,transparent)] bg-[var(--shop-card,#F5F8FA)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--shop-line-strong,transparent)] hover:shadow-[0_18px_40px_rgba(17,56,88,0.14)]">
-      <div className="relative overflow-hidden bg-[var(--shop-surface,transparent)]">
+    <div
+      style={colorful ? ({ "--ca": accent } as React.CSSProperties) : undefined}
+      className="group flex w-full flex-col overflow-hidden rounded-[24px] border border-[var(--shop-line,transparent)] bg-[var(--shop-card,#F5F8FA)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--ca,var(--shop-line-strong,transparent))] hover:shadow-[0_18px_40px_rgba(17,56,88,0.14)]"
+    >
+      <div className="relative overflow-hidden bg-[var(--shop-surface,transparent)]" style={colorful ? { background: categoryWash(product.category) } : undefined}>
         <Link href={href} className="block" aria-label={product.title}>
           <Image
             src={variantUrl(product, color)}
@@ -26,8 +31,8 @@ export function ProductCard({ product, colorful = false }: { product: Product; c
           />
         </Link>
         <div className="pointer-events-none absolute left-3 top-3 flex flex-col items-start gap-1.5 text-[12px] font-semibold text-[#113858]">
-          <span className="rounded-full bg-white/95 px-3 py-1 shadow-sm">{product.productionDays ?? 28} days</span>
-          <span className="rounded-full bg-white/95 px-3 py-1 shadow-sm">Min. {product.minBulk} units</span>
+          <span className={`rounded-full px-3 py-1 shadow-sm ${colorful ? daysBadge(days) : "bg-white/95"}`}>{days} days</span>
+          <span className={`rounded-full px-3 py-1 shadow-sm ${colorful ? UNITS_BADGE : "bg-white/95"}`}>Min. {product.minBulk} units</span>
         </div>
         <div className="absolute inset-x-0 bottom-0 flex justify-end bg-gradient-to-t from-black/25 to-transparent px-3 pb-3 pt-10">
           <ColorSwatches colorIds={product.colors} value={color} onChange={setColor} size="sm" />
@@ -36,7 +41,7 @@ export function ProductCard({ product, colorful = false }: { product: Product; c
       <div className="flex flex-1 flex-col px-5 pb-5 pt-4">
         <p
           className={`flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] ${colorful ? "" : "text-[#607487]"}`}
-          style={colorful ? { color: categoryAccent(product.category) } : undefined}
+          style={colorful ? { color: accent } : undefined}
         >
           {colorful && <span aria-hidden className="size-1.5 rounded-full bg-current" />}
           {product.category}
