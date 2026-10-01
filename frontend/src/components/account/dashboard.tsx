@@ -136,7 +136,7 @@ export function Dashboard({ customer, orders, initialTab }: { customer: AccountC
         </div>
       </div>
 
-      <div className="mx-auto -mt-14 max-w-[1120px] px-4 sm:px-8">
+      <div className="relative z-10 mx-auto -mt-14 max-w-[1120px] px-4 sm:px-8">
         {/* Stats */}
         <div className="grid grid-cols-1 gap-3 min-[460px]:grid-cols-2 sm:gap-4 lg:grid-cols-4">
           {stats.map((s) => (
