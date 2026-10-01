@@ -11,6 +11,7 @@ const range = (list: typeof FINISHINGS) => `up to ${Math.max(...list.map((f) => 
 export function ProductInfo({ product }: { product: Product }) {
   const cards = [
     {
+      hue: "var(--pa, #1B7A57)",
       icon: Paintbrush,
       title: "How customisation works",
       body: (
@@ -30,6 +31,7 @@ export function ProductInfo({ product }: { product: Product }) {
       ),
     },
     {
+      hue: "#0F7C8A",
       icon: Droplets,
       title: "Fabric & care",
       body: (
@@ -42,6 +44,7 @@ export function ProductInfo({ product }: { product: Product }) {
       ),
     },
     {
+      hue: "#B8512C",
       icon: Truck,
       title: "Pricing & delivery",
       body: (
@@ -63,15 +66,19 @@ export function ProductInfo({ product }: { product: Product }) {
   return (
     <section className="mx-auto max-w-6xl px-4 py-12">
       <div className="mx-auto max-w-2xl text-center">
-        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#607487] sm:text-[12px]">Good to know</p>
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--pa,#607487)] sm:text-[12px]">Good to know</p>
         <h2 className="text-[30px] font-bold leading-[1.12] tracking-[-0.025em] text-[#113858] sm:text-[40px]">
           Everything about <span className="text-[#113858]/45">your order.</span>
         </h2>
       </div>
       <div className="mt-10 grid gap-4 md:grid-cols-3">
-        {cards.map(({ icon: Icon, title, body }) => (
-          <div key={title} className="rounded-[24px] bg-[#F5F8FA] p-6 text-[14px] leading-relaxed text-[#607487]">
-            <span className="mb-4 grid size-12 place-items-center rounded-full bg-[#E9F0F5] text-[#113858]">
+        {cards.map(({ icon: Icon, title, body, hue }) => (
+          <div
+            key={title}
+            className="rounded-[24px] border p-6 text-[14px] leading-relaxed text-[#566C82]"
+            style={{ background: `color-mix(in srgb, ${hue} 7%, #fff)`, borderColor: `color-mix(in srgb, ${hue} 20%, #fff)` }}
+          >
+            <span className="mb-4 grid size-12 place-items-center rounded-full text-white" style={{ background: hue }}>
               <Icon className="size-6" strokeWidth={1.6} />
             </span>
             <h3 className="mb-3 text-[17px] font-bold text-[#113858]">{title}</h3>

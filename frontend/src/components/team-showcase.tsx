@@ -28,7 +28,7 @@ export function TeamShowcase() {
   return (
     <section className="mx-auto max-w-6xl px-4 py-14">
       <div className="mx-auto max-w-2xl text-center">
-        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#607487] sm:text-[12px]">
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--pa,#607487)] sm:text-[12px]">
           Our clients
         </p>
         <h2 className="text-[30px] font-bold leading-[1.12] tracking-[-0.025em] text-[#113858] sm:text-[40px]">

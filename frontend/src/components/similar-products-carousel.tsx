@@ -24,7 +24,7 @@ export function SimilarProductsCarousel({ products }: { products: Product[] }) {
     <section className="mx-auto max-w-6xl px-4 py-16 relative">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#607487] sm:text-[12px]">Keep exploring</p>
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--pa,#607487)] sm:text-[12px]">Keep exploring</p>
           <h2 className="text-[28px] font-bold tracking-[-0.025em] text-[#113858] sm:text-[34px]">Similar products</h2>
         </div>
         <div className="hidden sm:flex items-center gap-2">
@@ -50,7 +50,7 @@ export function SimilarProductsCarousel({ products }: { products: Product[] }) {
       >
         {products.map((p) => (
           <div key={p.slug} className="w-[70vw] shrink-0 snap-start sm:w-64 md:w-72">
-            <ProductCard product={p} />
+            <ProductCard product={p} colorful />
           </div>
         ))}
       </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PRODUCTS, getProduct } from "@/lib/catalog";
+import { productTheme } from "@/lib/shop-palette";
 import { EssentialPoloDetail } from "@/components/essential-polo-detail";
 import { ProductInfo } from "@/components/product-info";
 import { FabricFeatures } from "@/components/fabric-features";
@@ -30,7 +31,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
   ].slice(0, 6);
   
   return (
-    <>
+    <div style={productTheme(product.category)}>
       <EssentialPoloDetail product={product} initialColor={initialColor} />
 
       <ProductInfo product={product} />
@@ -41,6 +42,6 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
 
       <WhatsappCta />
       <SimilarProductsCarousel products={similarProducts} />
-    </>
+    </div>
   );
 }
