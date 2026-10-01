@@ -1,12 +1,12 @@
 // Per-category accent colours for the products page. All are dark enough for 11px labels on white
 // (about 4.5:1 or better); the pink is the site's existing accent (#c8426b).
 const ACCENTS: Record<string, string> = {
-  Polos: "#1B7A57",
+  Polos: "#1F5A8C",
   Shirts: "#0F7C8A",
   "T-Shirts": "#C8426B",
   Jacket: "#6B4FA3",
   Hoodies: "#9A6212",
-  Sweatshirt: "#8E3A62",
+  Sweatshirt: "#23795E",
   Towels: "#2F6FA3",
   Cap: "#B8512C",
   Trousers: "#5B6B7A",
@@ -29,16 +29,3 @@ export const FILTER_TONES = {
 // Production-time badge: green for quick turnaround, blue otherwise
 export const daysBadge = (days: number) => (days <= 14 ? "bg-[#E1F3EA] text-[#16644A]" : "bg-[#E4EEF8] text-[#1F5A8C]");
 export const UNITS_BADGE = "bg-[#FBF0DC] text-[#7A4E0C]";
-
-// Product detail page theme: set once on a wrapper, read by the page's components as
-// var(--pa), var(--pa-wash) (pale panel), var(--pa-deep) (hover) and var(--pa-line) (borders)
-export const productTheme = (category?: string | null) => {
-  const a = categoryAccent(category);
-  return {
-    "--pa": a,
-    "--pa-wash": `color-mix(in srgb, ${a} 7%, #fff)`,
-    "--pa-glow": `color-mix(in srgb, ${a} 14%, #fff)`,
-    "--pa-deep": `color-mix(in srgb, ${a} 78%, #000)`,
-    "--pa-line": `color-mix(in srgb, ${a} 20%, #fff)`,
-  } as import("react").CSSProperties;
-};
