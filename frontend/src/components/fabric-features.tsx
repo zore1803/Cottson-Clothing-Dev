@@ -11,8 +11,8 @@ export function FabricFeatures() {
     <section className="mx-auto max-w-6xl px-4 py-16">
       <div className="grid gap-6 lg:grid-cols-[1fr_2fr] lg:gap-16">
         <h2 className="text-[28px] font-bold leading-tight tracking-[-0.02em] text-[#113858] sm:text-[32px]">The fabric</h2>
-        <p className="max-w-lg text-[16px] leading-relaxed text-[#607487] lg:pt-1.5">
-          What your team notices first when they put it on: how it feels, how it breathes and how long it lasts.
+        <p className="text-[16px] leading-relaxed text-[#607487] lg:pt-1.5">
+          How it feels, how it breathes and how long it lasts.
         </p>
       </div>
       <ul className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
