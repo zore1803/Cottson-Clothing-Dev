@@ -6,7 +6,7 @@ import { useState } from "react";
 import { getProduct, colorById, variantUrl } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 
-const product = getProduct("formal-shirt-grey")!;
+const product = getProduct("formal-shirt-slate")!;
 const SHOWCASE = product.colors;
 
 /** Hero image: the real shirt photo in the chosen color (pre-rendered variants, instant swap) */

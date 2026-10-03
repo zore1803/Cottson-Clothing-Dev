@@ -9,7 +9,9 @@
     "lint": "eslint",
     "make:garment-layer": "node scripts/make-garment-layer.mjs",
     "make:product": "node scripts/make-product-from-photo.mjs",
-    "render:variants": "node scripts/render-variants.mjs"
+    "render:variants": "node scripts/render-variants.mjs",
+    "check-template": "node scripts/check-template.mjs",
+    "test:mockups": "node --test tests/mockups.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

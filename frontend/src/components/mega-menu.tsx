@@ -26,8 +26,7 @@ const MENUS: Menu[] = [
       {
         heading: "New Arrivals",
         items: [
-          { title: "Contrast Trim Shirt", text: "Our newest statement piece.", href: "/products/contrast-trim-shirt" },
-          { title: "Classic Crew Tee", text: "An everyday essential.", href: "/products/classic-white-tee" },
+          { title: "Classic Polo", text: "Our newest statement piece.", href: "/products/classic-polo-black" },
         ],
       },
     ],
@@ -39,7 +38,7 @@ const MENUS: Menu[] = [
         heading: "The COTTSON Platform",
         items: [
           { title: "Design Studio", text: "Put your logo on any garment, live.", href: "/studio" },
-          { title: "Live color preview", text: "See every color on the real fabric.", href: "/products/formal-shirt-grey" },
+          { title: "Live color preview", text: "See every color on the real fabric.", href: "/products/formal-shirt-slate" },
           { title: "Bulk ordering", text: "Mix sizes and colors in one order.", href: "/#bulk" },
           { title: "Pricing", text: "10–20% off from 25 pieces.", href: "/#bulk" },
         ],

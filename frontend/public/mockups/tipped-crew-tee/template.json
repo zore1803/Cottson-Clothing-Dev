@@ -1,0 +1,76 @@
+{
+  "version": 2,
+  "type": "tipped-crew-tee",
+  "width": 1200,
+  "height": 1400,
+  "pxPerCm": 10.6,
+  "layers": {
+    "base": "base.png"
+  },
+  "foldStrength": 0.55,
+  "masks": "partition",
+  "regions": [
+    {
+      "id": "body",
+      "label": "Body",
+      "mask": "mask-body.png",
+      "default": "#f5f5f2"
+    },
+    {
+      "id": "sleeve",
+      "label": "Sleeves",
+      "mask": "mask-sleeve.png",
+      "default": "#f5f5f2",
+      "inherit": "body"
+    },
+    {
+      "id": "neckband",
+      "label": "Neckband",
+      "mask": "mask-neckband.png",
+      "default": "#f5f5f2",
+      "inherit": "body"
+    },
+    {
+      "id": "sleeve-tip",
+      "label": "Sleeve tipping",
+      "mask": "mask-sleeve-tip.png",
+      "default": "#f5f5f2",
+      "inherit": "neck-tip"
+    },
+    {
+      "id": "neck-tip",
+      "label": "Neck tipping",
+      "mask": "mask-neck-tip.png",
+      "default": "#f5f5f2"
+    }
+  ],
+  "zones": [
+    {
+      "id": "left-chest",
+      "label": "Left chest",
+      "x": 694,
+      "y": 356,
+      "w": 107,
+      "h": 85,
+      "rotation": 0
+    },
+    {
+      "id": "center-chest",
+      "label": "Center chest",
+      "x": 459,
+      "y": 439,
+      "w": 286,
+      "h": 222,
+      "rotation": 0
+    },
+    {
+      "id": "right-chest",
+      "label": "Right chest",
+      "x": 405,
+      "y": 356,
+      "w": 107,
+      "h": 85,
+      "rotation": 0
+    }
+  ]
+}

@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { Minus, Plus, Palette, Check } from "lucide-react";
 import { toast } from "sonner";
-import { type Product, colorById, formatPrice } from "@/lib/catalog";
+import Image from "next/image";
+import { type Product, colorById, formatPrice, assetUrl } from "@/lib/catalog";
 import { useCart } from "@/lib/cart-store";
 import { bulkDiscount, garmentUnitPrice } from "@/lib/pricing";
-import { VariantImage } from "@/components/variant-image";
+import { GarmentPhoto } from "@/components/design-studio/garment-photo";
 import { ColorSwatches } from "@/components/color-swatches";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ export function ProductConfigurator({ product, initialColor }: { product: Produc
   const [colorId, setColorId] = useState(initialColor);
   const [size, setSize] = useState<string | null>(null);
   const [qty, setQty] = useState(1);
+  const [pose, setPose] = useState(0);
   const add = useCart((s) => s.add);
 
   const color = colorById(colorId);
@@ -24,6 +26,7 @@ export function ProductConfigurator({ product, initialColor }: { product: Produc
 
   const changeColor = (id: string) => {
     setColorId(id);
+    setPose(0);
     // Shareable URL for the chosen color, without a navigation
     window.history.replaceState(null, "", `?color=${id}`);
   };
@@ -36,9 +39,32 @@ export function ProductConfigurator({ product, initialColor }: { product: Produc
 
   return (
     <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 lg:grid-cols-[1.1fr_1fr]">
-      <div className="lg:sticky lg:top-28 lg:self-start">
-        <VariantImage product={product} colorId={colorId} className="rounded-2xl" />
-        <p className="mt-2 text-center text-xs text-muted-foreground">Live preview on the real garment</p>
+      <div className="lg:sticky lg:top-32 lg:self-start">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
+          {product.poses && product.poses > 1 && (
+            <div className="order-2 flex gap-2 overflow-x-auto lg:order-1 lg:max-h-[36rem] lg:flex-col lg:overflow-y-auto lg:overflow-x-visible">
+              {Array.from({ length: product.poses }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setPose(i)}
+                  aria-label={`Pose ${i + 1}`}
+                  className={cn(
+                    "relative size-16 shrink-0 overflow-hidden rounded-lg border-2 bg-muted",
+                    pose === i ? "border-foreground" : "border-transparent hover:border-muted-foreground/40"
+                  )}
+                >
+                  <Image src={assetUrl(product.slug, "model-photo.png", i)} alt={`Pose ${i + 1}`} fill className="object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="order-1 min-w-0 flex-1 lg:order-2">
+            <div className="mx-auto aspect-[2/3] max-w-md overflow-hidden rounded-2xl lg:max-w-none">
+              <GarmentPhoto product={product} colorId={colorId} pose={pose} />
+            </div>
+            <p className="mt-2 text-center text-xs text-muted-foreground">Preview of the selected garment color</p>
+          </div>
+        </div>
       </div>
 
       <div>

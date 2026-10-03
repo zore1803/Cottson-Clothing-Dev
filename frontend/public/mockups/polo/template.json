@@ -1,0 +1,145 @@
+{
+  "version": 2,
+  "type": "polo",
+  "width": 1200,
+  "height": 1400,
+  "pxPerCm": 10.25,
+  "layers": {
+    "base": "base.png"
+  },
+  "foldStrength": 0.55,
+  "regions": [
+    {
+      "id": "body",
+      "label": "Body",
+      "mask": "mask-body.png",
+      "default": "#1c1c1c"
+    },
+    {
+      "id": "sleeve",
+      "label": "Sleeves",
+      "mask": "mask-sleeve.png",
+      "default": "#1c1c1c",
+      "inherit": "body"
+    },
+    {
+      "id": "cuff",
+      "label": "Sleeve cuffs",
+      "mask": "mask cuff.png",
+      "default": "#1c1c1c",
+      "inherit": "sleeve"
+    },
+    {
+      "id": "sleeve-tip",
+      "label": "Sleeve tipping",
+      "mask": "mask-sleeve-tip.png",
+      "default": "#f5f5f2",
+      "inherit": "collar-tip",
+      "plainInherit": "cuff"
+    },
+    {
+      "id": "collar",
+      "label": "Collar",
+      "mask": "mask collar.png",
+      "default": "#1c1c1c",
+      "inherit": "body"
+    },
+    {
+      "id": "collar-tip",
+      "label": "Tipping",
+      "mask": "mask collar tip.png",
+      "default": "#f5f5f2",
+      "plainInherit": "collar"
+    },
+    {
+      "id": "collar-tip-a",
+      "label": "Outer stripe",
+      "mask": "mask collar tip double a.png",
+      "default": "#f5f5f2",
+      "inherit": "collar-tip",
+      "when": {
+        "trim": [
+          "double"
+        ]
+      }
+    },
+    {
+      "id": "collar-tip-b",
+      "label": "Inner stripe",
+      "mask": "mask collar tip double b.png",
+      "default": "#f5f5f2",
+      "inherit": "collar-tip-a",
+      "when": {
+        "trim": [
+          "double"
+        ]
+      }
+    },
+    {
+      "id": "sleeve-tip-a",
+      "label": "Outer stripe (sleeves)",
+      "mask": "mask sleeve tip double a.png",
+      "default": "#f5f5f2",
+      "inherit": "collar-tip-a",
+      "when": {
+        "trim": [
+          "double"
+        ]
+      }
+    },
+    {
+      "id": "sleeve-tip-b",
+      "label": "Inner stripe (sleeves)",
+      "mask": "mask sleeve tip double b.png",
+      "default": "#f5f5f2",
+      "inherit": "collar-tip-b",
+      "when": {
+        "trim": [
+          "double"
+        ]
+      }
+    },
+    {
+      "id": "placket",
+      "label": "Placket",
+      "mask": "mask-placket.png",
+      "default": "#1c1c1c",
+      "inherit": "body"
+    },
+    {
+      "id": "buttons",
+      "label": "Buttons",
+      "mask": "mask-buttons.png",
+      "default": "#f5f5f2"
+    }
+  ],
+  "zones": [
+    {
+      "id": "left-chest",
+      "label": "Left chest",
+      "x": 690,
+      "y": 390,
+      "w": 103,
+      "h": 82,
+      "rotation": 0
+    },
+    {
+      "id": "center-chest",
+      "label": "Center chest",
+      "x": 463,
+      "y": 470,
+      "w": 277,
+      "h": 215,
+      "rotation": 0
+    },
+    {
+      "id": "right-chest",
+      "label": "Right chest",
+      "x": 410,
+      "y": 390,
+      "w": 103,
+      "h": 82,
+      "rotation": 0
+    }
+  ]
+}

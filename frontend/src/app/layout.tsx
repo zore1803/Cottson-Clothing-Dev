@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { RouteProgress } from "@/components/route-progress";
-import { TrustTicker } from "@/components/trust-ticker";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 
@@ -23,7 +22,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Suspense fallback={null}>
             <RouteProgress />
           </Suspense>
-          <TrustTicker />
           <SiteHeader />
           <main className="flex-1">{children}</main>
           <SiteFooter />

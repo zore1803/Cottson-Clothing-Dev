@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "family": "polo",
+  "style": "mannequin",
+  "views": {
+    "front": {
+      "buttons": "polo-front",
+      "zip": "polo-front-zip"
+    },
+    "back": "polo-back",
+    "side-left": {
+      "noArm": "polo-side-noarm",
+      "arm": "polo-side"
+    },
+    "side-right": {
+      "mirrorOf": "side-left"
+    }
+  },
+  "sideShowsArm": false,
+  "mirroredZones": {
+    "right-sleeve": {
+      "from": "left-sleeve",
+      "label": "Right sleeve"
+    }
+  },
+  "prices": {
+    "closure": {
+      "buttons": 0,
+      "zip": 0
+    },
+    "pocket": {
+      "no": 0,
+      "yes": 0
+    },
+    "trimStyle": {
+      "none": 0,
+      "single": 0,
+      "double": 0
+    }
+  }
+}

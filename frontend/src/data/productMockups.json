@@ -1,0 +1,147 @@
+{
+  "_comment": "Product slug -> mockup template (public/mockups/<template>/) and default colour ids (garment list for body/sleeve/collar/placket, trim list for tips). Unset regions inherit (sleeve/collar/placket -> body, sleeve-tip -> collar-tip).",
+  "polo-black": {
+    "template": "polo",
+    "colours": {
+      "body": "black"
+    }
+  },
+  "classic-polo-black": {
+    "template": "polo",
+    "colours": {
+      "body": "black"
+    }
+  },
+  "tipped-polo-charcoal": {
+    "template": "polo",
+    "colours": {
+      "body": "grey",
+      "collar-tip": "white",
+      "sleeve-tip": "white"
+    }
+  },
+  "classic-polo-navy": {
+    "template": "polo",
+    "colours": {
+      "body": "navy"
+    }
+  },
+  "relaxed-polo-black": {
+    "template": "polo",
+    "colours": {
+      "body": "black"
+    }
+  },
+  "crew-tee-black": {
+    "template": "crew-tee",
+    "colours": {
+      "body": "black"
+    }
+  },
+  "pinstripe-shirt-blue": {
+    "template": "formal-shirt",
+    "colours": {
+      "body": "sky"
+    }
+  },
+  "formal-shirt-slate": {
+    "template": "formal-shirt",
+    "colours": {
+      "body": "grey"
+    }
+  },
+  "formal-shirt-skyblue": {
+    "template": "formal-shirt",
+    "colours": {
+      "body": "sky"
+    }
+  },
+  "tipped-polo-skyblue": {
+    "template": "polo",
+    "colours": {
+      "body": "sky",
+      "collar-tip": "white",
+      "sleeve-tip": "white"
+    }
+  },
+  "pullover-hoodie-white": {
+    "template": "hoodie",
+    "colours": {
+      "body": "white"
+    }
+  },
+  "zip-hoodie-black": {
+    "template": "zip-hoodie",
+    "colours": {
+      "body": "black"
+    }
+  },
+  "hoodie-vest-black": {
+    "template": "hoodie-vest",
+    "colours": {
+      "body": "black"
+    }
+  },
+  "track-jacket-black": {
+    "template": "track-jacket",
+    "colours": {
+      "body": "black"
+    }
+  },
+  "drive": {
+    "template": "polo",
+    "colours": {
+      "body": "black",
+      "collar-tip": "white",
+      "sleeve-tip": "white"
+    }
+  },
+  "ease": {
+    "template": "polo",
+    "colours": {
+      "body": "black"
+    }
+  },
+  "grey-shirt": {
+    "template": "formal-shirt",
+    "colours": {
+      "body": "grey"
+    }
+  },
+  "yellow-shirt": {
+    "template": "formal-shirt",
+    "colours": {
+      "body": "yellow"
+    }
+  },
+  "indus-01": {
+    "template": "polo",
+    "colours": {
+      "body": "black",
+      "collar-tip": "red",
+      "sleeve-tip": "red"
+    }
+  },
+  "indus-04": {
+    "template": "polo",
+    "colours": {
+      "body": "yellow",
+      "collar-tip": "green",
+      "sleeve-tip": "green"
+    }
+  },
+  "formal-shirt-ice-blue": {
+    "template": "formal-shirt",
+    "colours": {
+      "body": "sky"
+    }
+  },
+  "essential-polo": {
+    "template": "polo",
+    "colours": {
+      "body": "black",
+      "collar-tip": "green",
+      "sleeve-tip": "green"
+    }
+  }
+}

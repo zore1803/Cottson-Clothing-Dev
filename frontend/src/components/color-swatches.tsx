@@ -29,9 +29,9 @@ export function ColorSwatches({
             title={c.name}
             onClick={() => onChange(id)}
             className={cn(
-              "rounded-full border-2 border-background ring-1 ring-border transition-transform hover:scale-110",
-              size === "sm" ? "size-5" : "size-9",
-              active && "ring-2 ring-foreground"
+              "rounded-full ring-1 ring-inset ring-black/15 transition-transform hover:scale-110",
+              size === "sm" ? "size-4 shadow-sm" : "size-9 border-2 border-background ring-border",
+              active && (size === "sm" ? "ring-2 ring-offset-1 ring-offset-white ring-brand" : "ring-2 ring-foreground")
             )}
             style={{ background: c.hex }}
           />

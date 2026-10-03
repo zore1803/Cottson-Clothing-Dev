@@ -1,0 +1,152 @@
+{
+  "version": 2,
+  "style": "mannequin",
+  "family": "polo",
+  "id": "polo-front",
+  "view": "front",
+  "width": 1200,
+  "height": 1600,
+  "groundShadow": false,
+  "dilateParts": true,
+  "pxPerCm": 11.6,
+  "pxPerCmNote": "PROVISIONAL assumption: size M, 40 in chest = 50.8 cm flat = 590 px armpit to armpit on the front view",
+  "layers": {
+    "base": "base.png",
+    "mannequin": "mannequin.png"
+  },
+  "shading": {
+    "scale": 200,
+    "foldStrength": 0.55,
+    "gainBase": 1.2,
+    "gainDark": 1.4,
+    "grain": {
+      "amp": 0.018,
+      "ampDark": 0.014,
+      "sigma": 0.5,
+      "seed": 1337
+    }
+  },
+  "trims": {
+    "single": "mask-trim-single.png",
+    "doubleA": "mask-trim-double-a.png",
+    "doubleB": "mask-trim-double-b.png"
+  },
+  "details": [],
+  "closure": "buttons",
+  "variants": {
+    "pocket": {
+      "base": "base-pocket.png"
+    }
+  },
+  "regions": [
+    {
+      "id": "body",
+      "label": "Body",
+      "mask": "mask-body.png",
+      "default": "#f5f5f2"
+    },
+    {
+      "id": "pocket",
+      "label": "Pocket",
+      "mask": "mask-pocket.png",
+      "default": "#f5f5f2",
+      "inherit": "body",
+      "when": {
+        "pocket": true
+      }
+    },
+    {
+      "id": "sleeve",
+      "label": "Sleeves",
+      "mask": "mask-sleeve.png",
+      "default": "#f5f5f2",
+      "inherit": "body"
+    },
+    {
+      "id": "cuff",
+      "label": "Sleeve cuffs",
+      "mask": "mask-cuff.png",
+      "default": "#f5f5f2",
+      "inherit": "sleeve"
+    },
+    {
+      "id": "collar",
+      "label": "Collar",
+      "mask": "mask-collar.png",
+      "default": "#f5f5f2",
+      "inherit": "body"
+    },
+    {
+      "id": "placket",
+      "label": "Placket",
+      "mask": "mask-placket.png",
+      "default": "#f5f5f2",
+      "inherit": "body"
+    },
+    {
+      "id": "buttons",
+      "label": "Buttons",
+      "mask": "mask-buttons.png",
+      "default": "#f5f5f2"
+    }
+  ],
+  "zones": [
+    {
+      "id": "left-chest",
+      "label": "Left chest",
+      "x": 711,
+      "y": 506.5,
+      "w": 118,
+      "h": 59,
+      "rotation": 0,
+      "maxCm": {
+        "w": 10.16,
+        "h": 5.08
+      },
+      "target": "body",
+      "avoid": [
+        "placket",
+        "collar",
+        "buttons"
+      ]
+    },
+    {
+      "id": "center-chest",
+      "label": "Center chest",
+      "x": 541,
+      "y": 620.5,
+      "w": 118,
+      "h": 59,
+      "rotation": 0,
+      "maxCm": {
+        "w": 10.16,
+        "h": 5.08
+      },
+      "target": "body",
+      "avoid": [
+        "placket",
+        "collar",
+        "buttons"
+      ]
+    },
+    {
+      "id": "right-chest",
+      "label": "Right chest",
+      "x": 371,
+      "y": 506.5,
+      "w": 118,
+      "h": 59,
+      "rotation": 0,
+      "maxCm": {
+        "w": 10.16,
+        "h": 5.08
+      },
+      "target": "body",
+      "avoid": [
+        "placket",
+        "collar",
+        "buttons"
+      ]
+    }
+  ]
+}
