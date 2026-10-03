@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { connectMongo, Design } from "@/lib/mongo";
-import { COLORS } from "@/lib/catalog";
+import { isValidObjectId } from "mongoose";
+import { COLORS, getProduct } from "@/lib/catalog";
+import { summarizeDesign } from "@/lib/designs";
+import { garmentUnitPrice, CUSTOMIZATION_FEE } from "@/lib/pricing";
+import { rateLimit, readJson } from "@/lib/security";
 import { getToken } from "@/lib/auth";
 
 // Turns the browser cart into a Medusa order:
@@ -26,13 +30,54 @@ async function store<T = Record<string, unknown>>(path: string, body?: unknown, 
 type Item = { slug: string; colorId: string; size: string; qty: number; designId?: string };
 type Variant = { id: string; options: { value: string; option?: { title: string } }[] };
 
+const MAX_LINES = 50;
+const MAX_QTY = 10_000;
+const bad = (error: string) => NextResponse.json({ error }, { status: 400 });
+
 export async function POST(req: Request) {
+  const limited = rateLimit(req, "checkout", 10, 10 * 60_000);
+  if (limited) return limited;
   try {
-    const { items, customer } = (await req.json()) as {
-      items: Item[];
-      customer: { name: string; email: string; phone: string; address: string; city: string; pincode: string };
-    };
-    if (!items?.length) return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
+    const body = await readJson(req);
+    const items = body?.items as Item[] | undefined;
+    const customer = body?.customer as { name: string; email: string; phone: string; address: string; city: string; pincode: string } | undefined;
+    if (!Array.isArray(items) || !items.length) return bad("Cart is empty");
+    if (items.length > MAX_LINES) return bad("Too many items in one order, please split it");
+    if (!customer || ["name", "email", "phone", "address", "city", "pincode"].some((k) => typeof (customer as Record<string, unknown>)[k] !== "string" || !(customer as Record<string, string>)[k].trim()))
+      return bad("Please fill in all delivery details");
+
+    // Never trust the browser's cart: check every line against the catalog. Prices are not
+    // taken from the request at all; Medusa prices each variant (incl. bulk tiers) itself.
+    const designIds = new Set<string>();
+    for (const i of items) {
+      const p = typeof i?.slug === "string" ? getProduct(i.slug) : undefined;
+      if (!p) return bad("An item in your cart is no longer available");
+      if (!COLORS.some((c) => c.id === i.colorId) || !p.sizes.includes(i.size)) return bad(`Invalid colour or size for ${p.title}`);
+      if (!Number.isInteger(i.qty) || i.qty < 1 || i.qty > MAX_QTY) return bad("Invalid quantity");
+      if (i.designId !== undefined) {
+        if (typeof i.designId !== "string" || !isValidObjectId(i.designId)) return bad("Invalid design reference");
+        designIds.add(i.designId);
+      }
+    }
+    // Minimum order applies per product across its colours and sizes
+    const perProduct = new Map<string, number>();
+    for (const i of items) perProduct.set(i.slug, (perProduct.get(i.slug) ?? 0) + i.qty);
+    for (const [slug, n] of perProduct) {
+      const p = getProduct(slug)!;
+      if (n < p.minBulk) return bad(`Minimum order for ${p.title} is ${p.minBulk} pieces`);
+    }
+
+    const token = await getToken();
+    const savedDesigns = new Map<string, { product: string; color: string; customerId?: string | null; elements: unknown[] }>();
+    if (designIds.size) {
+      await connectMongo();
+      const docs = await Design.find({ _id: { $in: [...designIds] } }, "product color customerId elements").lean();
+      for (const d of docs) savedDesigns.set(String(d._id), d);
+      for (const i of items) {
+        const d = i.designId ? savedDesigns.get(i.designId) : undefined;
+        if (i.designId && (!d || d.product !== i.slug || d.color !== i.colorId)) return bad("A saved design no longer matches your cart, please re-add it");
+      }
+    }
 
     // Map (product, color, size) to Medusa variant ids
     const handles = [...new Set(items.map((i) => i.slug))];
@@ -61,7 +106,6 @@ export async function POST(req: Request) {
     };
 
     // Signed-in customers: attach the cart to their account so the order shows in their history
-    const token = await getToken();
     const { cart } = await store<{ cart: { id: string } }>(
       "/carts",
       { region_id: REGION, email: customer.email, shipping_address: address, billing_address: address },
@@ -74,7 +118,7 @@ export async function POST(req: Request) {
       await store(`/carts/${cart.id}/line-items`, {
         variant_id: v.id,
         quantity: i.qty,
-        metadata: i.designId ? { design_id: i.designId } : undefined,
+        metadata: i.designId ? { design_id: i.designId, design_summary: summarizeDesign(savedDesigns.get(i.designId)!) } : undefined,
       });
       // Customized pieces: add the logo fee as its own line, linked to the same design
       if (i.designId) {
@@ -100,12 +144,16 @@ export async function POST(req: Request) {
     );
     if (done.type !== "order" || !done.order) throw new Error(done.error?.message ?? "Could not complete the order");
 
-    // Link saved designs to the order, for print-file generation later
-    const designIds = items.map((i) => i.designId).filter(Boolean);
-    if (designIds.length) {
+    // Link saved designs to the order and move them into the production queue
+    if (designIds.size) {
       await connectMongo();
-      await Design.updateMany({ _id: { $in: designIds } }, { medusaOrderId: done.order.id });
+      await Design.updateMany({ _id: { $in: [...designIds] } }, { medusaOrderId: done.order.id, status: "ordered" });
     }
+
+    // Safety net: compare Medusa's charge with the storefront's pricing rules. They should match
+    // exactly; a mismatch means the backend price tiers drifted from lib/pricing.ts.
+    const expectedItems = items.reduce((n, i) => n + i.qty * (garmentUnitPrice(getProduct(i.slug)!.price, i.qty) + (i.designId ? CUSTOMIZATION_FEE : 0)), 0);
+    if (done.order.item_total !== expectedItems) console.warn(`[checkout] price drift on order ${done.order.display_id}: Medusa ${done.order.item_total} vs expected ${expectedItems}`);
 
     return NextResponse.json({
       orderId: done.order.id,
