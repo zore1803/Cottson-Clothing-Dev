@@ -1,0 +1,27 @@
+import { connectMongo, Design, DESIGN_STATUSES } from "@/lib/mongo";
+import { summarizeDesign } from "@/lib/designs";
+import { requireAdmin } from "@/lib/security";
+
+// Production queue: designs attached to placed orders (full artwork via GET /api/designs/[id] with the admin key)
+export async function GET(req: Request) {
+  const denied = requireAdmin(req);
+  if (denied) return denied;
+  const status = new URL(req.url).searchParams.get("status");
+  await connectMongo();
+  const filter = status && (DESIGN_STATUSES as readonly string[]).includes(status) ? { status } : { medusaOrderId: { $exists: true } };
+  const docs = await Design.find(filter).sort({ createdAt: -1 }).limit(200).lean();
+  return Response.json({
+    designs: docs.map((d) => ({
+      id: String(d._id),
+      product: d.product,
+      color: d.color,
+      preview: d.preview,
+      status: d.status,
+      statusNote: d.statusNote,
+      medusaOrderId: d.medusaOrderId,
+      customerId: d.customerId,
+      summary: summarizeDesign(d),
+      createdAt: d.createdAt,
+    })),
+  });
+}
