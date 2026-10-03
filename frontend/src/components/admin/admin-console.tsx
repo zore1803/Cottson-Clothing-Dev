@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ChevronDown, ExternalLink, FileText, Inbox, LayoutDashboard, LogOut, Palette, Package, RefreshCw } from "lucide-react";
+import { Boxes, ChevronDown, ExternalLink, FileText, Inbox, LayoutDashboard, LogOut, Palette, Package, RefreshCw, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice, getProduct } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
+import { Pill, cardCls as card, selectCls as select } from "./ui";
+import { ProductsSection } from "./products-section";
+import { SettingsSection, type StoreSettings } from "./settings-section";
 
 type OrderItem = {
   id: string;
@@ -27,6 +29,7 @@ type AdminOrder = {
   fulfillment_status?: string;
   payment_status?: string;
   items: OrderItem[];
+  razorpay?: { id?: string; status: string; mode?: string; method?: string };
   shipping_address?: { first_name?: string | null; last_name?: string | null; address_1?: string | null; city?: string | null; postal_code?: string | null; phone?: string | null } | null;
 };
 type Quote = { _id: string; name: string; company?: string; email: string; phone?: string; product?: string; quantity?: number; message?: string; status: string; notes?: string; createdAt: string };
@@ -36,7 +39,9 @@ const TABS = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "orders", label: "Orders", icon: Package },
   { id: "production", label: "Production", icon: Palette },
+  { id: "products", label: "Products & stock", icon: Boxes },
   { id: "quotes", label: "Quotes", icon: Inbox },
+  { id: "settings", label: "Settings", icon: Settings },
 ] as const;
 type Tab = (typeof TABS)[number]["id"];
 
@@ -50,13 +55,7 @@ const DESIGN_STATUSES: [string, string][] = [
 const statusLabel = (s?: string) => DESIGN_STATUSES.find(([v]) => v === s)?.[1] ?? (s === "pending" ? "Saved" : (s ?? "Saved"));
 const MEDUSA_BASE = process.env.NEXT_PUBLIC_MEDUSA_URL ?? "";
 
-const select = "h-9 rounded-lg border border-[#113858]/15 bg-white px-2.5 text-[13px] font-medium text-[#113858] outline-none focus:border-[#113858]";
-const card = "rounded-2xl border border-[#113858]/[0.08] bg-white p-5 shadow-[0_8px_30px_rgba(17,56,88,0.06)] sm:p-6";
 const date = (d: string) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-
-function Pill({ children, tone = "bg-[#EAF1F7] text-[#113858]" }: { children: React.ReactNode; tone?: string }) {
-  return <span className={cn("inline-block rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider", tone)}>{children}</span>;
-}
 
 const designTone = (s?: string) =>
   s === "shipped" ? "bg-emerald-50 text-emerald-700" : s === "in_production" ? "bg-amber-50 text-amber-700" : s === "approved" ? "bg-[#DCEAF5] text-[#1F5A8C]" : "bg-[#EAF1F7] text-[#113858]";
@@ -69,7 +68,7 @@ function orderState(o: AdminOrder): { label: string; tone: string } {
   return { label: "Processing", tone: "bg-[#EAF1F7] text-[#113858]" };
 }
 
-export function AdminConsole({ admin }: { admin: { email: string; name: string } }) {
+export function AdminConsole({ admin, settings }: { admin: { email: string; name: string }; settings: StoreSettings }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("overview");
   const [orders, setOrders] = useState<AdminOrder[]>([]);
@@ -170,9 +169,6 @@ export function AdminConsole({ admin }: { admin: { email: string; name: string }
             <img src="/cottson.png" alt="COTTSON" className="h-7 w-auto max-w-[130px] object-contain brightness-0 invert" />
             <span className="rounded-full bg-white/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">Admin</span>
           </div>
-          <Link href="/" target="_blank" className="inline-flex items-center gap-1.5 text-[13px] font-medium text-white/75 transition hover:text-white">
-            View storefront <ExternalLink size={13} />
-          </Link>
         </div>
         <div className="mx-auto flex max-w-[1180px] flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-white">
@@ -359,6 +355,10 @@ export function AdminConsole({ admin }: { admin: { email: string; name: string }
                 </div>
               </div>
             )}
+
+            {tab === "products" && <ProductsSection call={call} />}
+
+            {tab === "settings" && <SettingsSection s={settings} />}
 
             {tab === "quotes" && (
               <div className={card}>
