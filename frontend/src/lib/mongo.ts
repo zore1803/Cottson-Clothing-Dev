@@ -23,6 +23,9 @@ export function connectMongo() {
   return g.mongo;
 }
 
+export const DESIGN_STATUSES = ["pending", "ordered", "approved", "in_production", "shipped"] as const;
+export type DesignStatus = (typeof DESIGN_STATUSES)[number];
+
 const DesignSchema = new Schema(
   {
     product: { type: String, required: true },
@@ -33,6 +36,11 @@ const DesignSchema = new Schema(
     elements: { type: [Schema.Types.Mixed], default: [] },
     preview: String,
     medusaOrderId: { type: String, index: true },
+    // Medusa customer who saved the design; absent for guest designs
+    customerId: { type: String, index: true },
+    // Production workflow: pending until the order is placed, then moved along by the team
+    status: { type: String, enum: DESIGN_STATUSES, default: "pending", index: true },
+    statusNote: String,
   },
   { timestamps: true }
 );
@@ -48,7 +56,8 @@ const QuoteSchema = new Schema(
     product: String,
     quantity: { type: Number, min: 1 },
     message: String,
-    status: { type: String, enum: ["new", "contacted", "won", "lost"], default: "new" },
+    status: { type: String, enum: ["new", "contacted", "won", "lost"], default: "new", index: true },
+    notes: String,
   },
   { timestamps: true }
 );
