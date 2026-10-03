@@ -3,26 +3,28 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Camera, Check, LayoutDashboard, LogOut, MapPin, Package, ShieldCheck, User, Wallet, CalendarDays } from "lucide-react";
+import { Camera, Check, LayoutDashboard, LogOut, MapPin, Package, Palette, ShieldCheck, User, Wallet, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { send } from "@/components/auth/fields";
 import { formatPrice } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { AddressesSection } from "./addresses-section";
 import { EmptyOrders, OrderCard, OrdersSection } from "./orders-section";
+import { DesignsSection } from "./designs-section";
 import { ProfileSection } from "./profile-section";
-import { Avatar, Card, btnGhost, btnPrimary, fullName, imageToAvatar, notifyAccountChanged, type AccountCustomer, type Order } from "./shared";
+import { Avatar, Card, btnGhost, btnPrimary, fullName, imageToAvatar, notifyAccountChanged, type AccountCustomer, type Order, type SavedDesign } from "./shared";
 
 const TABS = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "profile", label: "Profile", icon: User },
   { id: "addresses", label: "Addresses", icon: MapPin },
   { id: "orders", label: "Orders", icon: Package },
+  { id: "designs", label: "My designs", icon: Palette },
   { id: "security", label: "Security", icon: ShieldCheck },
 ] as const;
 type Tab = (typeof TABS)[number]["id"];
 
-export function Dashboard({ customer, orders, initialTab }: { customer: AccountCustomer; orders: Order[]; initialTab?: string }) {
+export function Dashboard({ customer, orders, designs, initialTab }: { customer: AccountCustomer; orders: Order[]; designs: SavedDesign[]; initialTab?: string }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [tab, setTabState] = useState<Tab>(TABS.some((t) => t.id === initialTab) ? (initialTab as Tab) : "overview");
@@ -228,6 +230,7 @@ export function Dashboard({ customer, orders, initialTab }: { customer: AccountC
             )}
             {tab === "addresses" && <AddressesSection addresses={customer.addresses} />}
             {tab === "orders" && <OrdersSection orders={orders} />}
+            {tab === "designs" && <DesignsSection designs={designs} />}
             {tab === "security" && (
               <Card title="Password" subtitle="Keep your account secure.">
                 <p className="text-[14.5px] leading-relaxed text-[#35516B]">

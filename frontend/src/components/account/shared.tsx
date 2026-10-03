@@ -29,6 +29,8 @@ export type Order = {
   items: OrderItem[];
 };
 
+export type SavedDesign = { id: string; product: string; color: string; preview?: string; status: string; createdAt: string };
+
 export type AccountCustomer = {
   email: string;
   first_name: string | null;
