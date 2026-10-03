@@ -1,6 +1,6 @@
 import { medusa, fail } from "@/lib/auth";
-import { requireAdmin } from "@/lib/admin-auth";
-import { connectMongo, Design } from "@/lib/mongo";
+import { requireAdmin } from "@/lib/authz";
+import { connectMongo, Design, Payment } from "@/lib/mongo";
 
 type MedusaOrder = {
   id: string;
@@ -28,18 +28,21 @@ export async function GET() {
 
     const designIds = [...new Set(orders.flatMap((o) => o.items.map((i) => i.metadata?.design_id)).filter((x): x is string => !!x))];
     const designs = new Map<string, { status: string; preview?: string }>();
-    if (designIds.length) {
-      try {
-        await connectMongo();
+    const payments = new Map<string, { id?: string; status: string; mode?: string; method?: string }>();
+    try {
+      await connectMongo();
+      for (const p of await Payment.find({ medusaOrderId: { $in: orders.map((o) => o.id) } }, "medusaOrderId razorpayPaymentId status mode method").lean())
+        payments.set(String(p.medusaOrderId), { id: p.razorpayPaymentId ?? undefined, status: p.status, mode: p.mode ?? undefined, method: p.method ?? undefined });
+      if (designIds.length)
         for (const d of await Design.find({ _id: { $in: designIds } }, "status preview").lean()) designs.set(String(d._id), { status: d.status ?? "pending", preview: d.preview ?? undefined });
-      } catch {
-        // Orders are still useful without design info if Mongo is unreachable
-      }
+    } catch {
+      // Orders are still useful without design or payment info if Mongo is unreachable
     }
 
     return Response.json({
       orders: orders.map((o) => ({
         ...o,
+        razorpay: payments.get(o.id),
         items: o.items.map((i) => ({ ...i, design: i.metadata?.design_id ? { id: i.metadata.design_id, ...designs.get(i.metadata.design_id) } : undefined })),
       })),
     });

@@ -1,31 +1,17 @@
 import { NextResponse } from "next/server";
-import { connectMongo, Design } from "@/lib/mongo";
+import { connectMongo, Design, Payment } from "@/lib/mongo";
 import { isValidObjectId } from "mongoose";
 import { COLORS, getProduct } from "@/lib/catalog";
 import { summarizeDesign } from "@/lib/designs";
-import { garmentUnitPrice, CUSTOMIZATION_FEE } from "@/lib/pricing";
 import { rateLimit, readJson } from "@/lib/security";
+import { store, REGION } from "@/lib/medusa-store";
+import { createOrderId, paymentMode, razorpayKeyId } from "@/lib/razorpay-dummy";
 import { getToken } from "@/lib/auth";
+import { getSession } from "@/lib/authz";
 
-// Turns the browser cart into a Medusa order:
-// cart -> line items -> address -> shipping method -> payment session -> complete.
-// Payment uses Medusa's system provider for now; Razorpay replaces it in the next phase.
-
-const MEDUSA = process.env.NEXT_PUBLIC_MEDUSA_URL!;
-const KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY!;
-const REGION = process.env.NEXT_PUBLIC_MEDUSA_REGION_ID!;
-
-async function store<T = Record<string, unknown>>(path: string, body?: unknown, token?: string): Promise<T> {
-  const res = await fetch(`${MEDUSA}/store${path}`, {
-    method: body === undefined ? "GET" : "POST",
-    headers: { "content-type": "application/json", "x-publishable-api-key": KEY, ...(token ? { authorization: `Bearer ${token}` } : {}) },
-    body: body === undefined ? undefined : JSON.stringify(body),
-    cache: "no-store",
-  });
-  const json = await res.json();
-  if (!res.ok) throw new Error(`Medusa ${path}: ${json?.message ?? res.status}`);
-  return json as T;
-}
+// Step 1 of checkout: validates the browser cart, builds it in Medusa (items, address, shipping),
+// and opens a payment order for the exact amount Medusa computed. The order itself is only placed
+// in /api/checkout/confirm once the payment is verified.
 
 type Item = { slug: string; colorId: string; size: string; qty: number; designId?: string };
 type Variant = { id: string; options: { value: string; option?: { title: string } }[] };
@@ -37,6 +23,9 @@ const bad = (error: string) => NextResponse.json({ error }, { status: 400 });
 export async function POST(req: Request) {
   const limited = rateLimit(req, "checkout", 10, 10 * 60_000);
   if (limited) return limited;
+  if (paymentMode() === "off") return NextResponse.json({ error: "Online payments are not available right now" }, { status: 503 });
+  // Staff accounts manage orders; they do not place them
+  if ((await getSession()).role === "admin") return NextResponse.json({ error: "You are signed in as an admin. Sign out to place an order." }, { status: 403 });
   try {
     const body = await readJson(req);
     const items = body?.items as Item[] | undefined;
@@ -135,35 +124,29 @@ export async function POST(req: Request) {
     if (!shipping_options.length) throw new Error("No shipping option for this address");
     await store(`/carts/${cart.id}/shipping-methods`, { option_id: shipping_options[0].id });
 
-    const { payment_collection } = await store<{ payment_collection: { id: string } }>("/payment-collections", { cart_id: cart.id });
-    await store(`/payment-collections/${payment_collection.id}/payment-sessions`, { provider_id: "pp_system_default" });
+    // The amount comes from Medusa's priced cart, never from the browser
+    const { cart: priced } = await store<{ cart: { total: number } }>(`/carts/${cart.id}?fields=total`);
+    const amount = Math.round(priced.total * 100); // paise
+    if (!(amount > 0)) throw new Error("Could not price your order");
 
-    const done = await store<{ type: string; order?: { id: string; display_id: number; total: number; item_total: number; shipping_total: number }; error?: { message: string } }>(
-      `/carts/${cart.id}/complete`,
-      {}
-    );
-    if (done.type !== "order" || !done.order) throw new Error(done.error?.message ?? "Could not complete the order");
-
-    // Link saved designs to the order and move them into the production queue
-    if (designIds.size) {
-      await connectMongo();
-      await Design.updateMany({ _id: { $in: [...designIds] } }, { medusaOrderId: done.order.id, status: "ordered" });
-    }
-
-    // Safety net: compare Medusa's charge with the storefront's pricing rules. They should match
-    // exactly; a mismatch means the backend price tiers drifted from lib/pricing.ts.
-    const expectedItems = items.reduce((n, i) => n + i.qty * (garmentUnitPrice(getProduct(i.slug)!.price, i.qty) + (i.designId ? CUSTOMIZATION_FEE : 0)), 0);
-    if (done.order.item_total !== expectedItems) console.warn(`[checkout] price drift on order ${done.order.display_id}: Medusa ${done.order.item_total} vs expected ${expectedItems}`);
-
-    return NextResponse.json({
-      orderId: done.order.id,
-      displayId: done.order.display_id,
-      total: done.order.total,
-      itemTotal: done.order.item_total,
-      shippingTotal: done.order.shipping_total,
+    const razorpayOrderId = createOrderId();
+    await connectMongo();
+    await Payment.create({
+      razorpayOrderId,
+      mode: paymentMode(),
+      cartId: cart.id,
+      amount,
+      email: customer.email,
+      lines: items.map((i) => ({ slug: i.slug, qty: i.qty, designId: i.designId })),
+      designIds: [...designIds],
     });
+
+    return NextResponse.json({ razorpayOrderId, amount, currency: "INR", keyId: razorpayKeyId(), mode: paymentMode() });
   } catch (e) {
+    const message = e instanceof Error ? e.message : "Checkout failed";
+    // Medusa refuses cart lines beyond the tracked stock of a variant
+    if (/inventory/i.test(message)) return NextResponse.json({ error: "Some items in your cart are out of stock in the quantity you chose. Please reduce the quantity and try again." }, { status: 409 });
     console.error(e);
-    return NextResponse.json({ error: e instanceof Error ? e.message : "Checkout failed" }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -62,3 +62,29 @@ const QuoteSchema = new Schema(
   { timestamps: true }
 );
 export const Quote = models.Quote || model("Quote", QuoteSchema);
+
+// One document per attempt to pay for a cart. Amounts are in paise, as Razorpay expects.
+// "created" -> "processing" (while the Medusa order is being placed) -> "paid"
+const PaymentSchema = new Schema(
+  {
+    razorpayOrderId: { type: String, required: true, unique: true },
+    razorpayPaymentId: String,
+    mode: { type: String, default: "dummy" },
+    method: String,
+    cartId: { type: String, required: true },
+    amount: { type: Number, required: true },
+    currency: { type: String, default: "INR" },
+    status: { type: String, enum: ["created", "processing", "paid", "failed", "order_failed"], default: "created", index: true },
+    email: String,
+    customerId: String,
+    // What was bought, kept so the order can be checked against pricing rules once placed
+    lines: { type: [Schema.Types.Mixed], default: [] },
+    designIds: { type: [String], default: [] },
+    medusaOrderId: { type: String, index: true },
+    displayId: Number,
+    orderTotal: Number,
+    error: String,
+  },
+  { timestamps: true }
+);
+export const Payment = models.Payment || model("Payment", PaymentSchema);
