@@ -20,7 +20,7 @@ const NAV = [
   { label: "Mockup", href: "/mockup-lab" },
 ];
 
-type Me = { first_name: string | null; last_name: string | null; email: string; avatar?: string } | null;
+type Me = { first_name: string | null; last_name: string | null; email: string; avatar?: string; admin?: boolean } | null;
 
 // Account link; when signed in it shows the user's initial and a hover card with name and email
 function AccountButton({ customer, className }: { customer: Me; className?: string }) {
@@ -29,8 +29,8 @@ function AccountButton({ customer, className }: { customer: Me; className?: stri
   return (
     <div className="group relative shrink-0">
       <Link
-        href="/account"
-        aria-label={customer ? `My account, ${name || customer.email}` : "Sign in"}
+        href={customer?.admin ? "/admin" : "/account"}
+        aria-label={customer?.admin ? "Admin dashboard" : customer ? `My account, ${name || customer.email}` : "Sign in"}
         className={cn(
           "flex shrink-0 items-center justify-center rounded-full bg-white text-[#113858] transition duration-200",
           className
@@ -50,6 +50,7 @@ function AccountButton({ customer, className }: { customer: Me; className?: stri
       >
         {customer ? (
           <>
+            {customer.admin && <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[#1F5A8C]">Admin</p>}
             {name && <p className="truncate text-[14px] font-semibold text-[#113858]">{name}</p>}
             <p className="truncate text-[13px] text-[#607487]">{customer.email}</p>
           </>
@@ -78,7 +79,7 @@ export function SiteHeader() {
     const load = () =>
       fetch("/api/auth/me")
         .then((r) => r.json())
-        .then((d) => live && setCustomer(d.customer ?? null))
+        .then((d) => live && setCustomer(d.customer ?? (d.admin ? { first_name: d.admin.name || "Admin", last_name: null, email: d.admin.email, admin: true } : null)))
         .catch(() => live && setCustomer(null));
     load();
     // The account page announces profile / photo edits so the header updates without a reload

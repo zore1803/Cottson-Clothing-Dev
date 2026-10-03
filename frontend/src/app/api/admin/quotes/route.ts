@@ -1,9 +1,9 @@
 import { connectMongo, Quote } from "@/lib/mongo";
-import { requireAdmin } from "@/lib/security";
+import { requireAdmin } from "@/lib/admin-auth";
 
 export async function GET(req: Request) {
-  const denied = requireAdmin(req);
-  if (denied) return denied;
+  const session = await requireAdmin();
+  if (session instanceof Response) return session;
   const status = new URL(req.url).searchParams.get("status");
   await connectMongo();
   const quotes = await Quote.find(status ? { status } : {}).sort({ createdAt: -1 }).limit(200).lean();

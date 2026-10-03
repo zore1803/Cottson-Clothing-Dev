@@ -1,12 +1,13 @@
 import { isValidObjectId } from "mongoose";
 import { connectMongo, Quote } from "@/lib/mongo";
-import { clean, readJson, requireAdmin } from "@/lib/security";
+import { requireAdmin } from "@/lib/admin-auth";
+import { clean, readJson } from "@/lib/security";
 
 const STATUSES = ["new", "contacted", "won", "lost"];
 
 export async function PATCH(req: Request, { params }: RouteContext<"/api/admin/quotes/[id]">) {
-  const denied = requireAdmin(req);
-  if (denied) return denied;
+  const session = await requireAdmin();
+  if (session instanceof Response) return session;
   const { id } = await params;
   const b = await readJson(req);
   if (!isValidObjectId(id) || !b) return Response.json({ error: "Invalid request" }, { status: 400 });

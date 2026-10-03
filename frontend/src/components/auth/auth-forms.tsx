@@ -33,8 +33,8 @@ export function LoginForm() {
   const router = useRouter();
   const next = safeNext(useSearchParams().get("next"));
   const { busy, error, onSubmit } = useSubmit(async (f) => {
-    await send("/api/auth/login", { email: f.email, password: f.password });
-    router.replace(next);
+    const res = await send<{ admin?: boolean }>("/api/auth/login", { email: f.email, password: f.password });
+    router.replace(res?.admin ? "/admin" : next);
     router.refresh();
   });
   return (

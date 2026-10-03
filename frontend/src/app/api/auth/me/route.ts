@@ -1,9 +1,13 @@
 import { getCustomer, getToken, medusa, fail, AuthError } from "@/lib/auth";
+import { getAdmin } from "@/lib/admin-auth";
 
 // Slim shape used by the header; the account page loads the full customer on the server
 export async function GET() {
   const c = await getCustomer();
-  if (!c) return Response.json({ customer: null });
+  if (!c) {
+    const session = await getAdmin();
+    return Response.json({ customer: null, admin: session ? { email: session.admin.email, name: [session.admin.first_name, session.admin.last_name].filter(Boolean).join(" ") } : null });
+  }
   const { id, email, first_name, last_name, phone, company_name, metadata, addresses } = c;
   return Response.json({
     customer: { id, email, first_name, last_name, phone, company_name, gst: metadata?.gst ?? "", avatar: metadata?.avatar ?? "", addresses },

@@ -1,5 +1,4 @@
 import "server-only";
-import { timingSafeEqual } from "node:crypto";
 
 // In-memory sliding-window limiter. Good enough for a single instance; swap for Redis
 // (Upstash etc.) if the site is ever scaled to several instances.
@@ -23,16 +22,6 @@ export function rateLimit(req: Request, name: string, limit: number, windowMs: n
   if (hits.size > 5000) for (const [k, v] of hits) if (!v.some((t) => now - t < windowMs)) hits.delete(k);
   return null;
 }
-
-/** Admin endpoints are guarded by the ADMIN_API_KEY env var, sent as `x-admin-key`. Returns a Response on failure. */
-export function requireAdmin(req: Request) {
-  const expected = process.env.ADMIN_API_KEY;
-  const given = req.headers.get("x-admin-key") ?? "";
-  const ok = !!expected && expected.length >= 16 && given.length === expected.length && timingSafeEqual(Buffer.from(given), Buffer.from(expected));
-  return ok ? null : Response.json({ error: "Unauthorized" }, { status: 401 });
-}
-
-export const isAdmin = (req: Request) => requireAdmin(req) === null;
 
 /** Parse a JSON body, returning null on malformed input instead of throwing */
 export async function readJson(req: Request): Promise<Record<string, unknown> | null> {

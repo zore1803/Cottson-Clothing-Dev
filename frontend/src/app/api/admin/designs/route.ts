@@ -1,11 +1,11 @@
 import { connectMongo, Design, DESIGN_STATUSES } from "@/lib/mongo";
 import { summarizeDesign } from "@/lib/designs";
-import { requireAdmin } from "@/lib/security";
+import { requireAdmin } from "@/lib/admin-auth";
 
-// Production queue: designs attached to placed orders (full artwork via GET /api/designs/[id] with the admin key)
+// Production queue: designs attached to placed orders (full artwork via GET /api/designs/[id] for a signed-in admin)
 export async function GET(req: Request) {
-  const denied = requireAdmin(req);
-  if (denied) return denied;
+  const session = await requireAdmin();
+  if (session instanceof Response) return session;
   const status = new URL(req.url).searchParams.get("status");
   await connectMongo();
   const filter = status && (DESIGN_STATUSES as readonly string[]).includes(status) ? { status } : { medusaOrderId: { $exists: true } };
