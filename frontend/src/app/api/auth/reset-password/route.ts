@@ -1,6 +1,9 @@
 import { medusa, isEmail, fail, AuthError, MIN_PASSWORD } from "@/lib/auth";
+import { rateLimit } from "@/lib/security";
 
 export async function POST(req: Request) {
+  const limited = rateLimit(req, "reset", 10, 60 * 60_000);
+  if (limited) return limited;
   try {
     const { token, email, password } = await req.json();
     if (!token || !isEmail(email)) throw new AuthError("This reset link is invalid. Request a new one.");

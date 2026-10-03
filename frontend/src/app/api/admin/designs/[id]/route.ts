@@ -1,6 +1,6 @@
 import { isValidObjectId } from "mongoose";
 import { connectMongo, Design, DESIGN_STATUSES } from "@/lib/mongo";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireAdmin } from "@/lib/authz";
 import { clean, readJson } from "@/lib/security";
 
 export async function PATCH(req: Request, { params }: RouteContext<"/api/admin/designs/[id]">) {

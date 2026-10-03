@@ -1,5 +1,5 @@
 import { connectMongo, Quote } from "@/lib/mongo";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireAdmin } from "@/lib/authz";
 
 export async function GET(req: Request) {
   const session = await requireAdmin();

@@ -1,6 +1,6 @@
 import { isValidObjectId } from "mongoose";
 import { connectMongo, Quote } from "@/lib/mongo";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireAdmin } from "@/lib/authz";
 import { clean, readJson } from "@/lib/security";
 
 const STATUSES = ["new", "contacted", "won", "lost"];

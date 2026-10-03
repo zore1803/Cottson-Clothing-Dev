@@ -1,6 +1,6 @@
 import { connectMongo, Design, DESIGN_STATUSES } from "@/lib/mongo";
 import { summarizeDesign } from "@/lib/designs";
-import { requireAdmin } from "@/lib/admin-auth";
+import { requireAdmin } from "@/lib/authz";
 
 // Production queue: designs attached to placed orders (full artwork via GET /api/designs/[id] for a signed-in admin)
 export async function GET(req: Request) {

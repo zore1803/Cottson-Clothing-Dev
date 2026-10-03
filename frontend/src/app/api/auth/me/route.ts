@@ -1,14 +1,12 @@
-import { getCustomer, getToken, medusa, fail, AuthError } from "@/lib/auth";
-import { getAdmin } from "@/lib/admin-auth";
+import { medusa, fail, AuthError } from "@/lib/auth";
+import { getSession, requireCustomer } from "@/lib/authz";
 
 // Slim shape used by the header; the account page loads the full customer on the server
 export async function GET() {
-  const c = await getCustomer();
-  if (!c) {
-    const session = await getAdmin();
-    return Response.json({ customer: null, admin: session ? { email: session.admin.email, name: [session.admin.first_name, session.admin.last_name].filter(Boolean).join(" ") } : null });
-  }
-  const { id, email, first_name, last_name, phone, company_name, metadata, addresses } = c;
+  const s = await getSession();
+  if (s.role === "admin") return Response.json({ customer: null, admin: { email: s.admin.email, name: [s.admin.first_name, s.admin.last_name].filter(Boolean).join(" ") } });
+  if (s.role !== "customer") return Response.json({ customer: null });
+  const { id, email, first_name, last_name, phone, company_name, metadata, addresses } = s.customer;
   return Response.json({
     customer: { id, email, first_name, last_name, phone, company_name, gst: metadata?.gst ?? "", avatar: metadata?.avatar ?? "", addresses },
   });
@@ -19,8 +17,8 @@ const MAX_AVATAR = 80_000; // characters of the data URL; the browser downsizes 
 // Partial update: only the fields present in the body are changed
 export async function PATCH(req: Request) {
   try {
-    const token = await getToken();
-    if (!token) throw new AuthError("Please sign in", 401);
+    const session = await requireCustomer();
+    if (session instanceof Response) return session;
     const b = await req.json();
     const update: Record<string, unknown> = {};
     const metadata: Record<string, string> = {};
@@ -45,7 +43,7 @@ export async function PATCH(req: Request) {
     }
     if (Object.keys(metadata).length) update.metadata = metadata;
 
-    await medusa("/store/customers/me", { token, body: update });
+    await medusa("/store/customers/me", { token: session.token, body: update });
     return Response.json({ ok: true });
   } catch (e) {
     return fail(e);

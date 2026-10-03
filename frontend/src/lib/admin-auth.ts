@@ -54,10 +54,4 @@ export async function getAdmin(): Promise<{ admin: Admin; token: string } | null
   }
 }
 
-/** For admin API routes: pass the result through when signed in, otherwise return the 401/403 response */
-export async function requireAdmin(): Promise<{ admin: Admin; token: string } | Response> {
-  const session = await getAdmin();
-  return session ?? Response.json({ error: "Admin sign-in required" }, { status: 401 });
-}
-
 export { AuthError };

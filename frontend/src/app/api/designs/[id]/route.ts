@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { isValidObjectId } from "mongoose";
 import { connectMongo, Design } from "@/lib/mongo";
-import { getCustomer } from "@/lib/auth";
-import { getAdmin } from "@/lib/admin-auth";
+import { canRead, getSession } from "@/lib/authz";
 
-// A design is readable by its owner or by a signed-in admin; guest designs by staff only.
+// A design is readable by its owner or by an admin (who sits above customers); guest designs by admins only.
 // Missing and forbidden both answer 404 so ids can't be probed.
 export async function GET(_req: Request, { params }: RouteContext<"/api/designs/[id]">) {
   const { id } = await params;
@@ -12,9 +11,6 @@ export async function GET(_req: Request, { params }: RouteContext<"/api/designs/
   await connectMongo();
   const doc = await Design.findById(id).lean();
   if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (!(await getAdmin())) {
-    const customer = await getCustomer();
-    if (!doc.customerId || customer?.id !== doc.customerId) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
+  if (!canRead(await getSession(), doc.customerId)) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(doc);
 }

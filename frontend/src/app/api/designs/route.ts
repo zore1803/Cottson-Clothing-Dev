@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectMongo, Design } from "@/lib/mongo";
-import { getCustomer } from "@/lib/auth";
+import { getSession, requireCustomer } from "@/lib/authz";
 import { parseDesign } from "@/lib/designs";
 import { rateLimit, readJson } from "@/lib/security";
 
@@ -15,17 +15,19 @@ export async function POST(req: Request) {
   const parsed = parseDesign(body);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
-  const [customer] = await Promise.all([getCustomer(), connectMongo()]);
-  const doc = await Design.create({ ...parsed.design, customerId: customer?.id });
+  const [session] = await Promise.all([getSession(), connectMongo()]);
+  // Designing is part of ordering, which admin accounts don't do; guests and customers can save
+  if (session.role === "admin") return NextResponse.json({ error: "Admin accounts cannot save customer designs" }, { status: 403 });
+  const doc = await Design.create({ ...parsed.design, customerId: session.role === "customer" ? session.customer.id : undefined });
   return NextResponse.json({ id: String(doc._id) }, { status: 201 });
 }
 
 // The signed-in customer's saved designs (previews only, newest first)
 export async function GET() {
-  const customer = await getCustomer();
-  if (!customer) return NextResponse.json({ error: "Please sign in" }, { status: 401 });
+  const session = await requireCustomer();
+  if (session instanceof Response) return session;
   await connectMongo();
-  const designs = await Design.find({ customerId: customer.id }, "product color preview status medusaOrderId createdAt")
+  const designs = await Design.find({ customerId: session.customer.id }, "product color preview status medusaOrderId createdAt")
     .sort({ createdAt: -1 })
     .limit(100)
     .lean();
