@@ -8,7 +8,7 @@ import Image from "next/image";
 import { type Product, colorById, formatPrice, assetUrl } from "@/lib/catalog";
 import { useCart } from "@/lib/cart-store";
 import { bulkDiscount, garmentUnitPrice } from "@/lib/pricing";
-import { RecolorCanvas } from "@/components/recolor-canvas";
+import { GarmentPhoto } from "@/components/design-studio/garment-photo";
 import { ColorSwatches } from "@/components/color-swatches";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,7 @@ export function ProductConfigurator({ product, initialColor }: { product: Produc
 
   const changeColor = (id: string) => {
     setColorId(id);
+    setPose(0);
     // Shareable URL for the chosen color, without a navigation
     window.history.replaceState(null, "", `?color=${id}`);
   };
@@ -58,13 +59,10 @@ export function ProductConfigurator({ product, initialColor }: { product: Produc
             </div>
           )}
           <div className="order-1 min-w-0 flex-1 lg:order-2">
-            <RecolorCanvas
-              slug={product.slug}
-              topColor={colorId === product.originalColor ? null : color.hex}
-              pose={product.poses ? pose : undefined}
-              className="mx-auto max-w-md rounded-2xl lg:max-w-none"
-            />
-            <p className="mt-2 text-center text-xs text-muted-foreground">Live preview on the real garment</p>
+            <div className="mx-auto aspect-[2/3] max-w-md overflow-hidden rounded-2xl lg:max-w-none">
+              <GarmentPhoto product={product} colorId={colorId} pose={pose} />
+            </div>
+            <p className="mt-2 text-center text-xs text-muted-foreground">Preview of the selected garment color</p>
           </div>
         </div>
       </div>
