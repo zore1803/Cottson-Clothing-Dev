@@ -19,7 +19,6 @@ import {
 } from "@medusajs/medusa/core-flows";
 
 type Catalog = {
-  colors: { id: string; name: string; hex: string }[];
   products: {
     slug: string; title: string; category: string; description: string; price: number;
     sizes: string[]; originalColor: string; colors: string[]; minBulk: number;
@@ -37,7 +36,11 @@ export default async function seedCottson({ container }: ExecArgs) {
 
   const catalogPath = path.resolve(process.cwd(), "../../../frontend/src/data/products.json");
   const catalog: Catalog = JSON.parse(fs.readFileSync(catalogPath, "utf8"));
-  const colorName = (id: string) => catalog.colors.find((c) => c.id === id)!.name;
+  // Stock colours live in colors.json (garment + trim swatches share ids)
+  const colorsPath = path.resolve(process.cwd(), "../../../frontend/src/data/colors.json");
+  const colorData: { garment: { id: string; name: string }[]; trim: { id: string; name: string }[] } = JSON.parse(fs.readFileSync(colorsPath, "utf8"));
+  const stockColors = [...colorData.garment, ...colorData.trim];
+  const colorName = (id: string) => stockColors.find((c) => c.id === id)!.name;
 
   // ---------- Store currency ----------
   const { data: [store] } = await query.graph({ entity: "store", fields: ["id", "supported_currencies.*", "default_sales_channel_id"] });

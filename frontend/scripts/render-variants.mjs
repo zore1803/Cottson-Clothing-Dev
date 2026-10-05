@@ -1,6 +1,6 @@
 // Pre-renders every catalog color of every product for listing / SEO pages.
 //
-//   node scripts/render-variants.mjs
+//   node scripts/render-variants.mjs [--only=slug1,slug2]
 //
 // Reads model-photo.png (untouched photo) + garment-layer.png (the cached segmentation mask,
 // see scripts/make-garment-layer.mjs) and writes public/products/<slug>/variants/<colorId>.webp.
@@ -26,7 +26,11 @@ const catalog = JSON.parse(await fs.readFile(path.join(root, 'src/data/products.
 const colorList = JSON.parse(await fs.readFile(path.join(root, 'src/data/colors.json'), 'utf8'));
 const colorHex = Object.fromEntries([...colorList.garment, ...colorList.trim].map((c) => [c.id, c.hex]));
 
+const onlyArg = process.argv.find((a) => a.startsWith('--only='));
+const only = onlyArg ? new Set(onlyArg.slice(7).split(',')) : null;
+
 for (const product of catalog.products) {
+  if (only && !only.has(product.slug)) continue;
   const dir = path.join(root, 'public/products', product.slug);
   const { data: base, info } = await sharp(path.join(dir, 'model-photo.png')).removeAlpha().raw().toBuffer({ resolveWithObject: true });
   const W = info.width, H = info.height, n = W * H;

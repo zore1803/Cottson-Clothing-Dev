@@ -1,62 +1,136 @@
 import "server-only";
-// Admin dashboard authentication (Better Auth). Staff sign in with email + password; there is no
-// public sign-up. The first admin is created with `npm run create-admin`, and an admin can then
-// add staff from the dashboard.
-//
-// Defence in depth: even if an account somehow existed, /admin and /api/admin check the user's
-// ROLE on the server (see lib/admin-guard.ts), so a plain "user" account gets nothing.
-import { betterAuth } from "better-auth";
-import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { nextCookies } from "better-auth/next-js";
-import { admin } from "better-auth/plugins";
-import { MongoClient } from "mongodb";
-// Imported for its side effect: the public-DNS workaround Atlas SRV lookups need on some resolvers
-import "@/lib/mongo";
+import { cookies } from "next/headers";
 
-if (!process.env.BETTER_AUTH_SECRET) throw new Error("BETTER_AUTH_SECRET is not set");
-if (!process.env.MONGODB_URI) throw new Error("MONGODB_URI is not set");
+// Customer auth is handled by Medusa (emailpass provider). The Medusa JWT lives in an
+// httpOnly cookie, so browser scripts never see it; only our /api/auth routes use it.
 
-/** Roles that may enter the dashboard */
-export const STAFF_ROLES = ["admin", "staff"] as const;
-export type StaffRole = (typeof STAFF_ROLES)[number];
+const MEDUSA = process.env.NEXT_PUBLIC_MEDUSA_URL!;
+const KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY!;
 
-// One MongoClient per server process (survives hot reloads). It connects on first use.
-const g = globalThis as unknown as { authMongo?: MongoClient };
-const client = (g.authMongo ??= new MongoClient(process.env.MONGODB_URI));
+export const SESSION_COOKIE = "cottson_session";
+export const SESSION_MAX_AGE = 60 * 60 * 24; // matches Medusa's default 1d JWT lifetime
+export const MIN_PASSWORD = 8;
 
-export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL,
-  secret: process.env.BETTER_AUTH_SECRET,
-  // Same database as the rest of COTTSON's own data; Better Auth adds user / session / account collections
-  database: mongodbAdapter(client.db("cottson")),
-  emailAndPassword: {
-    enabled: true,
-    // Staff are created by an admin (or the seed script), never through a public form. The seed
-    // script sets ALLOW_ADMIN_SIGNUP=1 for its own single run only.
-    disableSignUp: process.env.ALLOW_ADMIN_SIGNUP !== "1",
-    minPasswordLength: 12,
-    maxPasswordLength: 128,
-  },
-  session: {
-    expiresIn: 60 * 60 * 12, // 12 hours: a working day
-    updateAge: 60 * 60, // refresh the expiry hourly while in use
-    // No cookie cache on purpose: every request checks the session in the database, so a ban,
-    // role change or sign-out takes effect immediately (a cache would honour a revoked session
-    // for its whole lifetime). Admin traffic is small; this costs one lookup per page view.
-    cookieCache: { enabled: false },
-  },
-  advanced: {
-    // httpOnly + SameSite=Lax are the defaults; Secure is switched on automatically for https
-    useSecureCookies: process.env.NODE_ENV === "production",
-  },
-  // Brute-force guard on every auth endpoint (sign-in has its own, stricter built-in limit).
-  // Counters live in the database so they hold across serverless instances, not per process.
-  rateLimit: { enabled: true, window: 60, max: 20, storage: "database" },
-  plugins: [
-    // Roles ("admin", "staff") on the user record, plus user-management endpoints for admins
-    admin({ defaultRole: "user", adminRoles: ["admin"] }),
-    nextCookies(), // lets server actions set the session cookie (must be last)
-  ],
-});
+export type Address = {
+  id: string;
+  address_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  address_1: string | null;
+  address_2: string | null;
+  city: string | null;
+  province: string | null;
+  postal_code: string | null;
+  country_code: string | null;
+  phone: string | null;
+  is_default_shipping: boolean;
+};
 
-export type Session = typeof auth.$Infer.Session;
+export type Customer = {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  company_name: string | null;
+  created_at: string;
+  metadata: { gst?: string; avatar?: string } | null;
+  addresses: Address[];
+};
+
+export type OrderItem = { id: string; title: string; product_title?: string | null; variant_title?: string | null; quantity: number; unit_price: number; thumbnail?: string | null };
+export type Order = {
+  id: string;
+  display_id: number;
+  status: string;
+  fulfillment_status?: string;
+  payment_status?: string;
+  created_at: string;
+  total: number;
+  currency_code: string;
+  items: OrderItem[];
+};
+
+export class AuthError extends Error {
+  constructor(message: string, public status = 400) {
+    super(message);
+  }
+}
+
+export async function medusa<T = Record<string, unknown>>(
+  path: string,
+  opts: { method?: string; body?: unknown; token?: string } = {}
+): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`${MEDUSA}${path}`, {
+      method: opts.method ?? (opts.body === undefined ? "GET" : "POST"),
+      headers: {
+        "content-type": "application/json",
+        "x-publishable-api-key": KEY,
+        ...(opts.token ? { authorization: `Bearer ${opts.token}` } : {}),
+      },
+      body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
+      cache: "no-store",
+    });
+  } catch {
+    throw new AuthError("We cannot reach the server right now. Please try again shortly.", 503);
+  }
+  const text = await res.text();
+  let json: Record<string, unknown> = {};
+  try {
+    json = text ? JSON.parse(text) : {};
+  } catch {}
+  if (!res.ok) throw new AuthError(String(json.message ?? json.error ?? "Something went wrong"), res.status);
+  return json as T;
+}
+
+export async function setSession(token: string) {
+  (await cookies()).set(SESSION_COOKIE, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: SESSION_MAX_AGE,
+  });
+}
+
+export async function clearSession() {
+  (await cookies()).delete(SESSION_COOKIE);
+}
+
+export async function getToken() {
+  return (await cookies()).get(SESSION_COOKIE)?.value;
+}
+
+export async function getCustomer(): Promise<Customer | null> {
+  const token = await getToken();
+  if (!token) return null;
+  try {
+    const { customer } = await medusa<{ customer: Customer }>("/store/customers/me", { token });
+    return customer;
+  } catch {
+    return null;
+  }
+}
+
+export async function getOrders(): Promise<Order[]> {
+  const token = await getToken();
+  if (!token) return [];
+  try {
+    const { orders } = await medusa<{ orders: Order[] }>(
+      "/store/orders?order=-created_at&limit=50&fields=id,display_id,status,created_at,total,currency_code,fulfillment_status,payment_status,*items",
+      { token }
+    );
+    return orders;
+  } catch {
+    return [];
+  }
+}
+
+export const isEmail = (v: unknown): v is string => typeof v === "string" && /^\S+@\S+\.\S+$/.test(v.trim());
+
+export function fail(e: unknown) {
+  const err = e instanceof AuthError ? e : new AuthError("Something went wrong", 500);
+  return Response.json({ error: err.message }, { status: err.status });
+}

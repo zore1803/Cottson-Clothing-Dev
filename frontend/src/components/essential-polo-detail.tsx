@@ -28,7 +28,7 @@ import { PositionDialog } from "@/components/design-studio/position-dialog";
 import { GarmentPhoto, useFabricColor } from "@/components/design-studio/garment-photo";
 import { useFabricUnder, usePhoto } from "@/components/design-studio/use-conformed-art";
 import { stitchAngleFor } from "@/lib/conform";
-import { readLogoFile, useLogoArt, useStitchability, type LogoFile } from "@/components/design-studio/use-logo-artwork";
+import { useLogoArt, useStitchability, type LogoFile } from "@/components/design-studio/use-logo-artwork";
 import { THREADS } from "@/lib/embroidery";
 import { contrastRatio } from "@/lib/contrast";
 
@@ -144,7 +144,6 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
   // Flat / Conformed compare: false shows the stitched logo without bending it to the fabric
   const [conformed, setConformed] = useState(true);
   const frameRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const finishing = finishingById(finishingId);
   const embroidered = finishing.kind === "embroidery";
@@ -197,22 +196,6 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
     thickenMm,
     angleDeg: stitchAngle,
   }).url;
-
-  const onLogoFile = async (file: File) => {
-    try {
-      const l = await readLogoFile(file);
-      // Standard left-chest size: the longer side ~8 cm, within the finishing's limit
-      const w = Math.min(DEFAULT_LOGO_CM, DEFAULT_LOGO_CM * l.aspect, maxWidthFor(finishing, l.aspect));
-      const p = placeAt(frame, positionId, w, l.aspect);
-      setLogo(l);
-      setPlacement(p);
-      setThicken(false);
-      // Zoom the photo in on the logo right away
-      setFocus(focusOn(frame, p, l.aspect));
-    } catch {
-      toast.error("Couldn't read that file — try a PNG, JPG or SVG");
-    }
-  };
 
   const onPlacement = (p: Placement) => {
     setPlacement(p);
@@ -380,25 +363,13 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
 
           <div className="mt-8 space-y-4">
           <Step n={1} title="Add your logo">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/svg+xml,image/webp"
-              hidden
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) onLogoFile(f);
-                e.target.value = "";
-              }}
-            />
             {!logo ? (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
+              <Link
+                href={`/studio?product=${product.slug}&color=${colorId}`}
                 className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-[#113858]/30 bg-white px-4 py-6 text-sm font-semibold text-[#113858] transition-colors hover:border-[#113858] hover:bg-[#E9F0F5]"
               >
-                <ImagePlus className="size-5" /> Upload your logo <span className="font-normal text-[#607487]">· PNG, JPG or SVG</span>
-              </button>
+                <ImagePlus className="size-5" /> Add your logo in the Design Studio <span className="font-normal text-[#607487]">· PNG, JPG or SVG</span>
+              </Link>
             ) : (
               <>
                 <p className="mt-2 text-xs text-muted-foreground">Drag the logo on the photo to place it.</p>

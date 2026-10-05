@@ -4,9 +4,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { RouteProgress } from "@/components/route-progress";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
-import { HideOnAdmin } from "@/components/hide-on-admin";
+import { SiteShell } from "@/components/site-shell";
 
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
@@ -23,14 +21,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Suspense fallback={null}>
             <RouteProgress />
           </Suspense>
-          {/* The storefront navbar and footer are hidden on /admin, which has its own chrome */}
-          <HideOnAdmin>
-            <SiteHeader />
-          </HideOnAdmin>
-          <main className="flex-1">{children}</main>
-          <HideOnAdmin>
-            <SiteFooter />
-          </HideOnAdmin>
+          <SiteShell>{children}</SiteShell>
         </Providers>
       </body>
     </html>

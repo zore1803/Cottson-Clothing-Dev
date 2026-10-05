@@ -23,6 +23,9 @@ export function connectMongo() {
   return g.mongo;
 }
 
+export const DESIGN_STATUSES = ["pending", "ordered", "approved", "in_production", "shipped"] as const;
+export type DesignStatus = (typeof DESIGN_STATUSES)[number];
+
 const DesignSchema = new Schema(
   {
     product: { type: String, required: true },
@@ -33,6 +36,11 @@ const DesignSchema = new Schema(
     elements: { type: [Schema.Types.Mixed], default: [] },
     preview: String,
     medusaOrderId: { type: String, index: true },
+    // Medusa customer who saved the design; absent for guest designs
+    customerId: { type: String, index: true },
+    // Production workflow: pending until the order is placed, then moved along by the team
+    status: { type: String, enum: DESIGN_STATUSES, default: "pending", index: true },
+    statusNote: String,
   },
   { timestamps: true }
 );
@@ -48,8 +56,35 @@ const QuoteSchema = new Schema(
     product: String,
     quantity: { type: Number, min: 1 },
     message: String,
-    status: { type: String, enum: ["new", "contacted", "won", "lost"], default: "new" },
+    status: { type: String, enum: ["new", "contacted", "won", "lost"], default: "new", index: true },
+    notes: String,
   },
   { timestamps: true }
 );
 export const Quote = models.Quote || model("Quote", QuoteSchema);
+
+// One document per attempt to pay for a cart. Amounts are in paise, as Razorpay expects.
+// "created" -> "processing" (while the Medusa order is being placed) -> "paid"
+const PaymentSchema = new Schema(
+  {
+    razorpayOrderId: { type: String, required: true, unique: true },
+    razorpayPaymentId: String,
+    mode: { type: String, default: "dummy" },
+    method: String,
+    cartId: { type: String, required: true },
+    amount: { type: Number, required: true },
+    currency: { type: String, default: "INR" },
+    status: { type: String, enum: ["created", "processing", "paid", "failed", "order_failed"], default: "created", index: true },
+    email: String,
+    customerId: String,
+    // What was bought, kept so the order can be checked against pricing rules once placed
+    lines: { type: [Schema.Types.Mixed], default: [] },
+    designIds: { type: [String], default: [] },
+    medusaOrderId: { type: String, index: true },
+    displayId: Number,
+    orderTotal: Number,
+    error: String,
+  },
+  { timestamps: true }
+);
+export const Payment = models.Payment || model("Payment", PaymentSchema);

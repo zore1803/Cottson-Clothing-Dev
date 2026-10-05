@@ -13,12 +13,14 @@ const reelVideos = [
   "https://res.cloudinary.com/tpxo8m6a/video/upload/v1790330596/BRAND_PROCESS.mp4",
 ];
 
+// Reels are muted, so the audio track is stripped (ac_none); H.264 is hardware-decoded everywhere,
+// and the frame rate is capped at 30 to keep several simultaneous videos smooth.
 function getOptimizedVideoUrl(url: string) {
   if (!url || typeof url !== "string") return url;
   if (url.includes("/video/upload/")) {
     return url.replace(
       /\/video\/upload\/([^/]*\/)?/,
-      "/video/upload/q_auto:eco,w_360,br_700k,vc_auto/"
+      "/video/upload/q_auto:eco,w_480,br_800k,vc_h264,ac_none,fps_0-30/"
     );
   }
   return url;
@@ -30,14 +32,41 @@ function getPosterUrl(url: string) {
     return url
       .replace(
         /\/video\/upload\/([^/]*\/)?/,
-        "/video/upload/so_0,q_auto:eco,f_auto,w_360/"
+        "/video/upload/so_1,q_auto:eco,f_auto,w_480/"
       )
       .replace(/\.mp4$/i, ".jpg");
   }
   return undefined;
 }
 
-function ReelCard({ video, sectionInView }: { video: string; sectionInView: boolean }) {
+// Autoplay is skipped (posters only) for reduced-motion and Data Saver users
+function useAutoplayAllowed() {
+  const [allowed, setAllowed] = useState(true);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => {
+      const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData;
+      setAllowed(!mq.matches && !saveData);
+    };
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return allowed;
+}
+
+function usePageVisible() {
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    const update = () => setVisible(!document.hidden);
+    update();
+    document.addEventListener("visibilitychange", update);
+    return () => document.removeEventListener("visibilitychange", update);
+  }, []);
+  return visible;
+}
+
+function ReelCard({ video, sectionInView, autoplay }: { video: string; sectionInView: boolean; autoplay: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -58,7 +87,7 @@ function ReelCard({ video, sectionInView }: { video: string; sectionInView: bool
         setIsVisible(entry.isIntersecting);
       },
       {
-        rootMargin: "80px 20px",
+        rootMargin: "80px 160px",
         threshold: 0.05,
       }
     );
@@ -67,7 +96,8 @@ function ReelCard({ video, sectionInView }: { video: string; sectionInView: bool
     return () => observer.disconnect();
   }, [sectionInView]);
 
-  const shouldPlay = sectionInView && (isVisible || isHovered);
+  const pageVisible = usePageVisible();
+  const shouldPlay = autoplay && pageVisible && sectionInView && (isVisible || isHovered);
 
   useEffect(() => {
     const videoEl = videoRef.current;
@@ -141,6 +171,7 @@ function ReelCard({ video, sectionInView }: { video: string; sectionInView: bool
 
 export function AboutReels() {
   const { ref: sectionRef, isInView } = useInView({ rootMargin: "150px" });
+  const autoplay = useAutoplayAllowed();
 
   const reelItems = [
     ...reelVideos,
@@ -180,11 +211,11 @@ export function AboutReels() {
         </div>
       </div>
 
-      <div className="relative overflow-hidden">
+      <div className={autoplay ? "relative overflow-hidden" : "relative overflow-x-auto"}>
         <div
           className="flex w-max gap-4 will-change-transform [transform:translateZ(0)] hover:[animation-play-state:paused]"
           style={{
-            animation: "reelMarquee 90s linear infinite",
+            animation: autoplay ? "reelMarquee 90s linear infinite" : "none",
             animationPlayState: isInView ? "running" : "paused",
           }}
         >
@@ -194,6 +225,7 @@ export function AboutReels() {
                 key={`reel-track1-${index}`}
                 video={video}
                 sectionInView={isInView}
+                autoplay={autoplay}
               />
             ))}
           </div>
@@ -204,6 +236,7 @@ export function AboutReels() {
                 key={`reel-track2-${index}`}
                 video={video}
                 sectionInView={isInView}
+                autoplay={autoplay}
               />
             ))}
           </div>

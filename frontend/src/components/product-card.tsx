@@ -61,8 +61,8 @@ export function ProductCard({ product }: { product: Product }) {
   const href = `/products/${product.slug}?color=${color}`;
 
   return (
-    <div className="group flex w-full flex-col overflow-hidden rounded-[24px] bg-[#F5F8FA] transition-shadow duration-300 hover:shadow-[0_18px_40px_rgba(17,56,88,0.14)]">
-      <div className="relative overflow-hidden">
+    <div className="group flex w-full flex-col overflow-hidden rounded-[24px] border border-[var(--shop-line,transparent)] bg-[var(--shop-card,#F5F8FA)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--shop-line-strong,transparent)] hover:shadow-[0_18px_40px_rgba(17,56,88,0.14)]">
+      <div className="relative overflow-hidden bg-[var(--shop-surface,transparent)]">
         <Link
           href={href}
           className="relative block aspect-[3/4]"
@@ -176,7 +176,7 @@ export function ProductCard({ product }: { product: Product }) {
       `}</style>
 
       <div className="flex flex-1 flex-col px-5 pb-5 pt-4">
-        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#607487]">
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[color:var(--shop-muted,#607487)]">
           {product.category}
         </p>
 
@@ -187,7 +187,7 @@ export function ProductCard({ product }: { product: Product }) {
           {product.title}
         </Link>
 
-        <p className="mt-auto pt-3 text-[14px] text-[#607487]">
+        <p className="mt-auto pt-3 text-[14px] text-[color:var(--shop-muted,#607487)]">
           Starting from{" "}
           <span className="font-semibold text-[#113858]">
             {formatPrice(product.price, product.currency)}
