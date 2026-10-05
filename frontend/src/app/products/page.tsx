@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Shop" };
 
 export default function ProductsPage() {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16">
+    <div className="mx-auto max-w-7xl px-4 pt-28 pb-16 sm:pt-32">
       <CategoryFilter products={PRODUCTS} />
     </div>
   );

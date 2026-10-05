@@ -30,35 +30,6 @@
       }
     },
     {
-      "slug": "classic-white-tee",
-      "title": "Classic Crew Tee",
-      "category": "T-Shirts",
-      "description": "Soft cotton crew-neck tee, ready for your logo. The everyday essential in the COTTSON lineup.",
-      "price": 599,
-      "currency": "INR",
-      "sizes": [
-        "S",
-        "M",
-        "L",
-        "XL",
-        "XXL"
-      ],
-      "originalColor": "white",
-      "colors": [
-        "white",
-        "black",
-        "navy",
-        "red",
-        "grey"
-      ],
-      "minBulk": 25,
-      "fit": {
-        "chest": 0.646,
-        "top": 0.386,
-        "cx": 0.5
-      }
-    },
-    {
       "slug": "classic-polo-black",
       "title": "Classic Polo",
       "category": "Polos",

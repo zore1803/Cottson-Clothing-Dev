@@ -22,7 +22,7 @@ export default function CartPage() {
 
   if (!items.length)
     return (
-      <div className="mx-auto max-w-5xl px-4 py-24 text-center">
+      <div className="mx-auto max-w-5xl px-4 pt-32 pb-24 text-center">
         <h1 className="text-3xl font-semibold">Your cart is empty</h1>
         <Link href="/products" className={cn(buttonVariants({ size: "lg" }), "mt-6 h-11 px-6")}>
           Start shopping
@@ -31,7 +31,7 @@ export default function CartPage() {
     );
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 lg:grid-cols-[1fr_340px]">
+    <div className="mx-auto grid max-w-6xl gap-10 px-4 pt-28 pb-12 sm:pt-32 lg:grid-cols-[1fr_340px]">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Cart</h1>
         <ul className="mt-8 divide-y border-y">

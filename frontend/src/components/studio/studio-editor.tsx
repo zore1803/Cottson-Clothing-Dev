@@ -183,7 +183,7 @@ export function StudioEditor() {
   };
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 lg:grid-cols-[1fr_380px]">
+    <div className="mx-auto grid max-w-7xl gap-8 px-4 pb-8 pt-28 sm:pt-32 lg:grid-cols-[1fr_380px]">
       <div>
         <div ref={boxRef} className="relative mx-auto w-full max-w-[640px] overflow-hidden rounded-2xl">
           <VariantImage

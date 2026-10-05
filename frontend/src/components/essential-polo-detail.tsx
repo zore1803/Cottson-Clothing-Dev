@@ -2,9 +2,11 @@
 
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import NextImage from "next/image";
 import { toast } from "sonner";
-import { ImagePlus, Minus, Move, Palette, Plus, Shirt, X, ZoomIn, ZoomOut } from "lucide-react";
-import { type Product, colorById, formatPrice, variantUrl } from "@/lib/catalog";
+import { ChevronRight, Clock, ImagePlus, Minus, Move, Package, Palette, Plus, Ruler, Shirt, X, ZoomIn, ZoomOut } from "lucide-react";
+import { type Product, assetUrl, colorById, formatPrice, variantUrl } from "@/lib/catalog";
+import { BULK_TIERS, garmentUnitPrice } from "@/lib/pricing";
 import { useCart } from "@/lib/cart-store";
 import { cn } from "@/lib/utils";
 import {
@@ -61,12 +63,71 @@ function Segmented<T>({
   );
 }
 
+const SIZE_GUIDE = [
+  ["S", "52", "69"],
+  ["M", "55", "71"],
+  ["L", "58", "73"],
+  ["XL", "61", "75"],
+  ["XXL", "64", "77"],
+];
+
+function SizeGuide({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[60] grid place-items-center bg-[#0b243a]/40 p-4 backdrop-blur-[2px]" onClick={onClose}>
+      <div role="dialog" aria-label="Size guide" className="w-full max-w-md rounded-[28px] bg-white p-6 shadow-2xl sm:p-8" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <h3 className="text-[22px] font-bold tracking-[-0.02em] text-[#113858]">Size guide</h3>
+          <button type="button" aria-label="Close size guide" onClick={onClose} className="grid size-10 place-items-center rounded-full bg-[#F3F6F8] text-[#113858] hover:bg-[#E9F0F5]">
+            <X className="size-5" />
+          </button>
+        </div>
+        <p className="mt-2 text-[13px] text-[#607487]">Approximate garment measurements in cm, laid flat. Between sizes? Choose the larger one.</p>
+        <table className="mt-5 w-full text-left text-[14px]">
+          <thead>
+            <tr className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#607487]">
+              <th className="pb-2">Size</th>
+              <th className="pb-2">Chest (width)</th>
+              <th className="pb-2">Length</th>
+            </tr>
+          </thead>
+          <tbody>
+            {SIZE_GUIDE.map(([size, chest, length]) => (
+              <tr key={size} className="border-t border-[#113858]/10 text-[#113858]">
+                <td className="py-2.5 font-bold">{size}</td>
+                <td className="py-2.5">{chest}</td>
+                <td className="py-2.5">{length}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/** Numbered step card used for each configuration section */
+function Step({ n, title, hint, children }: { n: number; title: React.ReactNode; hint?: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-[24px] bg-[#F5F8FA] p-5 sm:p-6">
+      <div className="flex items-center gap-3">
+        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[#113858] text-[13px] font-bold text-white">{n}</span>
+        <h2 className="text-[16px] font-bold text-[#113858]">{title}</h2>
+        {hint && <span className="ml-auto text-[12px] font-medium text-[#607487]">{hint}</span>}
+      </div>
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+}
+
 /** Product detail page for the Essential Polo: wave-sweep trim-color swap, a quick logo
  * preview, and the real catalog (price, sizes, minBulk) + cart. The full editor is /studio. */
 export function EssentialPoloDetail({ product, initialColor }: { product: Product; initialColor: string }) {
   const add = useCart((s) => s.add);
   const [colorId, setColorId] = useState(initialColor);
   const [sizes, setSizes] = useState<Record<string, number>>({});
+  // Alternate photographed angle (0 = the main photo, which supports the color swap)
+  const [pose, setPose] = useState(0);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   // Real-world size of this product's photo frame, so logos are sized in true cm
   const frame = useMemo(() => frameFor(product.fit), [product.fit]);
@@ -170,11 +231,15 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
 
   const color = colorById(colorId);
   const totalQty = Object.values(sizes).reduce((n, q) => n + q, 0);
+  // Bulk tiers apply per size line, exactly as the cart prices them
+  const orderTotal = Object.values(sizes).reduce((n, q) => n + q * garmentUnitPrice(product.price, q), 0);
+  const saved = totalQty * product.price - orderTotal;
   const setSize = (s: string, qty: number) => setSizes((prev) => ({ ...prev, [s]: Math.max(0, qty) }));
 
   const selectColor = (id: string) => {
     if (id === colorId) return;
     setColorId(id);
+    setPose(0);
     window.history.replaceState(null, "", `?color=${id}`);
   };
 
@@ -191,13 +256,41 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6">
-      <div className="grid gap-10 lg:grid-cols-2">
+    <div className="mx-auto max-w-6xl px-4 pb-10 pt-28 sm:pt-32">
+      <nav aria-label="Breadcrumb" className="mb-6 flex items-center gap-1.5 text-[13px] font-medium text-[#607487]">
+        <Link href="/products" className="hover:text-[#113858] hover:underline">Products</Link>
+        <ChevronRight className="size-3.5" />
+        <span>{product.category}</span>
+        <ChevronRight className="size-3.5" />
+        <span className="text-[#113858]">{product.title}</span>
+      </nav>
+      <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
         {/* Left: photo with the wave-sweep color swap, zoomed in on the logo once there is one.
             Sticky so it stays on screen while the (usually longer) options column scrolls. */}
-        <div className="relative lg:sticky lg:top-32 lg:self-start">
-          <div className="relative grid aspect-[682/1024] w-full max-w-[540px] place-items-center justify-items-start overflow-hidden rounded-2xl bg-white">
-              <GarmentPhoto ref={frameRef} product={product} colorId={colorId} focus={focus}>
+        <div className="lg:sticky lg:top-28 lg:self-start">
+         <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
+          {product.poses && product.poses > 1 && (
+            <div className="order-2 flex gap-2 overflow-x-auto lg:order-1 lg:max-h-[calc(100vh-9rem)] lg:w-20 lg:flex-col lg:overflow-x-visible lg:overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {Array.from({ length: product.poses }, (_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setPose(i)}
+                  aria-label={`View angle ${i + 1}`}
+                  aria-pressed={pose === i}
+                  className={cn(
+                    "relative aspect-[3/4] w-16 shrink-0 overflow-hidden rounded-xl border-2 bg-[#F3F6F8] lg:w-full",
+                    pose === i ? "border-[#113858]" : "border-transparent hover:border-[#113858]/30"
+                  )}
+                >
+                  <NextImage src={assetUrl(product.slug, "model-photo.png", i)} alt="" fill unoptimized className="object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="relative order-1 min-w-0 flex-1 lg:order-2">
+          <div className="relative grid aspect-[682/1024] w-full place-items-center justify-items-start overflow-hidden rounded-[28px] bg-[#F3F6F8]">
+              <GarmentPhoto ref={frameRef} product={product} colorId={colorId} pose={pose} focus={focus}>
                 {logo && logoArt && (
                   <LogoLayer
                     src={showFlat ? logo.src : logoArt}
@@ -247,31 +340,46 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
               </button>
             </div>
           )}
+          </div>
+         </div>
         </div>
 
         {/* Right: title, design studio CTA, logo, trim color, sizes, price + add to cart */}
         <div>
-          <div className="flex items-start justify-between gap-4">
-            <h1 className="text-3xl font-bold text-brand">{product.title}</h1>
-            <div className="flex shrink-0 items-center gap-2">
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#607487] sm:text-[12px]">{product.category}</p>
+          <h1 className="mt-2 text-[32px] font-bold leading-[1.1] tracking-[-0.025em] text-[#113858] sm:text-[40px]">{product.title}</h1>
+          <p className="mt-3 text-[26px] font-bold text-[#113858]">
+            {formatPrice(product.price, product.currency)}
+            <span className="ml-1.5 text-[14px] font-medium text-[#607487]">per piece</span>
+          </p>
+          <p className="mt-3 text-[15px] leading-relaxed text-[#607487]">{product.description}</p>
+
+          <div className="mt-5 flex flex-wrap gap-2 text-[13px] font-semibold text-[#113858]">
+            <span className="flex items-center gap-1.5 rounded-full bg-[#E9F0F5] px-3.5 py-1.5">
+              <Package className="size-4" /> Min. order {product.minBulk} pieces
+            </span>
+            <span className="flex items-center gap-1.5 rounded-full bg-[#E9F0F5] px-3.5 py-1.5">
+              <Clock className="size-4" /> Ready in 7–10 business days
+            </span>
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-2">
             <Link
               href={`/studio?product=${product.slug}&color=${colorId}`}
-              className="flex shrink-0 items-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-white hover:bg-brand/90"
+              className="flex items-center gap-2 rounded-full bg-[#113858] px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#0b243a]"
             >
-              <Shirt className="size-3.5" /> Customize
+              <Shirt className="size-4" /> Customize
             </Link>
             <Link
               href={`/mockup-lab?product=${product.slug}`}
-              className="flex shrink-0 items-center gap-1.5 rounded-lg border border-brand px-3 py-2 text-xs font-semibold text-brand hover:bg-muted"
+              className="flex items-center gap-2 rounded-full border border-[#113858]/25 px-5 py-2.5 text-[13px] font-semibold text-[#113858] transition-colors hover:bg-[#F3F6F8]"
             >
-              <Palette className="size-3.5" /> Design Studio
+              <Palette className="size-4" /> Design Studio
             </Link>
-            </div>
           </div>
-          <p className="mt-2 text-sm text-muted-foreground">{product.description}</p>
 
-          <div className="mt-8">
-            <div className="text-sm font-semibold text-brand">1. Add your logo</div>
+          <div className="mt-8 space-y-4">
+          <Step n={1} title="Add your logo">
             <input
               ref={fileInputRef}
               type="file"
@@ -287,9 +395,9 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="mt-3 flex items-center gap-2 rounded-lg border border-dashed px-4 py-3 text-sm font-medium text-muted-foreground hover:border-brand hover:text-brand"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-[#113858]/30 bg-white px-4 py-6 text-sm font-semibold text-[#113858] transition-colors hover:border-[#113858] hover:bg-[#E9F0F5]"
               >
-                <ImagePlus className="size-4" /> Upload logo
+                <ImagePlus className="size-5" /> Upload your logo <span className="font-normal text-[#607487]">· PNG, JPG or SVG</span>
               </button>
             ) : (
               <>
@@ -338,7 +446,7 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
                       Thread — {thread ? thread.name : "Logo colors"}
                       {threadChoice === "auto" && <span className="text-muted-foreground"> (auto)</span>}
                     </div>
-                    <div role="radiogroup" aria-label="Thread color" className="mt-2 flex flex-wrap items-center gap-2">
+                    <div role="radiogroup" aria-label="Thread colour" className="mt-2 flex flex-wrap items-center gap-2">
                       <button
                         type="button"
                         role="radio"
@@ -423,11 +531,10 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
                 )}
               </>
             )}
-          </div>
+          </Step>
 
-          <div className="mt-8">
-            <div className="text-sm font-semibold text-brand">2. Collar color — {color.name}</div>
-            <div className="mt-3 flex flex-wrap items-center gap-3">
+          <Step n={2} title={<>Colour <span className="font-medium text-[#607487]">— {color.name}</span></>}>
+            <div className="flex flex-wrap items-center gap-3">
               {product.colors.map((id) => {
                 const c = colorById(id);
                 return (
@@ -446,13 +553,19 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
                 );
               })}
             </div>
-          </div>
+          </Step>
 
-          <div className="mt-8">
-            <div className="text-sm font-semibold text-brand">3. Choose sizes (min. order {product.minBulk})</div>
-            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <Step n={3} title="Choose sizes" hint={`${totalQty} / min. ${product.minBulk}`}>
+            <button
+              type="button"
+              onClick={() => setGuideOpen(true)}
+              className="mb-3 flex items-center gap-1.5 text-[13px] font-semibold text-[#113858] underline-offset-2 hover:underline"
+            >
+              <Ruler className="size-4" /> Size guide
+            </button>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {product.sizes.map((s) => (
-                <div key={s} className="flex items-center justify-between rounded-lg border px-3 py-2">
+                <div key={s} className={cn("flex items-center justify-between rounded-xl border bg-white px-3 py-2.5", (sizes[s] ?? 0) > 0 ? "border-[#113858]" : "border-[#113858]/10")}>
                   <span className="text-sm font-semibold">{s}</span>
                   <div className="flex items-center gap-1.5">
                     <button
@@ -476,16 +589,16 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
                 </div>
               ))}
             </div>
-
+          </Step>
           </div>
 
-          <div className="mt-8 border-t pt-6">
+          <div className="mt-4 rounded-[24px] border border-[#113858]/10 bg-white p-5 shadow-[0_10px_30px_rgba(17,56,88,0.06)] sm:p-6">
             {totalQty > 0 && (
-              <div className="mb-6 flex flex-wrap gap-2">
+              <div className="mb-5 flex flex-wrap gap-2">
                 {product.sizes
                   .filter((s) => (sizes[s] ?? 0) > 0)
                   .map((s) => (
-                    <div key={s} className="flex items-center gap-2 rounded-lg bg-[#EAEAEA] px-3 py-2">
+                    <div key={s} className="flex items-center gap-2 rounded-full bg-[#E9F0F5] px-3.5 py-1.5">
                       <span className="text-sm font-semibold">{s}</span>
                       <span className="text-sm tabular-nums text-muted-foreground">{sizes[s]}</span>
                     </div>
@@ -494,23 +607,35 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
             )}
 
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="text-sm">
-                <div className="text-muted-foreground">Lead time</div>
-                <div className="font-semibold text-brand">7–10 business days</div>
-                <div className="mt-1 text-muted-foreground">Price</div>
-                <div className="font-semibold text-brand">{formatPrice(product.price, product.currency)} per piece</div>
+              <div>
+                <div className="text-[13px] text-[#607487]">
+                  {totalQty > 0 ? `${totalQty} pieces` : "Order total"}
+                </div>
+                <div className="text-[26px] font-bold leading-tight text-[#113858]">
+                  {formatPrice(totalQty > 0 ? orderTotal : 0, product.currency)}
+                </div>
+                {saved > 0 && <div className="text-[12px] font-semibold text-emerald-700">You save {formatPrice(saved, product.currency)} with bulk pricing</div>}
               </div>
               <button
                 type="button"
                 onClick={addToCart}
-                className="h-11 shrink-0 rounded-lg bg-brand px-6 text-sm font-semibold text-white hover:bg-brand/90"
+                className="h-12 shrink-0 rounded-full bg-[#113858] px-8 text-[14px] font-semibold text-white transition-colors hover:bg-[#0b243a]"
               >
                 Add to cart ({totalQty})
               </button>
             </div>
+            <div className="mt-5 flex flex-wrap gap-2 border-t border-[#113858]/10 pt-4 text-[12px] font-semibold text-[#113858]">
+              <span className="text-[#607487]">Bulk pricing per size:</span>
+              {[...BULK_TIERS].reverse().map((t) => (
+                <span key={t.min} className="rounded-full bg-[#E9F0F5] px-2.5 py-0.5">
+                  {t.min}+ pcs · {Math.round(t.discount * 100)}% off
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </div>
+      {guideOpen && <SizeGuide onClose={() => setGuideOpen(false)} />}
     </div>
   );
 }

@@ -50,7 +50,7 @@ export default function CheckoutPage() {
 
   return (
     <form
-      className="mx-auto grid max-w-6xl gap-10 px-4 py-12 lg:grid-cols-[1fr_340px]"
+      className="mx-auto grid max-w-6xl gap-10 px-4 pb-12 pt-28 sm:pt-32 lg:grid-cols-[1fr_340px]"
       onSubmit={async (e) => {
         e.preventDefault();
         const f = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;

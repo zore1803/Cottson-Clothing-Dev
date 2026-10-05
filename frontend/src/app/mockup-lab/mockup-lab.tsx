@@ -329,7 +329,7 @@ export function MockupLab({
   const logoElsewhere = !!logoSrc && viewForPlacement(ui.zone) !== ui.view;
 
   return (
-    <div className="grid w-full gap-8 px-4 py-8 md:grid-cols-[340px_minmax(0,1fr)_340px] md:px-[4vw]">
+    <div className="grid w-full gap-8 px-4 pt-28 pb-8 sm:pt-32 md:grid-cols-[340px_minmax(0,1fr)_340px] md:px-[4vw]">
       {/* Right column: product picker + logo (equal width to the left column, so the garment is page-centred) */}
       <div className={cn("flex flex-col items-end gap-5 md:order-3 md:sticky md:top-32 md:self-start", mannequinOn && "order-2")}>
         <div className="w-full max-w-sm">

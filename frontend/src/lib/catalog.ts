@@ -15,6 +15,13 @@ export type Product = {
   originalColor: string;
   colors: string[];
   minBulk: number;
+  /** Optional attributes used by the listing filters; missing = not set (production defaults to 28 days) */
+  productionDays?: number;
+  customColor?: boolean;
+  printOnDemand?: boolean;
+  livePreview?: boolean;
+  express?: boolean;
+  promo?: boolean;
   /** Number of alternate poses under /products/<slug>/photos/<n>/, each with its own
    * model-photo.png + garment-layer.png (see scripts/import-poses.mjs). Products without this
    * field only have the single root-level photo (the older single-pose layout). */

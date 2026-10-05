@@ -2,7 +2,7 @@
 
 import { forwardRef, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { type Product, colorById, variantUrl } from "@/lib/catalog";
+import { type Product, assetUrl, colorById, variantUrl } from "@/lib/catalog";
 import { IMAGE_ASPECT, type Focus } from "./placement";
 
 /** Pan + zoom (transform-origin 0 0) that puts the focus point in the middle of the frame.
@@ -18,22 +18,31 @@ function focusTransform({ px, py, z }: Focus) {
   return `translate(${tx * 100}%, ${ty * 100}%) scale(${z})`;
 }
 
+// Only pose 0 has pre-rendered color variants (see scripts/render-variants.mjs, which only
+// ever wrote to the product root, i.e. pose 0's assets) — other poses are reference angles
+// shown in the garment's original photographed color. A key of "pose-<n>" (n > 0) picks that
+// pose's own photo; any other key is a colorId shown via pose 0's color-swap variant.
+const poseKey = (pose: number) => `pose-${pose}`;
+const isPoseKey = (key: string) => key.startsWith("pose-");
+
 /** The polo photo in its own 2:3 box (so cm placement maps 1:1 to the image), with the
- * wave-sweep transition between collar colors. Children (the logo layer) sit on top. */
+ * wave-sweep transition between collar colors (pose 0) or between reference angles (other
+ * poses). Children (the logo layer) sit on top. */
 export const GarmentPhoto = forwardRef<
   HTMLDivElement,
-  { product: Product; colorId: string; focus?: Focus | null; children?: React.ReactNode }
+  { product: Product; colorId: string; pose?: number; focus?: Focus | null; children?: React.ReactNode }
 >(
-  function GarmentPhoto({ product, colorId, focus, children }, ref) {
-    const [base, setBase] = useState(colorId);
+  function GarmentPhoto({ product, colorId, pose = 0, focus, children }, ref) {
+    const key = pose === 0 ? colorId : poseKey(pose);
+    const [base, setBase] = useState(key);
     const [incoming, setIncoming] = useState<string | null>(null);
     const [swept, setSwept] = useState(false);
-    const [shown, setShown] = useState(colorId);
+    const [shown, setShown] = useState(key);
 
-    // A new color starts a sweep: the new photo is revealed left→right over the old one
-    if (colorId !== shown) {
-      setShown(colorId);
-      setIncoming(colorId);
+    // A new color or pose starts a sweep: the new photo is revealed left→right over the old one
+    if (key !== shown) {
+      setShown(key);
+      setIncoming(key);
       setSwept(false);
     }
     useEffect(() => {
@@ -50,10 +59,10 @@ export const GarmentPhoto = forwardRef<
       };
     }, [incoming]);
 
-    const img = (id: string) => (
+    const img = (k: string) => (
       <Image
-        src={variantUrl(product, id)}
-        alt={`${product.title} — ${colorById(id).name}`}
+        src={isPoseKey(k) ? assetUrl(product.slug, "model-photo.png", Number(k.slice(5))) : variantUrl(product, k)}
+        alt={isPoseKey(k) ? `${product.title} — alternate angle` : `${product.title} — ${colorById(k).name}`}
         fill
         // Served as-is: the optimizer re-encodes at q75, which shows when zoomed in
         unoptimized

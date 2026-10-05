@@ -459,7 +459,7 @@ export function DesignStudio({ product, initialColor }: { product: Product; init
 
   return (
     <div className="bg-[#eceef3]">
-      <div className="mx-auto max-w-7xl px-4 pb-16 pt-6">
+      <div className="mx-auto max-w-7xl px-4 pb-16 pt-28 sm:pt-32">
         {/* Header: back, title, and the studio actions */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">

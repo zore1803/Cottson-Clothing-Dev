@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { RouteProgress } from "@/components/route-progress";
-import { TrustTicker } from "@/components/trust-ticker";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { HideOnAdmin } from "@/components/hide-on-admin";
@@ -24,12 +23,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Suspense fallback={null}>
             <RouteProgress />
           </Suspense>
-          {/* Ticker strip + navbar stay pinned to the top while the page scrolls (not on /admin) */}
+          {/* The storefront navbar and footer are hidden on /admin, which has its own chrome */}
           <HideOnAdmin>
-            <div className="sticky top-0 z-40">
-              <TrustTicker />
-              <SiteHeader />
-            </div>
+            <SiteHeader />
           </HideOnAdmin>
           <main className="flex-1">{children}</main>
           <HideOnAdmin>

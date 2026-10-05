@@ -22,5 +22,7 @@ Thumbs.db
 /index.html
 /assets/
 
+# Raw source photo drops (processed once by frontend/scripts/import-poses.mjs)
+/*.zip
 # Local scratch: mockup regression baselines, unzipped asset drops
 tmp/
