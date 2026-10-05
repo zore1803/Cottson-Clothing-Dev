@@ -4,7 +4,8 @@
     "template": "polo",
     "colours": {
       "body": "black"
-    }
+    },
+    "trimStyle": "none"
   },
   "classic-white-tee": {
     "template": "crew-tee",
@@ -16,7 +17,8 @@
     "template": "polo",
     "colours": {
       "body": "black"
-    }
+    },
+    "trimStyle": "none"
   },
   "tipped-polo-charcoal": {
     "template": "polo",
@@ -24,19 +26,22 @@
       "body": "grey",
       "collar-tip": "white",
       "sleeve-tip": "white"
-    }
+    },
+    "trimStyle": "single"
   },
   "classic-polo-navy": {
     "template": "polo",
     "colours": {
       "body": "navy"
-    }
+    },
+    "trimStyle": "double"
   },
   "relaxed-polo-black": {
     "template": "polo",
     "colours": {
       "body": "black"
-    }
+    },
+    "trimStyle": "none"
   },
   "crew-tee-black": {
     "template": "crew-tee",
@@ -68,7 +73,8 @@
       "body": "sky",
       "collar-tip": "white",
       "sleeve-tip": "white"
-    }
+    },
+    "trimStyle": "single"
   },
   "pullover-hoodie-white": {
     "template": "hoodie",
@@ -100,13 +106,15 @@
       "body": "black",
       "collar-tip": "white",
       "sleeve-tip": "white"
-    }
+    },
+    "trimStyle": "single"
   },
   "ease": {
     "template": "polo",
     "colours": {
       "body": "black"
-    }
+    },
+    "trimStyle": "none"
   },
   "grey-shirt": {
     "template": "formal-shirt",
@@ -126,7 +134,8 @@
       "body": "black",
       "collar-tip": "red",
       "sleeve-tip": "red"
-    }
+    },
+    "trimStyle": "single"
   },
   "indus-04": {
     "template": "polo",
@@ -134,7 +143,8 @@
       "body": "yellow",
       "collar-tip": "green",
       "sleeve-tip": "green"
-    }
+    },
+    "trimStyle": "single"
   },
   "formal-shirt-ice-blue": {
     "template": "formal-shirt",
@@ -148,6 +158,7 @@
       "body": "black",
       "collar-tip": "green",
       "sleeve-tip": "green"
-    }
+    },
+    "trimStyle": "single"
   }
 }

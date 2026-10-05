@@ -7,6 +7,7 @@ import { RouteProgress } from "@/components/route-progress";
 import { TrustTicker } from "@/components/trust-ticker";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { HideOnAdmin } from "@/components/hide-on-admin";
 
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
@@ -23,13 +24,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Suspense fallback={null}>
             <RouteProgress />
           </Suspense>
-          {/* Ticker strip + navbar stay pinned to the top while the page scrolls */}
-          <div className="sticky top-0 z-40">
-            <TrustTicker />
-            <SiteHeader />
-          </div>
+          {/* Ticker strip + navbar stay pinned to the top while the page scrolls (not on /admin) */}
+          <HideOnAdmin>
+            <div className="sticky top-0 z-40">
+              <TrustTicker />
+              <SiteHeader />
+            </div>
+          </HideOnAdmin>
           <main className="flex-1">{children}</main>
-          <SiteFooter />
+          <HideOnAdmin>
+            <SiteFooter />
+          </HideOnAdmin>
         </Providers>
       </body>
     </html>

@@ -16,10 +16,11 @@ import { uiStateToParams } from "@/lib/mockup/mannequinUrl";
 import { viewForPlacement, type MannequinUiState, type PlacementId, type SectionKey } from "@/lib/mockup/mannequinState";
 import type { MannequinZone } from "@/lib/mockup/mannequin";
 import {
+  activeRegions,
   resolveColours,
   type PreparedTemplate,
 } from "@/lib/mockup/renderCanvas";
-import { defaultColours, hasMannequin, mannequinDefaultsFor } from "@/lib/mockup/products";
+import { defaultColours, hasMannequin, mannequinDefaultsFor, trimStyleFor } from "@/lib/mockup/products";
 import { DEFAULT_LOGO_SCALE, defaultScaleFor, hasOrientation } from "@/lib/mockup/zones";
 import type {
   Finish,
@@ -589,27 +590,40 @@ export function MockupLab({
             <div className="mb-1.5 text-sm font-semibold text-brand">
               Colours
             </div>
-            <div className="overflow-hidden rounded-lg border bg-white">
+            <div className="grid grid-cols-2 overflow-hidden rounded-lg border bg-white">
               {(() => {
                 const resolved = resolveColours(template, merged);
-                return template.regions.map((r) => (
-                  <PartPicker
-                    key={r.id}
-                    label={r.label}
-                    colors={
-                      TRIM_REGIONS.includes(r.id) ? TRIM_COLORS : GARMENT_COLORS
-                    }
-                    value={resolved[r.id]}
-                    inherited={!merged[r.id]}
-                    open={openPart === r.id}
-                    onToggle={() =>
-                      setOpenPart((o) => (o === r.id ? null : r.id))
-                    }
-                    onChange={(hex) =>
-                      setColours((c) => ({ ...c, [r.id]: hex }))
-                    }
-                  />
-                ));
+                // This product's own regions only (data/productMockups.json trimStyle), and
+                // regions that share a `group` (e.g. the collar's + sleeves' outer stripe)
+                // collapsed into one row: one colour drives every region in the group.
+                const trimStyle = trimStyleFor(slug);
+                const active = activeRegions(template, trimStyle).filter((r) => r.id !== "buttons");
+                const seenGroups = new Set<string>();
+                const rows = active.filter((r) => {
+                  if (!r.group) return true;
+                  if (seenGroups.has(r.group)) return false;
+                  seenGroups.add(r.group);
+                  return true;
+                });
+                return rows.map((r) => {
+                  const members = r.group ? active.filter((x) => x.group === r.group).map((x) => x.id) : [r.id];
+                  const open = openPart !== null && members.includes(openPart);
+                  return (
+                    <div key={r.id} className={cn(open && "col-span-2")}>
+                      <PartPicker
+                        label={r.label}
+                        colors={TRIM_REGIONS.includes(r.id) ? TRIM_COLORS : GARMENT_COLORS}
+                        value={resolved[r.id]}
+                        inherited={!merged[r.id]}
+                        open={open}
+                        onToggle={() => setOpenPart((o) => (o !== null && members.includes(o) ? null : r.id))}
+                        onChange={(hex) =>
+                          setColours((c) => ({ ...c, ...Object.fromEntries(members.map((id) => [id, hex])) }))
+                        }
+                      />
+                    </div>
+                  );
+                });
               })()}
             </div>
           </div>

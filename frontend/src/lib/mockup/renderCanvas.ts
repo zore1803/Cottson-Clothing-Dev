@@ -15,7 +15,7 @@
 //
 // Speed: each part is tinted into its own bbox-sized canvas and cached by colour, so a
 // colour change re-tints one part and re-composites.
-import type { LogoPlacement, MockupState, RegionColours, RegionId, TemplateConfig, TemplateRegion } from "./types";
+import type { LogoPlacement, MockupState, RegionColours, RegionId, TemplateConfig, TemplateRegion, TrimStyle } from "./types";
 import { fitLogo, placedZone } from "./zones";
 
 export const BACKGROUND = "#f5f5f5";
@@ -158,6 +158,10 @@ export function loadTemplate(type: string, root = "/mockups"): Promise<PreparedT
 
 /** Parts this template can recolour (masks present) */
 export const supportedRegions = (t: PreparedTemplate): RegionId[] => t.regions.map((r) => r.id);
+
+/** Regions this product's real sample has: no `when`, or `when.trim` includes its trimStyle */
+export const activeRegions = (t: PreparedTemplate, trimStyle: TrimStyle = "none"): PreparedRegion[] =>
+  t.regions.filter((r) => !r.when || r.when.trim.includes(trimStyle));
 
 /** Final colour per part: own colour → inherited part's colour → template default */
 export function resolveColours(t: PreparedTemplate, colours: RegionColours): Record<string, string> {
@@ -363,6 +367,7 @@ export function renderMockup(
     drawGroundShadow(ctx, t);
   }
   const colours = resolveColours(t, state.colours);
+  const regions = activeRegions(t, state.trimStyle);
   if (t.config.masks === "partition") {
     // Partition masks meet with soft edges whose alphas sum to 1 (e.g. 0.5 + 0.5). Stacking them
     // source-over leaves 0.5 + 0.5·0.5 = 0.75 there, so the background shows through as a light
@@ -373,10 +378,10 @@ export function renderMockup(
     gx.globalCompositeOperation = "source-over";
     gx.clearRect(0, 0, W, H);
     gx.globalCompositeOperation = "lighter";
-    for (const r of t.regions) gx.drawImage(tintRegion(t, r, colours[r.id]), r.box.x, r.box.y);
+    for (const r of regions) gx.drawImage(tintRegion(t, r, colours[r.id]), r.box.x, r.box.y);
     gx.globalCompositeOperation = "source-over";
     ctx.drawImage(g, 0, 0);
-  } else for (const r of t.regions) ctx.drawImage(tintRegion(t, r, colours[r.id]), r.box.x, r.box.y);
+  } else for (const r of regions) ctx.drawImage(tintRegion(t, r, colours[r.id]), r.box.x, r.box.y);
   if (t.details) ctx.drawImage(t.details, 0, 0, W, H);
   if (state.logo && logoImg) drawLogo(ctx, t, logoImg, state.logo);
   if (opts.debugMasks) drawMaskDebug(ctx, t);

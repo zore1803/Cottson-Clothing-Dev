@@ -16,7 +16,27 @@ export type GarmentType =
  * Recolourable parts. `body` is painted first and may cover the whole garment; the others are
  * painted over it in template.json order and should not overlap each other.
  */
-export type RegionId = "body" | "sleeve" | "cuff" | "collar" | "collar-tip" | "sleeve-tip" | "placket" | "buttons" | "neckband" | "neck-tip" | "yoke" | "pocket";
+export type RegionId =
+  | "body"
+  | "sleeve"
+  | "cuff"
+  | "collar"
+  | "collar-tip"
+  | "sleeve-tip"
+  | "collar-tip-a"
+  | "collar-tip-b"
+  | "sleeve-tip-a"
+  | "sleeve-tip-b"
+  | "placket"
+  | "buttons"
+  | "neckband"
+  | "neck-tip"
+  | "yoke"
+  | "pocket";
+
+/** Fixed per product (data/productMockups.json), not user-chosen: which tipping regions its
+ * photographed sample actually has, so the colour list only ever shows what that product supports. */
+export type TrimStyle = "none" | "single" | "double";
 
 export type LogoZoneId = "left-chest" | "center-chest" | "right-chest" | "left-sleeve-upper" | "left-sleeve" | "right-sleeve-upper" | "right-sleeve" | "back" | "back-neck" | "back-full";
 
@@ -30,6 +50,12 @@ export type TemplateRegion = {
   default: string;
   /** Take this region's colour when it has none of its own (e.g. sleeve → body) */
   inherit?: RegionId;
+  /** Only relevant (drawn, and shown in the UI) for products with this trimStyle */
+  when?: { trim: TrimStyle[] };
+  /** Regions that share one colour control (e.g. the collar's and sleeve's outer stripe): picking
+   * a colour for any one of them sets it for the whole group. The group's UI row uses the first
+   * region listed with this id as its label and starting colour. */
+  group?: string;
 };
 
 /** Where a logo can go, in template pixels. The logo is fitted inside, keeping its aspect ratio. */
@@ -96,6 +122,8 @@ export type LogoOrientation = "along" | "upright";
 export type MockupState = {
   colours: RegionColours;
   logo?: LogoPlacement | null;
+  /** Which tipping regions to draw/offer (data/productMockups.json, fixed per product). Default "none". */
+  trimStyle?: TrimStyle;
 };
 
 /** data/productMockups.json entry */
@@ -103,4 +131,6 @@ export type ProductMockup = {
   template: GarmentType;
   /** Colour ids from data/colors.json (garment list for body/sleeve/collar, trim list for tips) */
   colours: Partial<Record<RegionId, string>>;
+  /** Which tipping this product's real sample has; regions gated by `when` follow it. Default "none". */
+  trimStyle?: TrimStyle;
 };

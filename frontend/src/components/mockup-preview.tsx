@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { loadImage, loadTemplate, renderMockup, type PreparedTemplate } from "@/lib/mockup/renderCanvas";
-import { defaultColours, templateTypeFor } from "@/lib/mockup/products";
+import { defaultColours, templateTypeFor, trimStyleFor } from "@/lib/mockup/products";
 import { logoSizeCm, placedZone } from "@/lib/mockup/zones";
 import { renderEmbroidery } from "@/lib/embroidery";
 import type { LogoPlacement, RegionColours } from "@/lib/mockup/types";
@@ -152,7 +152,7 @@ export function MockupPreview({ productSlug, colours, logo, fallbackSrc, alt, cl
   // Re-render synchronously on any change: tinted regions are cached, so this is cheap
   useEffect(() => {
     if (!template || !canvasRef.current) return;
-    renderMockup(template, { colours: { ...defaultColours(productSlug), ...colours }, logo }, img, canvasRef.current, {
+    renderMockup(template, { colours: { ...defaultColours(productSlug), ...colours }, logo, trimStyle: trimStyleFor(productSlug) }, img, canvasRef.current, {
       debugMasks,
       // Transparent: the page shows through; the ground shadow is still drawn
       background: "transparent",
