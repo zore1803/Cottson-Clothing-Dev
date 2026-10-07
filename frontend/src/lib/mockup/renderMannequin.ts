@@ -26,7 +26,7 @@ export type MannequinDesign = {
   trim1: string;
   trim2: string;
   /** Uploaded logo (image URL / data URL), its zone and the size slider (0.5–1) */
-  logo?: { src: string; zoneId: string; scale: number } | null;
+  logo?: { src: string; zoneId: string; scale: number; finish?: "print" | "embroidery" } | null;
 };
 
 export type MannequinRender = {

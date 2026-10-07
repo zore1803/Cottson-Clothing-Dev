@@ -20,7 +20,7 @@ import {
   type PreparedTemplate,
 } from "@/lib/mockup/renderCanvas";
 import { defaultColours, hasMannequin, mannequinDefaultsFor } from "@/lib/mockup/products";
-import { DEFAULT_LOGO_SCALE, defaultScaleFor, hasOrientation } from "@/lib/mockup/zones";
+import { DEFAULT_LOGO_SCALE, defaultScaleFor, hasOrientation, logoSizeCm, placedZone } from "@/lib/mockup/zones";
 import type {
   Finish,
   LogoOrientation,
@@ -277,6 +277,20 @@ export function MockupLab({
   const [orientation, setOrientation] = useState<LogoOrientation>("along");
   const [finish, setFinish] = useState<Finish>("embroidery");
   const [openPart, setOpenPart] = useState<RegionId | null>("body");
+  const [showPlacement, setShowPlacement] = useState(true);
+  const activeZone = template ? placedZone(template.config, zone, orientation) : null;
+  const allowedFinishes = activeZone?.finishes ?? ["embroidery", "print"];
+  const fittedSize = template && activeZone && logoDims?.src === logoSrc
+    ? logoSizeCm(template.config, activeZone, logoDims.w, logoDims.h, scale) : null;
+  const onGhostTemplate = useCallback((t: PreparedTemplate | null) => {
+    setTemplate(t);
+    if (!t) return;
+    const nextZone = t.config.zones.find((z) => z.id === zone) ?? t.config.zones[0];
+    if (nextZone) {
+      setZone(nextZone.id);
+      if (nextZone.finishes && !nextZone.finishes.includes(finish)) setFinish(nextZone.finishes[0]);
+    }
+  }, [zone, finish]);
 
   const merged = { ...defaultColours(slug), ...colours };
   const logo = useMemo(
@@ -315,7 +329,7 @@ export function MockupLab({
       colours: ui.colours,
       trim1: ui.trim1,
       trim2: ui.trim2,
-      logo: logoSrc ? { src: logoSrc, zoneId: ui.zone, scale: ui.scale } : null,
+      logo: logoSrc ? { src: logoSrc, zoneId: ui.zone, scale: ui.scale, finish: ui.finish } : null,
     }),
     [ui, logoSrc],
   );
@@ -337,6 +351,10 @@ export function MockupLab({
             value={slug}
             onChange={(s) => {
               setSlug(s);
+              setTemplate(null);
+              setZone("left-chest");
+              setScale(DEFAULT_LOGO_SCALE);
+              setOrientation("along");
               setColours({});
               // New product: its own defaults, keeping the chosen style where the product has it
               setUi({ ...mannequinDefaultsFor(s), style: hasMannequin(s) ? ui.style : "ghost" });
@@ -373,10 +391,11 @@ export function MockupLab({
                     <button
                       key={f}
                       type="button"
+                      disabled={!allowedFinishes.includes(f)}
                       onClick={() => setFinish(f)}
                       aria-pressed={finish === f}
                       className={cn(
-                        "rounded-md px-3 py-1 text-xs font-medium capitalize",
+                        "rounded-md px-3 py-1 text-xs font-medium capitalize disabled:opacity-40 disabled:cursor-not-allowed",
                         finish === f ? "bg-white text-brand shadow-sm" : "text-muted-foreground",
                       )}
                     >
@@ -385,6 +404,9 @@ export function MockupLab({
                   ))}
                 </div>
               </div>
+              <p className="text-xs text-muted-foreground">
+                {finish === "embroidery" ? "Raised thread texture for stitched logos." : "Flat artwork that follows the fabric shading."}
+              </p>
               <input
                 ref={fileRef}
                 type="file"
@@ -458,6 +480,8 @@ export function MockupLab({
                     setZone(id);
                     setScale(defaultScaleFor(id));
                     setOrientation("along");
+                    const finishes = template.config.zones.find((z) => z.id === id)?.finishes;
+                    if (finishes && !finishes.includes(finish)) setFinish(finishes[0]);
                   }}
                   className="h-10 w-full cursor-pointer appearance-none rounded-lg border bg-white pl-3 pr-9 font-medium outline-none hover:border-brand/40 focus:ring-2 focus:ring-brand/30"
                 >
@@ -468,6 +492,11 @@ export function MockupLab({
                   ))}
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              </label>
+              <p className="mt-2 text-xs text-muted-foreground">Left and right refer to the wearer. Logos stay centred inside the selected area.</p>
+              <label className="mt-3 flex items-center gap-2 text-xs">
+                <input type="checkbox" checked={showPlacement} onChange={(e) => setShowPlacement(e.target.checked)} />
+                Show placement area
               </label>
               {hasOrientation(zone) && (
                 <div className="mt-3">
@@ -514,6 +543,8 @@ export function MockupLab({
                 <span>Smaller</span>
                 <span>Fills the area</span>
               </span>
+              {fittedSize && <span className="mt-2 block text-xs font-medium">Logo: {fittedSize.w.toFixed(1)} × {fittedSize.h.toFixed(1)} cm</span>}
+              <span className="mt-2 block text-[11px] text-muted-foreground">Preview dimensions are approximate; confirm garment measurements before production.</span>
             </label>
           </section>
         )}
@@ -524,6 +555,8 @@ export function MockupLab({
           <>
             <MannequinPreview
               design={design}
+              showPlacement={showPlacement}
+              placementZone={ui.zone}
               debug={debugMasks}
               perf={perf}
               onTemplate={onMannequinTemplate}
@@ -536,6 +569,7 @@ export function MockupLab({
                 Logo is on the {viewLabel(viewForPlacement(ui.zone))} view
               </p>
             )}
+            <label className="flex items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={showPlacement} onChange={(e) => setShowPlacement(e.target.checked)} />Show placement area</label>
             {perf && timing && (
               <p className="rounded bg-black/80 px-2 py-1 font-mono text-xs text-white" data-perf>
                 composite {timing.ms.toFixed(1)} ms · composite + paint {timing.totalMs.toFixed(1)} ms
@@ -548,8 +582,10 @@ export function MockupLab({
           productSlug={slug}
           colours={colours}
           logo={logo}
+          alt="Garment-only mockup, front view"
+          placementGuide={showPlacement ? { zone, orientation } : null}
           fallbackSrc={assetUrl(slug, "photo.jpg")}
-          onTemplate={setTemplate}
+          onTemplate={onGhostTemplate}
           // Whole garment fits the screen height (below the pinned header), centred in its column
           className="w-full max-w-[560px] md:h-[calc(100vh-10rem)] md:w-auto md:max-w-full"
         />

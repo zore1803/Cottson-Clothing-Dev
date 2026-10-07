@@ -39,9 +39,9 @@
     }
   },
   "pinstripe-shirt-blue": {
-    "template": "formal-shirt",
+    "template": "pinstriped-shirt",
     "colours": {
-      "body": "sky"
+      "body": "#242424"
     }
   },
   "formal-shirt-slate": {
@@ -103,9 +103,9 @@
     }
   },
   "grey-shirt": {
-    "template": "formal-shirt",
+    "template": "solid-formal-shirt",
     "colours": {
-      "body": "grey"
+      "body": "#999ba1"
     }
   },
   "yellow-shirt": {

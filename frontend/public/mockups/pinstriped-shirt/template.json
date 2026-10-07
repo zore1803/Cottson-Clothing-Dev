@@ -1,0 +1,48 @@
+{
+  "version": 2,
+  "type": "pinstriped-shirt",
+  "width": 1086,
+  "height": 1448,
+  "pxPerCm": 11,
+  "shadingScale": 65,
+  "referenceColour": "#242424",
+  "preserveDetails": [
+    { "x": 470, "y": 249, "radius": 12 },
+    { "x": 530, "y": 335, "radius": 13 },
+    { "x": 548, "y": 494, "radius": 13 },
+    { "x": 546, "y": 657, "radius": 13 },
+    { "x": 546, "y": 816, "radius": 13 },
+    { "x": 545, "y": 971, "radius": 13 },
+    { "x": 546, "y": 1124, "radius": 13 }
+  ],
+  "foldStrength": 0.35,
+  "layers": {
+    "base": "ghost-reference.png"
+  },
+  "regions": [
+    {
+      "id": "body",
+      "label": "Shirt colour",
+      "mask": "mask-body.png",
+      "default": "#242424"
+    }
+  ],
+  "zones": [
+    {
+      "id": "left-chest",
+      "label": "Left chest / pocket",
+      "x": 650,
+      "y": 485,
+      "w": 130,
+      "h": 110
+    },
+    {
+      "id": "right-chest",
+      "label": "Right chest",
+      "x": 340,
+      "y": 485,
+      "w": 130,
+      "h": 110
+    }
+  ]
+}

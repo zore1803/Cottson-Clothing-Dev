@@ -7,6 +7,8 @@ export type GarmentType =
   | "crew-tee"
   | "tipped-crew-tee"
   | "formal-shirt"
+  | "pinstriped-shirt"
+  | "solid-formal-shirt"
   | "hoodie"
   | "zip-hoodie"
   | "hoodie-vest"
@@ -44,6 +46,8 @@ export type LogoZone = {
   rotation: number;
   /** Optional horizontal squeeze of the logo (sleeves: 0.88, as the sleeve curves away) */
   scaleX?: number;
+  /** Omit when both finishes are supported. */
+  finishes?: Finish[];
 };
 
 /** public/mockups/<type>/template.json */
@@ -55,6 +59,13 @@ export type TemplateConfig = {
   height: number;
   /** Template pixels per real-world cm on the chest, to convert zones to cm for finishing limits */
   pxPerCm: number;
+  /** Neutral fabric luminance in a dark reference photo (white templates use 255). */
+  shadingScale?: number;
+  /** Recolour the reference pixels instead of multiplying a white shading layer. */
+  referenceColour?: string;
+  referenceRendering?: "fabric";
+  /** Circular details, such as buttons, that retain their original pixels. */
+  preserveDetails?: { x: number; y: number; radius: number }[];
   layers: {
     /** The garment photographed/rendered in WHITE on a ghost mannequin, transparent background.
      * Its luminance is the shading for every colour. */

@@ -8,13 +8,14 @@ import { loadImage, loadTemplate, renderMockup, type PreparedTemplate } from "@/
 import { defaultColours, templateTypeFor } from "@/lib/mockup/products";
 import { logoSizeCm, placedZone } from "@/lib/mockup/zones";
 import { renderEmbroidery } from "@/lib/embroidery";
-import type { LogoPlacement, RegionColours } from "@/lib/mockup/types";
+import type { LogoPlacement, LogoZoneId, LogoOrientation, RegionColours } from "@/lib/mockup/types";
 
 type Props = {
   productSlug: string;
   /** Region colours (hex) on top of the product's defaults */
   colours?: RegionColours;
   logo?: LogoPlacement | null;
+  placementGuide?: { zone: LogoZoneId; orientation: LogoOrientation } | null;
   /** Shown when the product has no template (or it fails to load) */
   fallbackSrc?: string;
   alt?: string;
@@ -27,7 +28,7 @@ type Props = {
  * The uploaded logo in its OWN colours with the stitch render's light/shade laid over it, so
  * embroidery reads as thread without changing any colour of the artwork.
  */
-async function stitchTexture(originalSrc: string, stitchesSrc: string) {
+export async function stitchTexture(originalSrc: string, stitchesSrc: string) {
   const [orig, stitches] = await Promise.all([loadImage(originalSrc), loadImage(stitchesSrc)]);
   const W = 900;
   const H = Math.max(1, Math.round((W * orig.naturalHeight) / (orig.naturalWidth || W)));
@@ -76,7 +77,7 @@ async function stitchTexture(originalSrc: string, stitchesSrc: string) {
  * scales with CSS, so it's responsive. Falls back to the product photo when the garment type
  * has no template in public/mockups/.
  */
-export function MockupPreview({ productSlug, colours, logo, fallbackSrc, alt, className, onTemplate }: Props) {
+export function MockupPreview({ productSlug, colours, logo, placementGuide, fallbackSrc, alt, className, onTemplate }: Props) {
   const type = templateTypeFor(productSlug);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [loaded, setLoaded] = useState<{ type: string; t: PreparedTemplate | null } | null>(null);
@@ -111,13 +112,20 @@ export function MockupPreview({ productSlug, colours, logo, fallbackSrc, alt, cl
   // Embroidery: stitch the logo with the real thread renderer (same as the product page),
   // sized to its real width in the zone so the stitch density is right
   const rawSrc = logo?.src ?? null;
+  const [rawImage, setRawImage] = useState<{ src: string; img: HTMLImageElement } | null>(null);
+  useEffect(() => {
+    if (!rawSrc) return;
+    let cancelled = false;
+    loadImage(rawSrc).then((img) => !cancelled && setRawImage({ src: rawSrc, img })).catch(() => {});
+    return () => { cancelled = true; };
+  }, [rawSrc]);
   const stitchKey = (() => {
-    if (!rawSrc || logo?.finish !== "embroidery" || !template) return null;
+    if (!rawSrc || logo?.finish !== "embroidery" || !template || rawImage?.src !== rawSrc) return null;
     const zone = placedZone(template.config, logo.zone, logo.orientation);
     if (!zone) return null;
-    // Real width at this zone/scale, assuming a square-ish logo; rounded so the slider doesn't re-stitch every step
-    const cm = Math.max(2, Math.round(logoSizeCm(template.config, zone, 1, 1, logo.scale).w));
-    return `${rawSrc.length}:${rawSrc.slice(-24)}:${cm}`;
+    // Use the actual aspect ratio so tall and wide artwork get the right stitch density.
+    const cm = Math.max(0.5, Math.round(logoSizeCm(template.config, zone, rawImage.img.naturalWidth, rawImage.img.naturalHeight, logo.scale).w * 10) / 10);
+    return `${rawSrc}:${cm}`;
   })();
   const [stitched, setStitched] = useState<{ key: string; url: string } | null>(null);
   useEffect(() => {
@@ -161,6 +169,7 @@ export function MockupPreview({ productSlug, colours, logo, fallbackSrc, alt, cl
 
   const loading = template === undefined;
   const aspect = template ? template.config.width / template.config.height : 2 / 3;
+  const guide = template && placementGuide ? placedZone(template.config, placementGuide.zone, placementGuide.orientation) : null;
 
   if (template === null) {
     // No template for this garment type: the product photo, as before
@@ -179,6 +188,10 @@ export function MockupPreview({ productSlug, colours, logo, fallbackSrc, alt, cl
         aria-label={alt ?? "Garment mockup"}
         className={cn("block size-full transition-opacity duration-300", loading ? "opacity-0" : "opacity-100")}
       />
+      {guide && template && (
+        <div aria-label={`${guide.label} logo placement area`} className="pointer-events-none absolute border-2 border-dashed border-sky-500 bg-sky-400/10 ring-1 ring-white/80"
+          style={{ left: `${guide.x / template.config.width * 100}%`, top: `${guide.y / template.config.height * 100}%`, width: `${guide.w / template.config.width * 100}%`, height: `${guide.h / template.config.height * 100}%`, transform: `rotate(${guide.rotation ?? 0}deg)` }} />
+      )}
       {debugMasks && (
         // Debug tints hide the chosen colours; make that obvious and easy to leave
         <a

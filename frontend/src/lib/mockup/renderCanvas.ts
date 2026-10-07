@@ -17,6 +17,7 @@
 // colour change re-tints one part and re-composites.
 import type { LogoPlacement, MockupState, RegionColours, RegionId, TemplateConfig, TemplateRegion } from "./types";
 import { fitLogo, placedZone } from "./zones";
+import { recolourReferencePixel, recolourFabricPixel, buttonProtection } from "./core/reference-colour";
 
 export const BACKGROUND = "#f5f5f5";
 const DEFAULT_FOLD_STRENGTH = 0.55;
@@ -61,6 +62,7 @@ type PreparedRegion = TemplateRegion & {
 };
 
 export type PreparedTemplate = {
+  source: HTMLImageElement;
   config: TemplateConfig;
   base: string;
   /** base.png as grayscale luminance, with base.png's alpha */
@@ -91,14 +93,15 @@ function alphaBox(c: HTMLCanvasElement): Box {
 }
 
 /** base.png → grayscale luminance canvas (alpha kept) */
-function luminance(img: HTMLImageElement, W: number, H: number) {
+function luminance(img: HTMLImageElement, W: number, H: number, shadingScale = 255) {
   const c = canvas(W, H);
   const ctx = c.getContext("2d", { willReadFrequently: true })!;
   ctx.drawImage(img, 0, 0, W, H);
   const id = ctx.getImageData(0, 0, W, H);
   const d = id.data;
   for (let i = 0; i < d.length; i += 4) {
-    const l = Math.round(0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]);
+    const source = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+    const l = Math.min(255, Math.round(source * 255 / shadingScale));
     d[i] = d[i + 1] = d[i + 2] = l;
   }
   ctx.putImageData(id, 0, 0);
@@ -139,7 +142,7 @@ export function loadTemplate(type: string, root = "/mockups"): Promise<PreparedT
         Promise.all(config.regions.map((r) => loadImage(url(r.mask)).catch(() => null))),
       ]);
       const { width: W, height: H } = config;
-      const lum = luminance(baseImg, W, H);
+      const lum = luminance(baseImg, W, H, config.shadingScale);
       const regions: PreparedRegion[] = [];
       config.regions.forEach((r, i) => {
         const img = masks[i];
@@ -147,7 +150,7 @@ export function loadTemplate(type: string, root = "/mockups"): Promise<PreparedT
         const maskCanvas = featherMask(img, W, H);
         regions.push({ ...r, maskCanvas, box: alphaBox(maskCanvas) });
       });
-      return { config, base, lum, garmentBox: alphaBox(lum), details, regions };
+      return { config, base, source: baseImg, lum, garmentBox: alphaBox(lum), details, regions };
     })().catch(() => null);
     // Don't cache a miss forever: a template added later should show up on retry
     p.then((t) => !t && templateCache.delete(base));
@@ -180,6 +183,38 @@ function tintRegion(t: PreparedTemplate, r: PreparedRegion, colour: string) {
   ctx.globalCompositeOperation = "source-over";
   ctx.globalAlpha = 1;
   ctx.clearRect(0, 0, w, h);
+  if (t.config.referenceColour) {
+    ctx.drawImage(t.source, x, y, w, h, 0, 0, w, h);
+    const parse = (hex: string) => [1, 3, 5].map((offset) => parseInt(hex.slice(offset, offset + 2), 16));
+    const reference = parse(t.config.referenceColour);
+    const target = parse(colour);
+    const buttonThreshold = reference[0] * 0.2126 + reference[1] * 0.7152 + reference[2] * 0.0722 + 29;
+    const pixels = ctx.getImageData(0, 0, w, h);
+    const mask = r.maskCanvas.getContext("2d")!.getImageData(x, y, w, h).data;
+    for (let py = 0; py < h; py++) for (let px = 0; px < w; px++) {
+      const index = (py * w + px) * 4;
+      if (!pixels.data[index + 3]) continue;
+      const source = [pixels.data[index], pixels.data[index + 1], pixels.data[index + 2]];
+      const recoloured = t.config.referenceRendering === "fabric"
+        ? recolourFabricPixel(source, reference, target)
+        : recolourReferencePixel(source, reference, target);
+      const luminance = source[0] * 0.2126 + source[1] * 0.7152 + source[2] * 0.0722;
+      let protection = 0;
+      for (const detail of t.config.preserveDetails ?? []) {
+        const distance = Math.hypot(px + x - detail.x, py + y - detail.y);
+        if (distance < detail.radius) protection = Math.max(protection, buttonProtection(distance, detail.radius, luminance, buttonThreshold));
+      }
+      for (let channel = 0; channel < 3; channel++) {
+        pixels.data[index + channel] = Math.round(recoloured[channel] * (1 - protection) + source[channel] * protection);
+      }
+      // Intersect coverage without multiplying alpha twice at the cutout edge.
+      pixels.data[index + 3] = Math.min(pixels.data[index + 3], mask[index + 3]);
+    }
+    ctx.putImageData(pixels, 0, 0);
+    // Preserve the original antialiased cutout while respecting the region mask.
+    r.cache = { colour, canvas: c };
+    return c;
+  }
   ctx.fillStyle = colour;
   ctx.fillRect(0, 0, w, h);
   ctx.globalCompositeOperation = "multiply";
@@ -219,7 +254,7 @@ function drawGroundShadow(ctx: CanvasRenderingContext2D, t: PreparedTemplate) {
 /** The logo with fabric folds multiplied in and its own alpha restored */
 function shadeLogo(t: PreparedTemplate, logo: HTMLImageElement, placement: LogoPlacement) {
   const zone = placedZone(t.config, placement.zone, placement.orientation);
-  if (!zone) return null;
+  if (!zone || (zone.finishes && !zone.finishes.includes(placement.finish))) return null;
   const lw = logo.naturalWidth || logo.width || 1;
   const lh = logo.naturalHeight || logo.height || 1;
   const fit = fitLogo(zone, lw, lh, placement.scale);
@@ -301,7 +336,7 @@ function drawMaskDebug(ctx: CanvasRenderingContext2D, t: PreparedTemplate) {
   for (const z of t.config.zones) {
     ctx.save();
     ctx.translate(z.x + z.w / 2, z.y + z.h / 2);
-    ctx.rotate((z.rotation * Math.PI) / 180);
+    ctx.rotate(((z.rotation ?? 0) * Math.PI) / 180);
     ctx.lineWidth = 5;
     ctx.strokeStyle = "rgba(255,255,255,0.9)";
     ctx.strokeRect(-z.w / 2, -z.h / 2, z.w, z.h);

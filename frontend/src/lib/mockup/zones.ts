@@ -27,7 +27,8 @@ export const hasOrientation = (id: LogoZoneId) => id.endsWith("-sleeve-upper");
  * back and swaps its width and height, so it covers the same patch of sleeve.
  */
 export function placedZone(t: TemplateConfig, id: LogoZoneId, orientation: LogoOrientation = "along") {
-  const z = zoneById(t, id);
+  const raw = zoneById(t, id);
+  const z = raw ? { ...raw, rotation: raw.rotation ?? 0 } : null;
   if (!z || orientation !== "upright" || !hasOrientation(id)) return z;
   const cx = z.x + z.w / 2, cy = z.y + z.h / 2;
   return { ...z, x: cx - z.h / 2, y: cy - z.w / 2, w: z.h, h: z.w, rotation: z.rotation - 90 };

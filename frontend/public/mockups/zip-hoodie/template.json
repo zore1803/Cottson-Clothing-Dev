@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "type": "zip-hoodie",
+  "width": 1162,
+  "height": 1354,
+  "pxPerCm": 10.726153846153846,
+  "referenceColour": "#1c1c1c",
+  "referenceRendering": "fabric",
+  "shadingScale": 55,
+  "foldStrength": 0.4,
+  "layers": {
+    "base": "ghost-reference.png",
+    "details": "details-zipper-refined.png"
+  },
+  "regions": [
+    {
+      "id": "body",
+      "label": "Jacket colour",
+      "mask": "mask-body.png",
+      "default": "#1c1c1c"
+    }
+  ],
+  "zones": [
+    {
+      "id": "left-chest",
+      "label": "Left chest",
+      "x": 697,
+      "y": 460,
+      "w": 134,
+      "h": 115
+    },
+    {
+      "id": "right-chest",
+      "label": "Right chest",
+      "x": 337,
+      "y": 460,
+      "w": 134,
+      "h": 115
+    }
+  ]
+}

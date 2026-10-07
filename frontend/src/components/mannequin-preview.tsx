@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { renderEmbroidery } from "@/lib/embroidery";
+import { stitchTexture } from "@/components/mockup-preview";
+import { loadImage } from "@/lib/mockup/renderCanvas";
 import { paintMannequin, prepareMannequin, type MannequinDesign } from "@/lib/mockup/renderMannequin";
 import { prefetchMannequinViews, type MannequinTemplateConfig, type MannequinZone } from "@/lib/mockup/mannequin";
 
@@ -15,6 +18,8 @@ type Prepared = Awaited<ReturnType<typeof prepareMannequin>>;
  */
 export function MannequinPreview({
   design,
+  showPlacement = false,
+  placementZone,
   debug = false,
   perf = false,
   className,
@@ -23,6 +28,8 @@ export function MannequinPreview({
   onTemplate,
 }: {
   design: MannequinDesign;
+  showPlacement?: boolean;
+  placementZone?: string;
   debug?: boolean;
   /** ?perf=1: also hash each render (data-rgba-hash) for determinism checks */
   perf?: boolean;
@@ -47,11 +54,22 @@ export function MannequinPreview({
   const { view, closure } = design.options;
   const logoSrc = design.logo?.src ?? null;
   const pocket = design.options.pocket;
-  const loadKey = `${view}|${closure}|${pocket}|${logoSrc?.length ?? 0}:${logoSrc?.slice(-24) ?? ""}`;
+  const loadKey = `${view}|${closure}|${pocket}|${logoSrc ?? ""}|${design.logo?.finish}|${design.logo?.zoneId}|${design.logo?.scale}`;
   useEffect(() => {
     let cancelled = false;
     prepareMannequin({ ...design, options: { ...design.options, view, closure, pocket } })
-      .then((p) => {
+      .then(async (p) => {
+        if (logoSrc && design.logo?.finish === "embroidery") {
+          const zone = p.zones.find((z) => z.id === design.logo?.zoneId);
+          if (zone) {
+            const img = await loadImage(logoSrc);
+            const k = Math.min(zone.w / img.naturalWidth, zone.h / img.naturalHeight) * design.logo.scale;
+            const widthCm = Math.max(0.5, img.naturalWidth * k / p.layers.config.pxPerCm);
+            const threads = await renderEmbroidery(logoSrc, { maxColors: 4, widthCm, width: 900, keepBackground: true });
+            const src = await stitchTexture(logoSrc, threads);
+            p = await prepareMannequin({ ...design, logo: { ...design.logo, src } });
+          }
+        }
         if (cancelled) return;
         setPrepared({ key: loadKey, p });
         onTemplateRef.current?.({ config: p.layers.config, zones: p.zones });
@@ -80,6 +98,7 @@ export function MannequinPreview({
 
   // Box aspect from the template (1200 × 1600 until the first view loads)
   const size = prepared?.p.layers.config;
+  const guide = showPlacement ? ready?.zones.find((z) => z.id === (placementZone ?? design.logo?.zoneId)) : null;
   return (
     <div className={cn("relative", className)} style={{ aspectRatio: `${size?.width ?? 1200} / ${size?.height ?? 1600}` }}>
       <canvas
@@ -90,6 +109,7 @@ export function MannequinPreview({
         // Keeps showing the previous view while the next one loads (no flash on view changes)
         className={cn("block size-full transition-opacity duration-200", prepared ? "opacity-100" : "opacity-0")}
       />
+      {guide && size && !(design.options.pocket && guide.id === "left-chest") && <div aria-label={`${guide.label} logo placement area`} className="pointer-events-none absolute border-2 border-dashed border-sky-500 bg-sky-400/10 ring-1 ring-white/80" style={{ left: `${guide.x / size.width * 100}%`, top: `${guide.y / size.height * 100}%`, width: `${guide.w / size.width * 100}%`, height: `${guide.h / size.height * 100}%`, transform: `rotate(${guide.rotation ?? 0}deg)` }} />}
       {!prepared && !error && (
         <div className="absolute inset-0 grid place-items-center">
           <Loader2 className="size-6 animate-spin text-muted-foreground" aria-label="Loading mockup" />
