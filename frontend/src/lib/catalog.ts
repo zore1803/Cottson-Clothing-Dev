@@ -5,6 +5,8 @@ import colorData from "@/data/colors.json";
 
 export type Color = { id: string; name: string; hex: string };
 export type Product = {
+  imageUrl?: string;
+  colorImages?: Record<string, string>;
   slug: string;
   title: string;
   category: string;
@@ -55,7 +57,7 @@ export const assetUrl = (
 ) => (pose !== undefined ? `/products/${slug}/photos/${pose}/${file}` : `/products/${slug}/${file}`);
 // Pre-rendered catalog color (see scripts/render-variants.mjs); the original color is the photo itself
 export const variantUrl = (p: Product, colorId: string) =>
-  colorId === p.originalColor ? assetUrl(p.slug, "photo.jpg") : `/products/${p.slug}/variants/${colorId}.webp`;
+  p.colorImages?.[colorId] ?? p.imageUrl ?? (colorId === p.originalColor ? assetUrl(p.slug, "photo.jpg") : `/products/${p.slug}/variants/${colorId}.webp`);
 
 export const formatPrice = (amount: number, currency = "INR") =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);

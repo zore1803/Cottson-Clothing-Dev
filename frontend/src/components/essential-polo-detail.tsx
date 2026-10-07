@@ -25,7 +25,7 @@ import {
 } from "@/components/design-studio/placement";
 import { LogoLayer, blendFor } from "@/components/design-studio/logo-layer";
 import { PositionDialog } from "@/components/design-studio/position-dialog";
-import { GarmentPhoto, useFabricColor } from "@/components/design-studio/garment-photo";
+import { GarmentPhoto, useFabricColor, imageForColor } from "@/components/design-studio/garment-photo";
 import { useFabricUnder, usePhoto } from "@/components/design-studio/use-conformed-art";
 import { stitchAngleFor } from "@/lib/conform";
 import { readLogoFile, useLogoArt, useStitchability, type LogoFile } from "@/components/design-studio/use-logo-artwork";
@@ -249,7 +249,7 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
       return;
     }
     for (const [size, qty] of Object.entries(sizes)) {
-      if (qty > 0) add({ slug: product.slug, title: product.title, colorId, colorName: color.name, size, qty, basePrice: product.price });
+      if (qty > 0) add({ slug: product.slug, title: product.title, colorId, colorName: color.name, size, qty, basePrice: product.price, imageUrl: imageForColor(product, colorId) });
     }
     toast.success(`Added ${totalQty} × ${product.title} (${color.name}) to cart`);
     setSizes({});

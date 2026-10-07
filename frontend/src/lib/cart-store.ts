@@ -12,6 +12,8 @@ export type CartItem = {
   title: string;
   colorId: string;
   colorName: string;
+  /** Selected colour's catalog photo, including superadmin product URLs. */
+  imageUrl?: string;
   size: string;
   qty: number;
   /** Catalog price per piece before bulk discount; the line price is derived (see lineUnitPrice) */
@@ -48,7 +50,7 @@ export const useCart = create<CartState>()(
                 i.colorId === item.colorId &&
                 i.size === item.size
             );
-          if (same) return { items: s.items.map((i) => (i === same ? { ...i, qty: i.qty + item.qty } : i)) };
+          if (same) return { items: s.items.map((i) => (i === same ? { ...i, imageUrl: item.imageUrl ?? i.imageUrl, qty: i.qty + item.qty } : i)) };
           return { items: [...s.items, { ...item, id: crypto.randomUUID() }] };
         }),
       setQty: (id, qty) => set((s) => ({ items: s.items.map((i) => (i.id === id ? { ...i, qty: Math.max(1, qty) } : i)) })),
