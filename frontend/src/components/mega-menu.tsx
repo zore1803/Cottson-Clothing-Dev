@@ -73,12 +73,14 @@ const MENUS: Menu[] = [
 ];
 
 export function MegaMenu() {
-  const [open, setOpen] = useState<string | null>(null);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pathname = usePathname();
+  // The menu belongs to the page it was opened on, so navigating closes it without an effect
+  const [openState, setOpenState] = useState<{ label: string; path: string } | null>(null);
+  const open = openState && openState.path === pathname ? openState.label : null;
+  const setOpen = (label: string | null) => setOpenState(label === null ? null : { label, path: pathname });
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Close on navigation and on Escape
-  useEffect(() => setOpen(null), [pathname]);
+  // Close on Escape
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(null);
     window.addEventListener("keydown", onKey);

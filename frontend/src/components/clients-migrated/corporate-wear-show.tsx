@@ -38,7 +38,7 @@ export function CorporateWearShow() {
               sm:text-[17px]
             "
           >
-            Let's bring your vision to life! Schedule a live meeting with our
+            Let&apos;s bring your vision to life! Schedule a live meeting with our
             brand specialist and customise everything fabric, logo, colours
             and more.
           </p>

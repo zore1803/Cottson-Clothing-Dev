@@ -1,6 +1,7 @@
 // Mannequin mockup tests (node:test), run with: npm run test:mockups
 // T1–T6 render the real assets with the SHARED core (src/lib/mockup/core). T7 re-renders the ghost
 // templates in the browser and diffs them against tmp/mockup-baseline (needs `npm run dev`).
+import { existsSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -265,6 +266,11 @@ test("Grain: browser render is byte-identical to the Node render", async (t) => 
 });
 
 test("T7 ghost templates render pixel-identical to the Step 0 baseline", async (t) => {
+  // The baseline images are generated locally (`node scripts/ghost-regression.mjs capture`) and aren't committed
+  if (!existsSync(path.join(import.meta.dirname, "..", "..", "tmp", "mockup-baseline"))) {
+    t.skip("no baseline yet: run `node scripts/ghost-regression.mjs capture` once with the dev server up");
+    return;
+  }
   const up = await fetch(process.env.APP_URL ?? "http://localhost:3000/mockup-lab").then((r) => r.ok).catch(() => false);
   if (!up) {
     t.skip("dev server not running on http://localhost:3000 (start `npm run dev`)");

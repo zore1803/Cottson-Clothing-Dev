@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 export function useInView(options: IntersectionObserverInit = { rootMargin: "200px" }) {
   const [isInView, setIsInView] = useState(false);
   const [hasEntered, setHasEntered] = useState(false);
-  const ref = useRef<any>(null);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = ref.current;

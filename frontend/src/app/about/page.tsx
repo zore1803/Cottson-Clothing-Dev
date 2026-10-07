@@ -167,10 +167,7 @@ function AnimatedCounter({ value }: { value: string }) {
     if (!el) return;
 
     const numericMatch = value.match(/^(\d+)/);
-    if (!numericMatch) {
-      setDisplay(value);
-      return;
-    }
+    if (!numericMatch) return;
 
     const target = parseInt(numericMatch[1], 10);
     const suffix = value.slice(numericMatch[1].length);
@@ -230,7 +227,7 @@ function HowItAllBegan() {
 
           <p className="mx-auto mt-5 max-w-[640px] text-[14px] leading-[1.8] text-[#607487] sm:text-[15px]">
             Seven decades of textile mastery, passed down through generations
-            and reimagined for India's leading enterprises.
+            and reimagined for India&apos;s leading enterprises.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-2 sm:gap-2.5">
