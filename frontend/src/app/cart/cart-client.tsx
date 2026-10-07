@@ -21,6 +21,8 @@ export default function CartClient({ products }: { products: Product[] }) {
 
   const subtotal = cartTotal(items);
   const shipping = shippingFor(subtotal);
+  // Products removed from the shop can't be bought; flag them so the customer can drop them
+  const unavailable = items.filter((i) => !products.some((p) => p.slug === i.slug));
   const lines = items.map((i) => ({ slug: i.slug, colorId: i.colorId }));
 
   if (!items.length)
@@ -41,6 +43,14 @@ export default function CartClient({ products }: { products: Product[] }) {
     <div className="mx-auto grid max-w-6xl gap-10 px-4 pt-28 pb-4 sm:pt-32 lg:grid-cols-[1fr_340px]">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Cart</h1>
+        {unavailable.length > 0 && (
+          <div role="alert" className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <span>{unavailable.map((i) => i.title).join(", ")} {unavailable.length > 1 ? "are" : "is"} no longer available. Remove {unavailable.length > 1 ? "them" : "it"} to check out.</span>
+            <button type="button" className="font-semibold underline" onClick={() => unavailable.forEach((i) => remove(i.id))}>
+              Remove unavailable items
+            </button>
+          </div>
+        )}
         <ul className="mt-8 divide-y border-y">
           {items.map((i) => {
             const p = products.find((p) => p.slug === i.slug);
@@ -97,9 +107,15 @@ export default function CartClient({ products }: { products: Product[] }) {
           <span>Total</span>
           <span>{formatPrice(subtotal + shipping)}</span>
         </div>
-        <Link href="/checkout" className={cn(buttonVariants({ size: "lg" }), "mt-6 h-11 w-full")}>
-          Checkout
-        </Link>
+        {unavailable.length ? (
+          <button type="button" disabled className={cn(buttonVariants({ size: "lg" }), "mt-6 h-11 w-full")}>
+            Checkout
+          </button>
+        ) : (
+          <Link href="/checkout" className={cn(buttonVariants({ size: "lg" }), "mt-6 h-11 w-full")}>
+            Checkout
+          </Link>
+        )}
       </aside>
     </div>
     <CartRecommendations lines={lines} products={products} />

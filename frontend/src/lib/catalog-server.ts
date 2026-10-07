@@ -23,3 +23,14 @@ export async function listProducts({ includeHidden = false } = {}): Promise<Prod
     express: Boolean(p.express), promo: Boolean(p.promo), livePreview: false,
   }))];
 }
+
+/** Slugs of built-in products a superadmin has taken off the shop. Empty if the database can't be reached. */
+export async function hiddenSlugs(): Promise<Set<string>> {
+  if (!process.env.MONGODB_URI) return new Set();
+  try {
+    await connectMongo();
+    return new Set((await HiddenProduct.find().lean()).map((h) => String(h.slug)));
+  } catch {
+    return new Set();
+  }
+}

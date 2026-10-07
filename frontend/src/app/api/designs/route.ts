@@ -4,17 +4,19 @@ import { getSession, requireCustomer } from "@/lib/authz";
 import { parseDesign } from "@/lib/designs";
 import { AssetError, storeDesignAssets } from "@/lib/design-assets";
 import { rateLimit, readJson } from "@/lib/security";
+import { hiddenSlugs } from "@/lib/catalog-server";
 
 // Save a studio design; the returned id goes on the cart line item and later the Medusa order.
 // Signed-in customers get the design attached to their account; guests can still save one.
 export async function POST(req: Request) {
-  const limited = rateLimit(req, "designs", 20, 10 * 60_000);
+  const limited = await rateLimit(req, "designs", 20, 10 * 60_000);
   if (limited) return limited;
 
   const body = await readJson(req);
   if (!body) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   const parsed = parseDesign(body);
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
+  if ((await hiddenSlugs()).has(parsed.design.product)) return NextResponse.json({ error: "This product is no longer available" }, { status: 400 });
 
   const [session] = await Promise.all([getSession(), connectMongo()]);
   // Designing is part of ordering, which admin accounts don't do; guests and customers can save

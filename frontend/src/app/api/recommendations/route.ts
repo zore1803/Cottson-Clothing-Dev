@@ -1,3 +1,4 @@
+import { hiddenSlugs } from "@/lib/catalog-server";
 import { medusa } from "@/lib/auth";
 import { getSession } from "@/lib/authz";
 import { colorIdFromVariantTitle, pickedForYou, type Purchase } from "@/lib/recommendations";
@@ -19,7 +20,8 @@ export async function GET() {
       .filter((i) => i.product_handle)
       .map((i) => ({ slug: i.product_handle as string, qty: i.quantity, colorId: colorIdFromVariantTitle(i.variant_title) }));
 
-    const { products, topCategory } = pickedForYou(purchases);
+    const hidden = await hiddenSlugs();
+    const { products, topCategory } = pickedForYou(purchases, [...hidden]);
     return Response.json({ picks: products.map((p) => p.slug), topCategory, signedIn: true, basedOnOrders: purchases.length > 0 });
   } catch {
     // Suggestions are a nicety; never let a Medusa hiccup break the cart page
