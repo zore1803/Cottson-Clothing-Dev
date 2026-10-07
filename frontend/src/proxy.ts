@@ -37,7 +37,7 @@ export function proxy(req: NextRequest) {
   if (pathname === "/login" || pathname === "/register") {
     // A signed-in customer sent here to reach /admin must be able to sign in as staff instead
     const wantsAdmin = pathname === "/login" && (searchParams.get("next") ?? "").startsWith("/admin");
-    if (signedIn && !wantsAdmin) return NextResponse.redirect(new URL("/account", req.url));
+    if (signedIn && !wantsAdmin) return NextResponse.redirect(new URL("/", req.url));
   }
   return NextResponse.next();
 }

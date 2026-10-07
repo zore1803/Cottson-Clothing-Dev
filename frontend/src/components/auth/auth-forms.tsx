@@ -8,8 +8,8 @@ import { Field, FormError, SubmitButton, send } from "./fields";
 
 const link = "font-semibold text-[#113858] underline-offset-4 hover:underline";
 
-// Only allow same-site relative redirects after login
-const safeNext = (n: string | null) => (n && n.startsWith("/") && !n.startsWith("//") ? n : "/account");
+// Where to go after signing in: the page they were sent from if there was one (same-site paths only), otherwise the homepage
+const safeNext = (n: string | null) => (n && n.startsWith("/") && !n.startsWith("//") ? n : "/");
 
 function useSubmit(action: (f: Record<string, string>) => Promise<void>) {
   const [busy, setBusy] = useState(false);
@@ -58,7 +58,7 @@ export function RegisterForm() {
   const router = useRouter();
   const { busy, error, onSubmit } = useSubmit(async (f) => {
     await send("/api/auth/register", f);
-    router.replace("/account");
+    router.replace("/");
     router.refresh();
   });
   return (
