@@ -10,7 +10,7 @@ const METHODS = ["upi", "card", "netbanking"];
 
 export async function POST(req: Request) {
   if (paymentMode() !== "dummy") return NextResponse.json({ error: "Not found" }, { status: 404 });
-  const limited = rateLimit(req, "dummy-pay", 30, 10 * 60_000);
+  const limited = await rateLimit(req, "dummy-pay", 30, 10 * 60_000);
   if (limited) return limited;
 
   const b = await readJson(req);

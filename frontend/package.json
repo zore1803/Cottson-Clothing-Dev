@@ -11,7 +11,8 @@
     "make:product": "node scripts/make-product-from-photo.mjs",
     "render:variants": "node scripts/render-variants.mjs",
     "check-template": "node scripts/check-template.mjs",
-    "test:mockups": "node --test tests/mockups.test.mjs"
+    "test:mockups": "node --test tests/mockups.test.mjs",
+    "test": "node --conditions react-server --import ./tests/register.mjs --test tests/product-colors.test.mjs tests/payments-security.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -20,11 +21,13 @@
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.11.0",
     "clsx": "^2.1.1",
+    "ioredis": "^6.0.0",
     "konva": "^10.6.0",
     "lucide-react": "^1.47.0",
     "mongoose": "^9.10.1",
     "next": "16.3.5",
     "next-themes": "^0.4.6",
+    "nodemailer": "^10.0.15",
     "pixi.js": "^8.21.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -40,6 +43,7 @@
     "@huggingface/transformers": "^4.3.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

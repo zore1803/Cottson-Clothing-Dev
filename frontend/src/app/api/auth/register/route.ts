@@ -2,7 +2,7 @@ import { medusa, setSession, isEmail, fail, AuthError, MIN_PASSWORD } from "@/li
 import { rateLimit } from "@/lib/security";
 
 export async function POST(req: Request) {
-  const limited = rateLimit(req, "register", 5, 60 * 60_000);
+  const limited = await rateLimit(req, "register", 5, 60 * 60_000);
   if (limited) return limited;
   try {
     const b = await req.json();
