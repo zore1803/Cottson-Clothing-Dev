@@ -123,8 +123,8 @@ export const RecolorCanvas = forwardRef<RecolorHandle, Props>(function RecolorCa
       try {
         const PIXI = await import("pixi.js");
         const [modelImg, garmentImg] = await Promise.all([
-          loadImage(assetUrl(slug, "model-photo.png", pose)),
-          loadImage(assetUrl(slug, "garment-layer.png", pose)),
+          loadImage(assetUrl(slug, "model-photo.webp", pose)),
+          loadImage(assetUrl(slug, "garment-layer.webp", pose)),
         ]);
         if (cancelled) return;
         const W = modelImg.width, H = modelImg.height;

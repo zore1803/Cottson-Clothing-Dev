@@ -3,7 +3,7 @@
 //
 //   node scripts/measure-fit.mjs            -> writes `fit` into src/data/products.json
 //
-// Reads public/products/<slug>/garment-layer.png (the garment cut out of the photo) and records,
+// Reads public/products/<slug>/garment-layer.webp (the garment cut out of the photo) and records,
 // as fractions of the 2:3 photo frame the product page shows (object-cover, so wider photos lose
 // their sides):
 //   chest - torso width, taken below the sleeves (median over the middle-lower torso)
@@ -20,7 +20,7 @@ const catalogPath = "src/data/products.json";
 const catalog = JSON.parse(fs.readFileSync(catalogPath, "utf8"));
 
 async function measure(slug) {
-  const file = `public/products/${slug}/garment-layer.png`;
+  const file = `public/products/${slug}/garment-layer.webp`;
   if (!fs.existsSync(file)) return null;
   const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const W = info.width, H = info.height;

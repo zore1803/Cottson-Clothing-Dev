@@ -23,7 +23,7 @@ export type Product = {
   express?: boolean;
   promo?: boolean;
   /** Number of alternate poses under /products/<slug>/photos/<n>/, each with its own
-   * model-photo.png + garment-layer.png (see scripts/import-poses.mjs). Products without this
+   * model-photo.webp + garment-layer.webp (see scripts/import-poses.mjs). Products without this
    * field only have the single root-level photo (the older single-pose layout). */
   poses?: number;
   /** Where the garment sits in the product photo, as fractions of the 2:3 photo frame
@@ -50,7 +50,7 @@ export const getProduct = (slug: string) => PRODUCTS.find((p) => p.slug === slug
 
 export const assetUrl = (
   slug: string,
-  file: "photo.jpg" | "model-photo.png" | "garment-layer.png",
+  file: "photo.jpg" | "model-photo.webp" | "garment-layer.webp",
   pose?: number
 ) => (pose !== undefined ? `/products/${slug}/photos/${pose}/${file}` : `/products/${slug}/${file}`);
 // Pre-rendered catalog color (see scripts/render-variants.mjs); the original color is the photo itself

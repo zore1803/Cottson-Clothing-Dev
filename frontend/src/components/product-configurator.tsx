@@ -53,7 +53,7 @@ export function ProductConfigurator({ product, initialColor }: { product: Produc
                     pose === i ? "border-foreground" : "border-transparent hover:border-muted-foreground/40"
                   )}
                 >
-                  <Image src={assetUrl(product.slug, "model-photo.png", i)} alt={`Pose ${i + 1}`} fill className="object-cover" />
+                  <Image src={assetUrl(product.slug, "model-photo.webp", i)} alt={`Pose ${i + 1}`} fill className="object-cover" />
                 </button>
               ))}
             </div>

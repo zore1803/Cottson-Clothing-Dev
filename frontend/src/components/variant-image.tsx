@@ -81,7 +81,7 @@ export const VariantImage = forwardRef<VariantHandle, Props>(function VariantIma
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const garmentImg = await loadImage(`/products/${product.slug}/garment-layer.png`);
+      const garmentImg = await loadImage(`/products/${product.slug}/garment-layer.webp`);
       if (cancelled) return;
       const meta: GarmentMeta = { width: garmentImg.width, height: garmentImg.height, bbox: scanBbox(garmentImg) };
       metaRef.current = meta;

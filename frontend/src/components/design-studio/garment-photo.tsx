@@ -348,7 +348,7 @@ export const GarmentPhoto = forwardRef<
       const src = isPose
         ? assetUrl(
             product.slug,
-            "model-photo.png",
+            "model-photo.webp",
             Number(k.slice(5))
           )
         : k;

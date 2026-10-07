@@ -266,7 +266,7 @@ export function EssentialPoloDetail({ product, initialColor }: { product: Produc
                     pose === i ? "border-[#113858]" : "border-transparent hover:border-[#113858]/30"
                   )}
                 >
-                  <NextImage src={assetUrl(product.slug, "model-photo.png", i)} alt="" fill unoptimized className="object-cover" />
+                  <NextImage src={assetUrl(product.slug, "model-photo.webp", i)} alt="" fill unoptimized className="object-cover" />
                 </button>
               ))}
             </div>
