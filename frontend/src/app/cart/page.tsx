@@ -9,6 +9,7 @@ import { shippingFor, bulkDiscount, CUSTOMIZATION_FEE } from "@/lib/pricing";
 import { getProduct, variantUrl, formatPrice } from "@/lib/catalog";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { CartRecommendations } from "@/components/cart-recommendations";
 
 const useMounted = () => useSyncExternalStore(() => () => {}, () => true, () => false);
 
@@ -22,16 +23,20 @@ export default function CartPage() {
 
   if (!items.length)
     return (
-      <div className="mx-auto max-w-5xl px-4 pt-32 pb-24 text-center">
-        <h1 className="text-3xl font-semibold">Your cart is empty</h1>
-        <Link href="/products" className={cn(buttonVariants({ size: "lg" }), "mt-6 h-11 px-6")}>
-          Start shopping
-        </Link>
-      </div>
+      <>
+        <div className="mx-auto max-w-5xl px-4 pt-32 pb-12 text-center">
+          <h1 className="text-3xl font-semibold">Your cart is empty</h1>
+          <Link href="/products" className={cn(buttonVariants({ size: "lg" }), "mt-6 h-11 px-6")}>
+            Start shopping
+          </Link>
+        </div>
+        <CartRecommendations lines={[]} />
+      </>
     );
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-10 px-4 pt-28 pb-12 sm:pt-32 lg:grid-cols-[1fr_340px]">
+    <>
+    <div className="mx-auto grid max-w-6xl gap-10 px-4 pt-28 pb-4 sm:pt-32 lg:grid-cols-[1fr_340px]">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Cart</h1>
         <ul className="mt-8 divide-y border-y">
@@ -95,5 +100,7 @@ export default function CartPage() {
         </Link>
       </aside>
     </div>
+    <CartRecommendations lines={items.map((i) => ({ slug: i.slug, colorId: i.colorId }))} />
+    </>
   );
 }
