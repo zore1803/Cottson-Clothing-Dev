@@ -2,6 +2,7 @@ import { fail, AuthError } from "@/lib/auth";
 import { requireSuperadmin } from "@/lib/authz";
 import { removeStaff, sendStaffPasswordReset, setStaffRole } from "@/lib/staff-store";
 import { medusa } from "@/lib/auth";
+import { audit } from "@/lib/audit";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -12,7 +13,9 @@ export async function PATCH(req: Request, { params }: Ctx) {
   try {
     const { role } = await req.json();
     if (role !== "admin" && role !== "superadmin") throw new AuthError("Role must be admin or superadmin");
-    return Response.json({ member: await setStaffRole(session.token, session.admin.id, (await params).id, role) });
+    const member = await setStaffRole(session.token, session.admin.id, (await params).id, role);
+    await audit(session, role === "superadmin" ? "staff.promoted" : "staff.demoted", member.email ?? member.id);
+    return Response.json({ member });
   } catch (e) {
     return fail(e);
   }
@@ -25,6 +28,7 @@ export async function POST(_: Request, { params }: Ctx) {
   try {
     const { user } = await medusa<{ user: { email: string } }>(`/admin/users/${encodeURIComponent((await params).id)}?fields=email`, { token: session.token });
     await sendStaffPasswordReset(user.email);
+    await audit(session, "staff.password_reset", user.email);
     return Response.json({ ok: true });
   } catch (e) {
     return fail(e);
@@ -35,7 +39,8 @@ export async function DELETE(_: Request, { params }: Ctx) {
   const session = await requireSuperadmin();
   if (session instanceof Response) return session;
   try {
-    await removeStaff(session.token, session.admin.id, (await params).id);
+    const removed = await removeStaff(session.token, session.admin.id, (await params).id);
+    await audit(session, "staff.removed", removed.email);
     return Response.json({ ok: true });
   } catch (e) {
     return fail(e);

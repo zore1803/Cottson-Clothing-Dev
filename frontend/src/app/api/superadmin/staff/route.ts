@@ -4,6 +4,7 @@ import { inviteStaff, listInvites, listStaff } from "@/lib/staff-store";
 import type { StaffRoleName } from "@/lib/admin-auth";
 import { mailConfigured } from "@/lib/mailer";
 import { rateLimit } from "@/lib/security";
+import { audit } from "@/lib/audit";
 
 export async function GET() {
   const session = await requireSuperadmin();
@@ -26,7 +27,9 @@ export async function POST(req: Request) {
     const b = await req.json();
     const role: StaffRoleName = b.role === "superadmin" ? "superadmin" : "admin";
     const who = [session.admin.first_name, session.admin.last_name].filter(Boolean).join(" ") || session.admin.email;
-    return Response.json(await inviteStaff(session.token, who, { email: String(b.email ?? ""), role }), { status: 201 });
+    const invited = await inviteStaff(session.token, who, { email: String(b.email ?? ""), role });
+    await audit(session, "staff.invited", invited.email, `as ${role}`);
+    return Response.json(invited, { status: 201 });
   } catch (e) {
     return fail(e);
   }

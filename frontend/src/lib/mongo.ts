@@ -43,6 +43,8 @@ const DesignSchema = new Schema(
     // Production workflow: pending until the order is placed, then moved along by the team
     status: { type: String, enum: DESIGN_STATUSES, default: "pending", index: true },
     statusNote: String,
+    // When the order was placed; production due dates count from here
+    orderedAt: Date,
   },
   { timestamps: true }
 );
@@ -158,3 +160,18 @@ const StaffInviteSchema = new Schema(
   { timestamps: true }
 );
 export const StaffInvite = models.StaffInvite || model("StaffInvite", StaffInviteSchema);
+
+// Who did what in the admin: one row per change, newest first. Written by lib/audit.ts, read on the
+// superadmin Audit log screen. Rows are never edited.
+const AuditLogSchema = new Schema(
+  {
+    at: { type: Date, default: Date.now, index: true },
+    actorId: String,
+    actorEmail: { type: String, index: true },
+    action: { type: String, required: true, index: true },
+    target: String,
+    detail: String,
+  },
+  { versionKey: false }
+);
+export const AuditLog = models.AuditLog || model("AuditLog", AuditLogSchema);

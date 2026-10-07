@@ -100,6 +100,7 @@ export async function revokeInvite(token: string, id: string) {
   await medusa(`/admin/invites/${encodeURIComponent(id)}`, { token, method: "DELETE" });
   await connectMongo();
   await StaffInvite.deleteOne({ email: invite.email.toLowerCase() });
+  return invite.email;
 }
 
 /**
@@ -146,7 +147,7 @@ export async function acceptInvite(input: { token: string; email: string; passwo
 
   if (invite.role === "superadmin") await StaffRole.updateOne({ userId: user.id }, { userId: user.id, email, role: "superadmin", owner: false }, { upsert: true });
   await StaffInvite.deleteOne({ email });
-  return { email };
+  return { email, userId: user.id, role: invite.role as StaffRoleName };
 }
 
 /** Promotes or demotes a staff member. Never touches owners or yourself, so a superadmin always remains. */
@@ -158,7 +159,7 @@ export async function setStaffRole(token: string, actorId: string, id: string, r
   if (existing?.owner || isOwnerEmail(target.email)) throw new AuthError("This account is an owner and can't be changed here", 400);
   if (role === "superadmin") await StaffRole.updateOne({ userId: id }, { userId: id, email: target.email.toLowerCase(), role: "superadmin", owner: false }, { upsert: true });
   else await StaffRole.deleteOne({ userId: id });
-  return { id, role };
+  return { id, role, email: target.email };
 }
 
 /** Removes a staff member's access. Superadmins must be demoted first so a promotion is never lost by accident. */
@@ -170,6 +171,7 @@ export async function removeStaff(token: string, actorId: string, id: string) {
   if (row?.owner || isOwnerEmail(target.email)) throw new AuthError("This account is an owner and can't be removed here", 400);
   if (row) throw new AuthError("Demote this superadmin to admin before removing them", 400);
   await medusa(`/admin/users/${encodeURIComponent(id)}`, { token, method: "DELETE" });
+  return { email: target.email };
 }
 
 /** Emails a password reset link to a staff member (the same link they get from "Forgot password") */

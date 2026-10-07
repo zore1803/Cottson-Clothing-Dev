@@ -2,6 +2,7 @@ import { fail } from "@/lib/auth";
 import { requireAdmin } from "@/lib/authz";
 import { setStock } from "@/lib/admin-store";
 import { readJson } from "@/lib/security";
+import { audit } from "@/lib/audit";
 
 const MEDUSA_ID = /^[a-z]+_[0-9A-Za-z]+$/;
 const MAX_STOCK = 1_000_000;
@@ -17,6 +18,7 @@ export async function PUT(req: Request, { params }: RouteContext<"/api/admin/pro
   if (q !== null && !(typeof q === "number" && Number.isInteger(q) && q >= 0 && q <= MAX_STOCK)) return Response.json({ error: "Quantity must be a whole number from 0 to 1,000,000, or empty for made to order" }, { status: 400 });
   try {
     await setStock(session.token, productId, variantId, q as number | null);
+    await audit(session, "stock.updated", variantId, q === null ? "made to order" : `set to ${q}`);
     return Response.json({ ok: true });
   } catch (e) {
     return fail(e);

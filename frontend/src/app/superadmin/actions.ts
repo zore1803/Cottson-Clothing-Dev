@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSuperadmin, isSuperadmin } from "@/lib/superadmin";
+import { audit } from "@/lib/audit";
 import { createMedusaProduct, deleteMedusaProduct } from "@/lib/medusa-catalog";
 import { normalizeColorImages } from "@/lib/product-colors";
 import { COLORS, PRODUCTS } from "@/lib/catalog";
@@ -36,6 +37,7 @@ export async function addProduct(_: { error: string; success: string }, data: Fo
     revalidatePath(`/products/${slug}`);
     revalidatePath("/studio");
     revalidatePath("/superadmin/products");
+    await audit(session, "product.added", slug, title);
     return { error: "", success: `Added ${title}. It is in the shop and under Products & stock.` };
   } catch (error) {
     await deleteMedusaProduct(session.token, slug).catch(() => {});
@@ -61,6 +63,7 @@ export async function removeProduct(slug: string) {
       await CatalogProduct.deleteOne({ slug });
     }
     refresh(slug);
+    await audit(session, "product.removed", slug);
     return { error: "" };
   } catch (error) {
     console.error("Product removal failed", error instanceof Error ? error.name : "Unknown error");
@@ -69,11 +72,13 @@ export async function removeProduct(slug: string) {
 }
 
 export async function restoreProduct(slug: string) {
-  if (!await isSuperadmin()) return { error: "Superadmin access required." };
+  const session = await getSuperadmin();
+  if (!session) return { error: "Superadmin access required." };
   try {
     await connectMongo();
     await HiddenProduct.deleteOne({ slug });
     refresh(slug);
+    await audit(session, "product.restored", slug);
     return { error: "" };
   } catch (error) {
     console.error("Product restore failed", error instanceof Error ? error.name : "Unknown error");
@@ -111,6 +116,7 @@ export async function syncProductsToMedusa(slugs: string[]) {
         colorImages,
       });
       synced++;
+      await audit(session, "product.synced", slug);
     } catch (error) {
       failed.push({ slug, error: error instanceof Error ? error.message : "Failed" });
     }
