@@ -6,8 +6,10 @@ import { summarizeDesign } from "@/lib/designs";
 import { rateLimit, readJson } from "@/lib/security";
 import { store, REGION } from "@/lib/medusa-store";
 import { createOrderId, paymentMode, razorpayKeyId } from "@/lib/razorpay-dummy";
+import { createRazorpayOrder } from "@/lib/razorpay";
 import { getToken } from "@/lib/auth";
 import { getSession } from "@/lib/authz";
+import { hiddenSlugs } from "@/lib/catalog-server";
 
 // Step 1 of checkout: validates the browser cart, builds it in Medusa (items, address, shipping),
 // and opens a payment order for the exact amount Medusa computed. The order itself is only placed
@@ -21,7 +23,7 @@ const MAX_QTY = 10_000;
 const bad = (error: string) => NextResponse.json({ error }, { status: 400 });
 
 export async function POST(req: Request) {
-  const limited = rateLimit(req, "checkout", 10, 10 * 60_000);
+  const limited = await rateLimit(req, "checkout", 10, 10 * 60_000);
   if (limited) return limited;
   if (paymentMode() === "off") return NextResponse.json({ error: "Online payments are not available right now" }, { status: 503 });
   // Staff accounts manage orders; they do not place them
@@ -38,8 +40,9 @@ export async function POST(req: Request) {
     // Never trust the browser's cart: check every line against the catalog. Prices are not
     // taken from the request at all; Medusa prices each variant (incl. bulk tiers) itself.
     const designIds = new Set<string>();
+    const hidden = await hiddenSlugs(); // products a superadmin removed can't be bought, even from an old cart
     for (const i of items) {
-      const p = typeof i?.slug === "string" ? getProduct(i.slug) : undefined;
+      const p = typeof i?.slug === "string" && !hidden.has(i.slug) ? getProduct(i.slug) : undefined;
       if (!p) return bad("An item in your cart is no longer available");
       if (!COLORS.some((c) => c.id === i.colorId) || !p.sizes.includes(i.size)) return bad(`Invalid colour or size for ${p.title}`);
       if (!Number.isInteger(i.qty) || i.qty < 1 || i.qty > MAX_QTY) return bad("Invalid quantity");
@@ -129,7 +132,7 @@ export async function POST(req: Request) {
     const amount = Math.round(priced.total * 100); // paise
     if (!(amount > 0)) throw new Error("Could not price your order");
 
-    const razorpayOrderId = createOrderId();
+    const razorpayOrderId = paymentMode() === "razorpay" ? await createRazorpayOrder(amount, cart.id) : createOrderId();
     await connectMongo();
     await Payment.create({
       razorpayOrderId,

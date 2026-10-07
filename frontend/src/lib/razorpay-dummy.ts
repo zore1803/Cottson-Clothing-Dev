@@ -11,8 +11,22 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
 const DEV_SECRET = "dummy_razorpay_secret_not_for_production";
 
-/** "dummy" in development; in production it must be switched on explicitly (PAYMENT_MODE=dummy) */
-export const paymentMode = () => process.env.PAYMENT_MODE ?? (process.env.NODE_ENV === "production" ? "off" : "dummy");
+/** True when real Razorpay credentials are configured */
+export const razorpayConfigured = () => !!process.env.RAZORPAY_KEY_ID && !!process.env.RAZORPAY_KEY_SECRET;
+
+/**
+ * "razorpay": real payments (RAZORPAY_KEY_ID + RAZORPAY_KEY_SECRET are set).
+ * "dummy": the simulated checkout, the default in development when there are no keys.
+ * "off": checkout disabled, the default in production until keys are set.
+ * PAYMENT_MODE overrides, but "razorpay" without keys is refused (treated as off).
+ */
+export const paymentMode = (): "razorpay" | "dummy" | "off" => {
+  const forced = process.env.PAYMENT_MODE;
+  if (forced === "razorpay") return razorpayConfigured() ? "razorpay" : "off";
+  if (forced === "dummy" || forced === "off") return forced;
+  if (razorpayConfigured()) return "razorpay";
+  return process.env.NODE_ENV === "production" ? "off" : "dummy";
+};
 
 const secret = () => {
   if (process.env.RAZORPAY_KEY_SECRET) return process.env.RAZORPAY_KEY_SECRET;

@@ -11,18 +11,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { DummyRazorpayModal, type RazorpayResult } from "@/components/payments/dummy-razorpay";
+import { RazorpayCheckout } from "@/components/payments/razorpay-checkout";
 
 const useMounted = () => useSyncExternalStore(() => () => {}, () => true, () => false);
 
 // Two steps: /api/checkout builds the cart and opens a payment order, the payment modal collects the
 // payment, then /api/checkout/confirm verifies it and places the order. The modal is a dummy Razorpay
 // for now (see lib/razorpay-dummy.ts).
-type PaymentOrder = { razorpayOrderId: string; amount: number; email: string };
+type PaymentOrder = { razorpayOrderId: string; amount: number; email: string; name: string; phone: string; keyId: string; mode: string };
 
 export default function CheckoutPage() {
   const { items, clear } = useCart();
   const mounted = useMounted();
-  const [placed, setPlaced] = useState<{ displayId: number; total: number } | null>(null);
+  const [placed, setPlaced] = useState<{ displayId: number; total: number; test: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
   const [payment, setPayment] = useState<PaymentOrder | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -67,7 +68,7 @@ export default function CheckoutPage() {
       <div className="mx-auto max-w-xl px-4 py-24 text-center">
         <h1 className="text-3xl font-semibold">Thank you!</h1>
         <p className="mt-3 text-muted-foreground">
-          Order #{placed.displayId} is confirmed · {formatPrice(placed.total)}. Payment received (test mode, no money was charged).
+          Order #{placed.displayId} is confirmed · {formatPrice(placed.total)}. {placed.test ? "Payment received (test mode, no money was charged)." : "Payment received. Thank you!"}
         </p>
         <Link href="/products" className={cn(buttonVariants({ size: "lg" }), "mt-6 h-11 px-6")}>Continue shopping</Link>
       </div>
@@ -87,6 +88,7 @@ export default function CheckoutPage() {
   ];
 
   async function confirmPayment(r: RazorpayResult) {
+    const test = payment?.mode !== "razorpay";
     setPayment(null);
     setBusy(true);
     try {
@@ -98,7 +100,7 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       clear();
-      setPlaced({ displayId: data.displayId, total: data.total });
+      setPlaced({ displayId: data.displayId, total: data.total, test });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not place your order");
     } finally {
@@ -108,7 +110,26 @@ export default function CheckoutPage() {
 
   return (
     <>
-      {payment && (
+      {payment?.mode === "razorpay" && (
+        <RazorpayCheckout
+          keyId={payment.keyId}
+          orderId={payment.razorpayOrderId}
+          amount={payment.amount}
+          email={payment.email}
+          name={payment.name}
+          phone={payment.phone}
+          onSuccess={confirmPayment}
+          onFailure={(m) => {
+            setPayment(null);
+            toast.error(m);
+          }}
+          onDismiss={() => {
+            setPayment(null);
+            toast.message("Payment cancelled. You can try again when you are ready.");
+          }}
+        />
+      )}
+      {payment?.mode === "dummy" && (
         <DummyRazorpayModal
           orderId={payment.razorpayOrderId}
           amount={payment.amount}
@@ -142,7 +163,7 @@ export default function CheckoutPage() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error);
             // Hand over to the payment modal; the order is placed once it reports a verified payment
-            setPayment({ razorpayOrderId: data.razorpayOrderId, amount: data.amount, email: f.email });
+            setPayment({ razorpayOrderId: data.razorpayOrderId, amount: data.amount, email: f.email, name: f.name, phone: f.phone, keyId: data.keyId, mode: data.mode });
           } catch (err) {
             toast.error(err instanceof Error ? err.message : "Checkout failed");
           } finally {
