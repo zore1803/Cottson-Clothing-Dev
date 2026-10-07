@@ -31,6 +31,7 @@ export function RazorpayCheckout({
   email,
   name,
   phone,
+  description,
   onSuccess,
   onFailure,
   onDismiss,
@@ -42,6 +43,8 @@ export function RazorpayCheckout({
   email: string;
   name?: string;
   phone?: string;
+  /** One line under the amount, e.g. "25 pieces" */
+  description?: string;
   onSuccess: (r: RazorpayResult) => void;
   onFailure: (message: string) => void;
   onDismiss: () => void;
@@ -56,16 +59,26 @@ export function RazorpayCheckout({
     loadScript()
       .then(() => {
         if (cancelled || !window.Razorpay) return;
+        // Razorpay hosts the payment window itself, so only its branding and behaviour can be set from here
+        const digits = (phone ?? "").replace(/\D/g, "").slice(-10);
         const rzp = new window.Razorpay({
           key: keyId,
           order_id: orderId,
           amount,
           currency: "INR",
           name: "COTTSON Clothing",
-          prefill: { email, name, contact: phone },
-          theme: { color: "#113858" },
+          description,
+          image: `${window.location.origin}/cottson-logo.png`,
+          prefill: { email, name, contact: digits.length === 10 ? `+91${digits}` : undefined },
+          theme: { color: "#113858", backdrop_color: "rgba(11, 36, 58, 0.62)" },
+          timeout: 900, // the window closes itself after 15 minutes
+          retry: { enabled: true, max_count: 3 },
+          modal: {
+            backdropclose: false, // a stray click outside shouldn't abandon a payment
+            confirm_close: true, // ask before closing
+            ondismiss: () => handlers.current.onDismiss(),
+          },
           handler: (r: RazorpayResult) => handlers.current.onSuccess(r),
-          modal: { ondismiss: () => handlers.current.onDismiss() },
         });
         rzp.on("payment.failed", (r) => handlers.current.onFailure(r.error?.description ?? "Payment failed. You can try again."));
         rzp.open();
@@ -74,7 +87,7 @@ export function RazorpayCheckout({
     return () => {
       cancelled = true;
     };
-  }, [keyId, orderId, amount, email, name, phone]);
+  }, [keyId, orderId, amount, email, name, phone, description]);
 
   return null;
 }

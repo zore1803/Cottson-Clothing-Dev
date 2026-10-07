@@ -118,6 +118,7 @@ export default function CheckoutPage() {
           email={payment.email}
           name={payment.name}
           phone={payment.phone}
+          description={`${items.reduce((n, i) => n + i.qty, 0)} pieces · Custom corporate clothing`}
           onSuccess={confirmPayment}
           onFailure={(m) => {
             setPayment(null);
