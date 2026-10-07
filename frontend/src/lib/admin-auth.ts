@@ -9,7 +9,15 @@ import { AuthError, medusa } from "@/lib/auth";
 export const ADMIN_COOKIE = "cottson_admin";
 const ADMIN_MAX_AGE = 60 * 60 * 24; // matches Medusa's default 1d JWT lifetime
 
-export type Admin = { id: string; email: string; first_name: string | null; last_name: string | null };
+export type Admin = { id: string; email: string; first_name: string | null; last_name: string | null; metadata?: Record<string, unknown> | null };
+export type StaffRole = "admin" | "superadmin";
+
+/** Emails in SUPERADMIN_EMAILS are always superadmins (the bootstrap owners); nobody can demote them from the UI */
+export const isOwnerEmail = (email: string) =>
+  (process.env.SUPERADMIN_EMAILS ?? "").split(",").some((e) => e.trim() && e.trim().toLowerCase() === email.toLowerCase());
+
+/** Staff role: the owner list wins, otherwise Medusa's user metadata.role, otherwise plain admin */
+export const roleOf = (a: Pick<Admin, "email" | "metadata">): StaffRole => (isOwnerEmail(a.email) || a.metadata?.role === "superadmin" ? "superadmin" : "admin");
 
 /**
  * Exchanges admin credentials for a Medusa token; throws AuthError when they are not an admin's.
@@ -19,13 +27,14 @@ export type Admin = { id: string; email: string; first_name: string | null; last
  */
 export async function adminLogin(email: string, password: string) {
   const { token } = await medusa<{ token: string }>("/auth/user/emailpass", { body: { email, password } });
+  let admin: Admin;
   try {
-    await medusa("/admin/users/me", { token });
+    ({ user: admin } = await medusa<{ user: Admin }>("/admin/users/me", { token }));
   } catch (e) {
     if (e instanceof AuthError && e.status < 500) throw new AuthError("Not an admin account", 401);
     throw e;
   }
-  return token;
+  return { token, admin };
 }
 
 export async function setAdminSession(token: string) {

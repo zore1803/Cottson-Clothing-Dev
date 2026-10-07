@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getAdmin } from "@/lib/admin-auth";
+import { getAdmin, roleOf } from "@/lib/admin-auth";
 import { paymentMode } from "@/lib/razorpay-dummy";
 import { BULK_TIERS, CUSTOMIZATION_FEE, FREE_SHIPPING_FROM, SHIPPING_FEE } from "@/lib/pricing";
 import { SettingsPage } from "@/components/admin/settings-page";
@@ -19,7 +19,7 @@ export default async function Page() {
         customizationFee: CUSTOMIZATION_FEE,
         bulkTiers: BULK_TIERS,
         medusaUrl: process.env.NEXT_PUBLIC_MEDUSA_URL ?? "",
-        admin: { email: admin?.email ?? "", name: [admin?.first_name, admin?.last_name].filter(Boolean).join(" ") },
+        admin: { email: admin?.email ?? "", role: admin ? roleOf(admin) : "admin", name: [admin?.first_name, admin?.last_name].filter(Boolean).join(" ") },
       }}
     />
   );

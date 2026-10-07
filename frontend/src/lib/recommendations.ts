@@ -22,9 +22,9 @@ const colorIdByName = new Map(COLORS.map((c) => [c.name.toLowerCase(), c.id]));
 export const colorIdFromVariantTitle = (title?: string | null) => colorIdByName.get((title ?? "").split("/")[0].trim().toLowerCase());
 
 /** Products that go with the cart: same category first, then complementary ones, never anything already in it */
-export function relatedProducts(cart: CartLine[], limit = 8): Product[] {
+export function relatedProducts(cart: CartLine[], limit = 8, catalog: Product[] = PRODUCTS): Product[] {
   const inCart = new Set(cart.map((l) => l.slug));
-  const cartProducts = cart.map((l) => PRODUCTS.find((p) => p.slug === l.slug)).filter((p): p is Product => !!p);
+  const cartProducts = cart.map((l) => catalog.find((p) => p.slug === l.slug)).filter((p): p is Product => !!p);
   if (cartProducts.length === 0) return [];
 
   const cartColors = new Set(cart.map((l) => l.colorId).filter(Boolean) as string[]);
@@ -32,7 +32,7 @@ export function relatedProducts(cart: CartLine[], limit = 8): Product[] {
   const sameCategory = new Set(cartProducts.map((p) => p.category));
   const complementary = new Set(cartProducts.flatMap((p) => COMPLEMENTS[p.category] ?? []));
 
-  return PRODUCTS.filter((p) => !inCart.has(p.slug))
+  return catalog.filter((p) => !inCart.has(p.slug))
     .map((p) => {
       let score = sameCategory.has(p.category) ? 10 : complementary.has(p.category) ? 5 : 0;
       score += p.colors.some((c) => cartColors.has(c)) ? 2 : 0; // comes in a colour they already chose

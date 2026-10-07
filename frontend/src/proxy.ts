@@ -18,12 +18,12 @@ export function proxy(req: NextRequest) {
       if (foreign) return NextResponse.json({ error: "Cross-site request blocked" }, { status: 403 });
     }
     // The admin API answers 401 to anyone without an admin session before it reaches the route
-    if (pathname.startsWith("/api/admin") && !isAdmin) return NextResponse.json({ error: "Admin sign-in required" }, { status: 401 });
+    if ((pathname.startsWith("/api/admin") || pathname.startsWith("/api/superadmin")) && !isAdmin) return NextResponse.json({ error: "Admin sign-in required" }, { status: 401 });
     return NextResponse.next();
   }
 
   // Admins manage the store; they don't use the storefront. Every page outside /admin sends them to the dashboard.
-  if (isAdmin && !pathname.startsWith("/admin")) return NextResponse.redirect(new URL("/admin", req.url));
+  if (isAdmin && !pathname.startsWith("/admin") && !pathname.startsWith("/superadmin")) return NextResponse.redirect(new URL("/admin", req.url));
 
   const toLogin = (next: string) => {
     const url = new URL("/login", req.url);
@@ -31,12 +31,12 @@ export function proxy(req: NextRequest) {
     return NextResponse.redirect(url);
   };
 
-  if (pathname.startsWith("/admin") && !isAdmin) return toLogin(pathname + search);
+  if ((pathname.startsWith("/admin") || pathname.startsWith("/superadmin")) && !isAdmin) return toLogin(pathname + search);
   if (pathname.startsWith("/account") && !signedIn) return toLogin(pathname + search);
 
   if (pathname === "/login" || pathname === "/register") {
     // A signed-in customer sent here to reach /admin must be able to sign in as staff instead
-    const wantsAdmin = pathname === "/login" && (searchParams.get("next") ?? "").startsWith("/admin");
+    const wantsAdmin = pathname === "/login" && /^\/(super)?admin/.test(searchParams.get("next") ?? "");
     if (signedIn && !wantsAdmin) return NextResponse.redirect(new URL("/", req.url));
   }
   return NextResponse.next();

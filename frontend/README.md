@@ -9,6 +9,31 @@ npm install --legacy-peer-deps   # react-konva's peer range lags React 19.2
 npm run dev                      # http://localhost:3000
 ```
 
+## Superadmin product panel
+
+Superadmins are Medusa admin users with the superadmin role. Sign in at `/login` with a
+staff account; superadmins get extra **Staff & roles** and **Add products** screens
+(`/superadmin/staff`, `/superadmin/products`) in the same console as `/admin`. Configure
+`MONGODB_URI` for the catalogue.
+
+To get the first superadmin, list their email in `SUPERADMIN_EMAILS` (comma separated, in
+`frontend/.env.local`) and restart Next.js. Owners listed there are always superadmins and
+can't be demoted or removed from the UI. Everyone else is promoted or demoted from the
+Staff screen, where new staff accounts are created too.
+
+The Add products screen creates products with an INR price, sizes, category, description, available
+colours, a default colour, minimum quantity, production days and one photo URL for each
+selected colour from the existing ImageKit library (`https://ik.imagekit.io/qiap0iq38/…`).
+Every selected colour requires its matching photo; the form previews each photo. Shop
+cards and detail pages switch images with colour swatches. Added products use the same
+detail component as existing products, with customization, size quantities and cart controls.
+Custom colour, print on demand, express
+and promotional flags feed the shop filters. Unique slugs cannot replace existing products.
+Additions persist in MongoDB and appear immediately in `/products` and the studio selector.
+These additions require separate Medusa variants before checkout. Photos should use the
+same garment framing as existing products for accurate logo placement. The homepage
+retains its existing collection for now.
+
 ## Stack (phase 1)
 
 | Area | Tech |

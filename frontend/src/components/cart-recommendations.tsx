@@ -3,14 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { SimilarProductsCarousel } from "@/components/similar-products-carousel";
-import { getProduct, type Product } from "@/lib/catalog";
+import type { Product } from "@/lib/catalog";
 import { relatedProducts, type CartLine } from "@/lib/recommendations";
 
 type Picks = { picks: string[]; topCategory: string | null; signedIn: boolean } | null;
 
 // Under the cart: products that go with what is in it, and, for signed-in customers with past
 // orders, products picked from what they have bought before.
-export function CartRecommendations({ lines }: { lines: CartLine[] }) {
+export function CartRecommendations({ lines, products }: { lines: CartLine[]; products: Product[] }) {
   const [data, setData] = useState<Picks>(null);
 
   useEffect(() => {
@@ -26,17 +26,17 @@ export function CartRecommendations({ lines }: { lines: CartLine[] }) {
 
   const key = lines.map((l) => `${l.slug}:${l.colorId ?? ""}`).join(",");
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const related = useMemo(() => relatedProducts(lines), [key]);
+  const related = useMemo(() => relatedProducts(lines, 8, products), [key, products]);
 
   const picks = useMemo(() => {
     const inCart = new Set(lines.map((l) => l.slug));
-    const all = (data?.picks ?? []).map(getProduct).filter((p): p is Product => !!p && !inCart.has(p.slug));
+    const all = (data?.picks ?? []).map((slug) => products.find((p) => p.slug === slug)).filter((p): p is Product => !!p && !inCart.has(p.slug));
     // Keep the two rows different where we can
     const shown = new Set(related.map((p) => p.slug));
     const distinct = all.filter((p) => !shown.has(p.slug));
     return distinct.length >= 3 ? distinct : all;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, related, key]);
+  }, [data, related, key, products]);
 
   return (
     <>

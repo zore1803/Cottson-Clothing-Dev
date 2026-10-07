@@ -4,6 +4,7 @@ import { forwardRef, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
 import { type Product, assetUrl, colorById, variantUrl } from "@/lib/catalog";
+import { resolveColorPhoto } from "@/lib/product-colors";
 import { IMAGE_ASPECT, type Focus } from "./placement";
 
 /**
@@ -42,17 +43,6 @@ function focusTransform({ px, py, z }: Focus) {
 const poseKey = (pose: number) => `pose-${pose}`;
 
 const isPoseKey = (key: string) => key.startsWith("pose-");
-
-/**
- * Normalize colour IDs/names.
- */
-function normalizeColor(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/_/g, "-")
-    .replace(/\s+/g, "-");
-}
 
 /**
  * Images for every catalog product, grouped by product slug and colour.
@@ -236,11 +226,14 @@ const PRODUCT_COLOR_IMAGES: Record<string, Record<string, string>> = {
 
 /** Get the prepared image for the selected colour. */
 export function imageForColor(product: Product, colorId: string) {
-  const images = PRODUCT_COLOR_IMAGES[product.slug];
-  const normalizedId = normalizeColor(colorId);
-  const normalizedName = normalizeColor(colorById(colorId)?.name ?? colorId);
-
-  return images?.[normalizedId] || images?.[normalizedName] || variantUrl(product, colorId);
+  // The superadmin form's colour/photo pairs travel with the saved product.
+  // Resolve them here exactly like the existing per-product URL entries.
+  return resolveColorPhoto(
+    colorId,
+    colorById(colorId)?.name ?? colorId,
+    product.colorImages,
+    PRODUCT_COLOR_IMAGES[product.slug],
+  ) ?? variantUrl(product, colorId);
 }
 
 /**
@@ -257,6 +250,8 @@ export const GarmentPhoto = forwardRef<
     colorId: string;
     pose?: number;
     focus?: Focus | null;
+    /** Fill the listing card's frame instead of using the studio photo ratio. */
+    fillFrame?: boolean;
     imageSrc?: string;
     children?: React.ReactNode;
   }
@@ -267,6 +262,7 @@ export const GarmentPhoto = forwardRef<
       colorId,
       pose = 0,
       focus,
+      fillFrame = false,
       imageSrc,
       children,
     },
@@ -277,7 +273,7 @@ export const GarmentPhoto = forwardRef<
      *
      * The frame itself never changes.
      */
-    const selectedColorImage = imageForColor(
+    const selectedColorImage = imageSrc ?? imageForColor(
       product,
       colorId
     );
@@ -294,6 +290,7 @@ export const GarmentPhoto = forwardRef<
         : poseKey(pose);
 
     const [base, setBase] = useState(key);
+    const baseRef = useRef(key);
     const [incoming, setIncoming] =
       useState<string | null>(null);
     const [swept, setSwept] = useState(false);
@@ -303,32 +300,50 @@ export const GarmentPhoto = forwardRef<
      * and reveal the new image over the old one.
      */
     useEffect(() => {
-      if (key === base) return;
-
-      setIncoming(key);
-      setSwept(false);
-    }, [key, base]);
-
-    useEffect(() => {
-      if (!incoming) return;
-
-      const raf = requestAnimationFrame(() =>
-        requestAnimationFrame(() =>
-          setSwept(true)
-        )
-      );
-
-      const t = window.setTimeout(() => {
-        setBase(incoming);
+      let cancelled = false;
+      let firstFrame = 0;
+      let secondFrame = 0;
+      let timer = 0;
+      const preload = new window.Image();
+      // Clear an interrupted reveal before loading the next selected colour.
+      queueMicrotask(() => {
+        if (cancelled) return;
         setIncoming(null);
         setSwept(false);
-      }, 650);
-
+      });
+      if (key !== baseRef.current) {
+        const src = isPoseKey(key)
+          ? assetUrl(product.slug, "model-photo.webp", Number(key.slice(5)))
+          : key;
+        preload.onload = async () => {
+          // Decode before revealing so uncached colour photos animate too.
+          try { await preload.decode(); } catch { /* onload already confirmed the photo loaded */ }
+          if (cancelled) return;
+          setIncoming(key);
+          firstFrame = requestAnimationFrame(() => {
+            secondFrame = requestAnimationFrame(() => {
+              if (cancelled) return;
+              setSwept(true);
+              timer = window.setTimeout(() => {
+                if (cancelled) return;
+                baseRef.current = key;
+                setBase(key);
+                setIncoming(null);
+                setSwept(false);
+              }, 650);
+            });
+          });
+        };
+        preload.src = src;
+      }
       return () => {
-        cancelAnimationFrame(raf);
-        window.clearTimeout(t);
+        cancelled = true;
+        preload.onload = null;
+        cancelAnimationFrame(firstFrame);
+        cancelAnimationFrame(secondFrame);
+        window.clearTimeout(timer);
       };
-    }, [incoming]);
+    }, [key, product.slug]);
 
     /**
      * Render image.
@@ -364,7 +379,8 @@ export const GarmentPhoto = forwardRef<
           fill
           unoptimized
           draggable={false}
-          className="pointer-events-none object-cover"
+          className="pointer-events-none object-cover object-center"
+          style={{ width: "100%", height: "100%", objectPosition: "50% 50%" }}
           priority
         />
       );
@@ -373,12 +389,12 @@ export const GarmentPhoto = forwardRef<
     return (
       <div
         ref={ref}
-        className="relative h-full select-none transition-transform duration-700 ease-[cubic-bezier(.2,.7,.2,1)]"
+        className={`relative h-full ${fillFrame ? "w-full" : ""} select-none transition-transform duration-700 ease-[cubic-bezier(.2,.7,.2,1)]`}
         style={{
           /**
            * NEVER changes when colour changes.
            */
-          aspectRatio: IMAGE_ASPECT,
+          aspectRatio: fillFrame ? undefined : IMAGE_ASPECT,
 
           /**
            * NEVER changes when colour changes.
@@ -399,6 +415,7 @@ export const GarmentPhoto = forwardRef<
         {/* New colour image */}
         {incoming && (
           <div
+            key={incoming}
             className="absolute inset-0 transition-[clip-path] duration-[650ms] ease-in-out"
             style={{
               /**
@@ -495,6 +512,7 @@ export function useFabricColor(
     }
 
     const img = new window.Image();
+    img.crossOrigin = "anonymous";
 
     img.onload = () => {
       const c = document.createElement("canvas");

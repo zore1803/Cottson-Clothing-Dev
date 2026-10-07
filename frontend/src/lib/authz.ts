@@ -1,7 +1,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE, getCustomer, getToken, type Customer } from "@/lib/auth";
-import { ADMIN_COOKIE, getAdmin, type Admin } from "@/lib/admin-auth";
+import { ADMIN_COOKIE, getAdmin, roleOf, type Admin } from "@/lib/admin-auth";
 
 // Roles, lowest to highest. An admin is a separate kind of account (a Medusa admin user, not a
 // customer) and sits above customers: it may read anything a customer owns, but it has no
@@ -37,6 +37,13 @@ const deny = (status: 401 | 403, error: string) => Response.json({ error }, { st
 export async function requireAdmin() {
   const s = await getSession();
   return s.role === "admin" ? s : deny(401, "Admin sign-in required");
+}
+
+/** Route guard for superadmin-only actions (staff management, adding catalogue products) */
+export async function requireSuperadmin() {
+  const s = await getSession();
+  if (s.role !== "admin") return deny(401, "Admin sign-in required");
+  return roleOf(s.admin) === "superadmin" ? s : deny(403, "Superadmin access required");
 }
 
 /** Route guard for customer-only actions (own account, own designs). Admins are refused: they have no customer profile. */

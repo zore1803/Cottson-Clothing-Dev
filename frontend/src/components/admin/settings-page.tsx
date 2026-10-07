@@ -11,7 +11,7 @@ export type StoreSettings = {
   customizationFee: number;
   bulkTiers: { min: number; discount: number }[];
   medusaUrl: string;
-  admin: { email: string; name: string };
+  admin: { email: string; name: string; role?: "admin" | "superadmin" };
 };
 
 // What the storefront is currently set to. Read-only: these values live in code (lib/pricing.ts)
@@ -36,7 +36,7 @@ export function SettingsPage({ s }: { s: StoreSettings }) {
         </Panel>
 
         <Panel title="Your account">
-          <DefinitionList items={[["Name", s.admin.name || "—"], ["Email", s.admin.email], ["Role", "Admin"]]} />
+          <DefinitionList items={[["Name", s.admin.name || "—"], ["Email", s.admin.email], ["Role", s.admin.role === "superadmin" ? "Superadmin" : "Admin"]]} />
         </Panel>
 
         <Panel title="Pricing" className="lg:col-span-2">

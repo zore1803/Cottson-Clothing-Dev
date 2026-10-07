@@ -2,8 +2,8 @@ import "server-only";
 import dns from "node:dns";
 import mongoose, { Schema, model, models, type InferSchemaType } from "mongoose";
 
-// MongoDB holds COTTSON's own data (saved studio designs, bulk quotes).
-// Commerce data (products, carts, orders) lives in Medusa / Postgres.
+// MongoDB holds saved designs, bulk quotes and enquiry-only catalog additions.
+// Checkout products, carts and orders live in Medusa / Postgres.
 
 // Some Windows resolvers refuse the SRV lookups Atlas needs; use public DNS for them
 const PUBLIC_DNS = ["8.8.8.8", "1.1.1.1"];
@@ -90,3 +90,36 @@ const PaymentSchema = new Schema(
   { timestamps: true }
 );
 export const Payment = models.Payment || model("Payment", PaymentSchema);
+
+const CatalogProductSchema = new Schema({
+  slug: { type: String, required: true, unique: true },
+  title: { type: String, required: true },
+  category: { type: String, required: true },
+  description: { type: String, required: true },
+  price: { type: Number, required: true, min: 0 },
+  currency: { type: String, default: "INR" },
+  sizes: [String],
+  originalColor: String,
+  colors: [String],
+  minBulk: Number,
+  productionDays: Number,
+  imageUrl: String,
+  colorImages: { type: Map, of: String },
+  customColor: Boolean,
+  printOnDemand: Boolean,
+  express: Boolean,
+  promo: Boolean,
+  livePreview: { type: Boolean, default: false },
+}, { timestamps: true });
+// Keep added schema fields during Next.js hot reloads. An older cached model
+// otherwise silently drops the colour photos when creating a new product.
+if (models.CatalogProduct && !models.CatalogProduct.schema.path("colorImages")) {
+  models.CatalogProduct.schema.add({
+    colorImages: { type: Map, of: String },
+    customColor: Boolean,
+    printOnDemand: Boolean,
+    express: Boolean,
+    promo: Boolean,
+  });
+}
+export const CatalogProduct = models.CatalogProduct || model("CatalogProduct", CatalogProductSchema);

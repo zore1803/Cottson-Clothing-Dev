@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Boxes, ClipboardList, Factory, LayoutDashboard, LogOut, Menu, Receipt, Settings, X } from "lucide-react";
+import { Boxes, ClipboardList, Factory, LayoutDashboard, LogOut, Menu, PackagePlus, Receipt, Settings, ShieldCheck, Users, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV: { heading?: string; items: { href: string; label: string; icon: typeof Boxes; badge?: "toApprove" | "newQuotes" }[] }[] = [
@@ -25,9 +25,12 @@ const NAV: { heading?: string; items: { href: string; label: string; icon: typeo
   { heading: "System", items: [{ href: "/admin/settings", label: "Settings", icon: Settings }] },
 ];
 
+// Extra screens only superadmins get, in the same shell
+const SUPER_NAV: (typeof NAV)[number] = { heading: "Superadmin", items: [{ href: "/superadmin/staff", label: "Staff & roles", icon: Users }, { href: "/superadmin/products", label: "Add products", icon: PackagePlus }] };
+
 type Summary = { toApprove: number; newQuotes: number };
 
-export function AdminShell({ admin, children }: { admin: { email: string; name: string }; children: React.ReactNode }) {
+export function AdminShell({ admin, role = "admin", children }: { admin: { email: string; name: string }; role?: "admin" | "superadmin"; children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -51,6 +54,8 @@ export function AdminShell({ admin, children }: { admin: { email: string; name: 
     router.refresh();
   }
 
+  const nav = role === "superadmin" ? [...NAV, SUPER_NAV] : NAV;
+  const label = role === "superadmin" ? "Superadmin" : "Admin";
   const isActive = (href: string) => (href === "/admin" ? pathname === "/admin" : pathname.startsWith(href));
 
   const sidebar = (
@@ -58,7 +63,7 @@ export function AdminShell({ admin, children }: { admin: { email: string; name: 
       <div className="flex h-14 items-center justify-between border-b border-slate-200 px-4">
         <Link href="/admin" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
           <img src="/cottson.png" alt="COTTSON" className="h-7 w-auto" />
-          <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Admin</span>
+          <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">{label}</span>
         </Link>
         <button type="button" aria-label="Close menu" onClick={() => setOpen(false)} className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 lg:hidden">
           <X size={16} />
@@ -66,7 +71,7 @@ export function AdminShell({ admin, children }: { admin: { email: string; name: 
       </div>
 
       <nav aria-label="Admin" className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
-        {NAV.map((group, i) => (
+        {nav.map((group, i) => (
           <div key={group.heading ?? i}>
             {group.heading && <p className="mb-1 px-2 text-[11px] font-medium uppercase tracking-wider text-slate-400">{group.heading}</p>}
             <ul className="space-y-0.5">
@@ -95,7 +100,10 @@ export function AdminShell({ admin, children }: { admin: { email: string; name: 
 
       <div className="border-t border-slate-200 p-3">
         <div className="px-2 pb-2">
-          <p className="truncate text-[13px] font-medium text-slate-900">{admin.name || admin.email}</p>
+          <p className="flex items-center gap-1.5 truncate text-[13px] font-medium text-slate-900">
+            {role === "superadmin" && <ShieldCheck size={13} className="shrink-0 text-[#113858]" aria-label="Superadmin" />}
+            <span className="truncate">{admin.name || admin.email}</span>
+          </p>
           {admin.name && <p className="truncate text-[12px] text-slate-500">{admin.email}</p>}
         </div>
         <button type="button" onClick={signOut} className="flex h-8 w-full items-center gap-2.5 rounded-md px-2 text-[13px] font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
@@ -112,7 +120,7 @@ export function AdminShell({ admin, children }: { admin: { email: string; name: 
       <header className="sticky top-0 z-40 flex h-12 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
         <Link href="/admin" className="flex items-center gap-2">
           <img src="/cottson.png" alt="COTTSON" className="h-5 w-auto" />
-          <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">Admin</span>
+          <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">{label}</span>
         </Link>
         <button type="button" aria-label="Open menu" onClick={() => setOpen(true)} className="rounded-md p-1.5 text-slate-600 hover:bg-slate-100">
           <Menu size={18} />
