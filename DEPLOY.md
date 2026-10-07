@@ -39,6 +39,9 @@ Plans: Postgres `basic-256mb` and the `starter` web service cost a few dollars a
    | `NEXT_PUBLIC_MEDUSA_URL` | `https://cottson-medusa.onrender.com` |
    | `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` | printed by `seed-cottson.ts` |
    | `NEXT_PUBLIC_MEDUSA_REGION_ID` | printed by `seed-cottson.ts` |
+| `CLOUDINARY_CLOUD_NAME` | the cloud name on your Cloudinary dashboard (not the API key name) |
+| `CLOUDINARY_API_KEY` | from Cloudinary → API Keys |
+| `CLOUDINARY_API_SECRET` | from Cloudinary → API Keys (server-side only, never `NEXT_PUBLIC_`) |
 4. Deploy. The build uses `frontend/.npmrc` (`legacy-peer-deps=true`), which react-konva needs.
 
 ## 3. Connect them
@@ -61,7 +64,7 @@ Plans: Postgres `basic-256mb` and the `starter` web service cost a few dollars a
 
 ## Known limits
 
-- **Uploaded logos are stored inside MongoDB as data URLs.** Fine for a demo; move them to Cloudflare R2 or S3 before real traffic (MongoDB documents cap at 16 MB).
+- **Customer logos and design previews are stored in Cloudinary** (folders `cottson/logos` and `cottson/previews`); only their URLs go in MongoDB. If the three `CLOUDINARY_*` variables are missing, designs fall back to storing images inline in MongoDB (fine for local development, not for real traffic). Nothing deletes uploads from designs that never became orders yet.
 - **Payments are not connected.** Checkout uses Medusa's system provider and takes no money. Add the Razorpay (or Stripe) provider next.
 - **Product garment layers and color variants are committed files** under `frontend/public/products/`. New products need `npm run make:product -- <photo.png> <outDir>` (or `make:garment-layer` for an already-composited photo) and `npm run render:variants` run locally, then committed.
 - **Pricing rules live in two places** — `frontend/src/lib/pricing.ts` and `backend/apps/backend/src/scripts/seed-cottson-pricing.ts`. Change both, then re-run the script.

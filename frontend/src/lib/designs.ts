@@ -1,6 +1,7 @@
 import "server-only";
 import { COLORS, getProduct } from "@/lib/catalog";
 import { clean } from "@/lib/security";
+import { isOwnAssetUrl } from "@/lib/cloudinary";
 
 const MAX_BODY_CHARS = 8_000_000;
 const MAX_PREVIEW_CHARS = 600_000;
@@ -31,14 +32,14 @@ export function parseDesign(body: Record<string, unknown>): { ok: true; design: 
     if (!el || typeof el !== "object" || Array.isArray(el)) return { ok: false, error: "Invalid design element" };
     const e = el as Record<string, unknown>;
     if (typeof e.type !== "string" || !ELEMENT_TYPES.has(e.type)) return { ok: false, error: "Invalid design element type" };
-    if (e.src !== undefined && (typeof e.src !== "string" || !IMAGE_DATA_URL.test(e.src))) return { ok: false, error: "Logos must be PNG, JPG, WebP or SVG images" };
+    if (e.src !== undefined && (typeof e.src !== "string" || !(IMAGE_DATA_URL.test(e.src) || isOwnAssetUrl(e.src)))) return { ok: false, error: "Logos must be PNG, JPG, WebP or SVG images" };
     if (typeof e.text === "string") e.text = e.text.slice(0, 200);
     elements.push(e);
   }
 
   let preview: string | undefined;
   if (body.preview !== undefined) {
-    if (typeof body.preview !== "string" || !/^data:image\/(jpeg|png|webp);base64,/.test(body.preview) || body.preview.length > MAX_PREVIEW_CHARS)
+    if (typeof body.preview !== "string" || !(/^data:image\/(jpeg|png|webp);base64,/.test(body.preview) || isOwnAssetUrl(body.preview)) || body.preview.length > MAX_PREVIEW_CHARS)
       return { ok: false, error: "Invalid preview image" };
     preview = body.preview;
   }

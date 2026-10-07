@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectMongo, Design } from "@/lib/mongo";
 import { getSession, requireCustomer } from "@/lib/authz";
 import { parseDesign } from "@/lib/designs";
+import { AssetError, storeDesignAssets } from "@/lib/design-assets";
 import { rateLimit, readJson } from "@/lib/security";
 
 // Save a studio design; the returned id goes on the cart line item and later the Medusa order.
@@ -18,7 +19,16 @@ export async function POST(req: Request) {
   const [session] = await Promise.all([getSession(), connectMongo()]);
   // Designing is part of ordering, which admin accounts don't do; guests and customers can save
   if (session.role === "admin") return NextResponse.json({ error: "Admin accounts cannot save customer designs" }, { status: 403 });
-  const doc = await Design.create({ ...parsed.design, customerId: session.role === "customer" ? session.customer.id : undefined });
+  // Logos and the preview go to Cloudinary; only their URLs are stored with the design
+  let design;
+  try {
+    design = await storeDesignAssets(parsed.design);
+  } catch (e) {
+    if (e instanceof AssetError) return NextResponse.json({ error: e.message }, { status: 400 });
+    console.error("[designs] could not store artwork", e);
+    return NextResponse.json({ error: "We could not store your artwork. Please try again." }, { status: 502 });
+  }
+  const doc = await Design.create({ ...design, customerId: session.role === "customer" ? session.customer.id : undefined });
   return NextResponse.json({ id: String(doc._id) }, { status: 201 });
 }
 

@@ -35,6 +35,8 @@ const DesignSchema = new Schema(
     // Logos (data URLs for now; S3/R2 URLs once uploads go to storage) and text, in photo pixels
     elements: { type: [Schema.Types.Mixed], default: [] },
     preview: String,
+    // Cloudinary id of the preview, kept so unused uploads can be cleaned up later
+    previewPublicId: String,
     medusaOrderId: { type: String, index: true },
     // Medusa customer who saved the design; absent for guest designs
     customerId: { type: String, index: true },
