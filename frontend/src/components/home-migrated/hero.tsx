@@ -85,7 +85,7 @@ export function Hero() {
               <div className="relative">
                 <div className="absolute bottom-[25px] left-1/2 h-[28px] w-[170px] -translate-x-1/2 rounded-full bg-[#113858]/10 blur-xl" />
                 <img
-                  src="/client-tvs.png"
+                  src="/TVS.png"
                   alt="Custom TVS company shirt"
                   loading="lazy"
                   decoding="async"
@@ -221,8 +221,8 @@ export function Hero() {
               <div className="relative">
                 <div className="absolute bottom-[25px] left-1/2 h-[28px] w-[170px] -translate-x-1/2 rounded-full bg-[#113858]/10 blur-xl" />
                 <img
-                  src="/client-honda.png"
-                  alt="Custom Honda corporate polo"
+                  src="/honda.png"
+                  alt="Custom Honda"
                   loading="lazy"
                   decoding="async"
                   className="relative h-[390px] w-[360px] object-contain drop-shadow-[0_18px_20px_rgba(17,56,88,0.08)] transition-transform duration-700 ease-out group-hover:-translate-y-2 group-hover:-rotate-1"

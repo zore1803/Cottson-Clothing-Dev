@@ -1,6 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Product photos served from ImageKit
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "ik.imagekit.io",
+        port: "",
+        pathname: "/qiap0iq38/**",
+      },
+    ],
+  },
   // Baseline hardening for every response. No CSP yet: the site loads third-party media and inline
   // styles, so one needs to be written against the real asset list.
   async headers() {
