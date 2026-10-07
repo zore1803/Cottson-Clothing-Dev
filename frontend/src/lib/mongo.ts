@@ -151,6 +151,8 @@ const StaffInviteSchema = new Schema(
     email: { type: String, required: true, unique: true },
     role: { type: String, enum: ["admin", "superadmin"], default: "admin" },
     inviteId: { type: String, required: true },
+    // SHA-256 of the invite token, so the accept page can reject a wrong token before creating any login
+    tokenHash: String,
     invitedBy: String,
   },
   { timestamps: true }

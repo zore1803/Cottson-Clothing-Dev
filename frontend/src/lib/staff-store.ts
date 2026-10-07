@@ -3,6 +3,9 @@ import { medusa, AuthError, MIN_PASSWORD, isEmail } from "@/lib/auth";
 import { isOwnerEmail, type Admin, type StaffRoleName } from "@/lib/admin-auth";
 import { StaffInvite, StaffRole, connectMongo } from "@/lib/mongo";
 import { sendMail, siteUrl } from "@/lib/mailer";
+import { createHash, timingSafeEqual } from "node:crypto";
+
+const sha256 = (v: string) => createHash("sha256").update(v).digest();
 
 // Staff management through Medusa's Admin API, always with the signed-in superadmin's own token.
 // A staff member is a Medusa admin user. Their role (admin or superadmin) is kept in our own
@@ -80,7 +83,7 @@ export async function inviteStaff(token: string, invitedBy: string, input: { ema
 
   const { invite } = await medusa<{ invite: MedusaInvite }>("/admin/invites", { token, body: { email } });
   await connectMongo();
-  await StaffInvite.updateOne({ email }, { email, role: input.role, inviteId: invite.id, invitedBy }, { upsert: true });
+  await StaffInvite.updateOne({ email }, { email, role: input.role, inviteId: invite.id, invitedBy, tokenHash: sha256(invite.token).toString("hex") }, { upsert: true });
 
   const link = `${siteUrl()}/accept-invite?token=${encodeURIComponent(invite.token)}&email=${encodeURIComponent(email)}`;
   const emailed = await sendMail({
@@ -112,6 +115,11 @@ export async function acceptInvite(input: { token: string; email: string; passwo
   await connectMongo();
   const invite = await StaffInvite.findOne({ email }).lean();
   if (!invite) throw new AuthError("This invite link is invalid or was cancelled. Ask for a new one.", 401);
+
+  // Check the token against the one we issued before any login is created for this email
+  const issued = invite.tokenHash ? Buffer.from(invite.tokenHash, "hex") : null;
+  const given = sha256(input.token);
+  if (!issued || issued.length !== given.length || !timingSafeEqual(issued, given)) throw new AuthError("This invite link is invalid or was replaced by a newer one. Ask for a new one.", 401);
 
   let identityToken: string;
   try {
