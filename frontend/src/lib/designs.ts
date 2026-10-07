@@ -19,10 +19,10 @@ export type DesignInput = {
 };
 
 /** Validates a studio design payload; returns the cleaned design or an error message */
-export function parseDesign(body: Record<string, unknown>): { ok: true; design: DesignInput } | { ok: false; error: string } {
+export function parseDesign(body: Record<string, unknown>, isKnownProduct: (slug: string) => boolean = (slug) => !!getProduct(slug)): { ok: true; design: DesignInput } | { ok: false; error: string } {
   const product = clean(body.product, 80);
   const color = clean(body.color, 40);
-  if (!getProduct(product)) return { ok: false, error: "Unknown product" };
+  if (!isKnownProduct(product)) return { ok: false, error: "Unknown product" };
   if (!COLORS.some((c) => c.id === color)) return { ok: false, error: "Unknown colour" };
   if (!Array.isArray(body.elements) || body.elements.length === 0) return { ok: false, error: "A design needs at least one element" };
   if (body.elements.length > MAX_ELEMENTS) return { ok: false, error: `A design can have at most ${MAX_ELEMENTS} elements` };

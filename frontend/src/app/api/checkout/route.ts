@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectMongo, Design, Payment } from "@/lib/mongo";
 import { isValidObjectId } from "mongoose";
-import { COLORS, getProduct } from "@/lib/catalog";
+import { COLORS, PRODUCTS } from "@/lib/catalog";
 import { summarizeDesign } from "@/lib/designs";
 import { rateLimit, readJson } from "@/lib/security";
 import { store, REGION } from "@/lib/medusa-store";
@@ -9,7 +9,7 @@ import { createOrderId, paymentMode, razorpayKeyId } from "@/lib/razorpay-dummy"
 import { createRazorpayOrder } from "@/lib/razorpay";
 import { getToken } from "@/lib/auth";
 import { getSession } from "@/lib/authz";
-import { hiddenSlugs } from "@/lib/catalog-server";
+import { listProducts } from "@/lib/catalog-server";
 
 // Step 1 of checkout: validates the browser cart, builds it in Medusa (items, address, shipping),
 // and opens a payment order for the exact amount Medusa computed. The order itself is only placed
@@ -40,9 +40,11 @@ export async function POST(req: Request) {
     // Never trust the browser's cart: check every line against the catalog. Prices are not
     // taken from the request at all; Medusa prices each variant (incl. bulk tiers) itself.
     const designIds = new Set<string>();
-    const hidden = await hiddenSlugs(); // products a superadmin removed can't be bought, even from an old cart
+    // The shop catalogue: built-in products plus ones a superadmin added, minus ones they removed
+    const catalog = await listProducts().catch(() => PRODUCTS);
+    const getProduct = (slug: string) => catalog.find((p) => p.slug === slug);
     for (const i of items) {
-      const p = typeof i?.slug === "string" && !hidden.has(i.slug) ? getProduct(i.slug) : undefined;
+      const p = typeof i?.slug === "string" ? getProduct(i.slug) : undefined;
       if (!p) return bad("An item in your cart is no longer available");
       if (!COLORS.some((c) => c.id === i.colorId) || !p.sizes.includes(i.size)) return bad(`Invalid colour or size for ${p.title}`);
       if (!Number.isInteger(i.qty) || i.qty < 1 || i.qty > MAX_QTY) return bad("Invalid quantity");
@@ -140,7 +142,7 @@ export async function POST(req: Request) {
       cartId: cart.id,
       amount,
       email: customer.email,
-      lines: items.map((i) => ({ slug: i.slug, qty: i.qty, designId: i.designId })),
+      lines: items.map((i) => ({ slug: i.slug, qty: i.qty, designId: i.designId, price: getProduct(i.slug)!.price })),
       designIds: [...designIds],
     });
 

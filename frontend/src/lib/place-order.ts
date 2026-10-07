@@ -35,8 +35,8 @@ export async function placeOrderForPayment(pay: PaymentDoc, paymentId: string): 
 
     // Safety net: Medusa's charge should equal the storefront's pricing rules; a mismatch means the
     // backend price tiers drifted from lib/pricing.ts.
-    const lines = pay.lines as { slug: string; qty: number; designId?: string }[];
-    const expected = lines.reduce((n, i) => n + i.qty * (garmentUnitPrice(getProduct(i.slug)!.price, i.qty) + (i.designId ? CUSTOMIZATION_FEE : 0)), 0);
+    const lines = pay.lines as { slug: string; qty: number; designId?: string; price?: number }[];
+    const expected = lines.reduce((n, i) => n + i.qty * (garmentUnitPrice(i.price ?? getProduct(i.slug)?.price ?? 0, i.qty) + (i.designId ? CUSTOMIZATION_FEE : 0)), 0);
     if (order.item_total !== expected) console.warn(`[checkout] price drift on order ${order.display_id}: Medusa ${order.item_total} vs expected ${expected}`);
 
     return { orderId: order.id, displayId: order.display_id, total: order.total, itemTotal: order.item_total, shippingTotal: order.shipping_total };

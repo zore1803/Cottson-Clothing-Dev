@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { listProducts } from "@/lib/catalog-server";
-import { formatPrice } from "@/lib/catalog";
+import { PRODUCTS, formatPrice } from "@/lib/catalog";
+import { getSuperadmin } from "@/lib/superadmin";
+import { medusaHandles } from "@/lib/medusa-catalog";
 import { Notice, PageHeader, Panel } from "@/components/admin/ui";
 import { ProductForm } from "../forms";
 import { RemoveProductButton, RestoreProductButton } from "../product-row-actions";
+import { SyncProductsButton } from "../sync-products";
 
 export const metadata: Metadata = { title: "Add products" };
 export const dynamic = "force-dynamic";
@@ -19,6 +22,10 @@ export default async function Page() {
   } catch {
     unavailable = true;
   }
+  // Products added through this screen that Medusa doesn't have yet can't be stocked or bought
+  const builtIn = new Set(PRODUCTS.map((p) => p.slug));
+  const handles = await getSuperadmin().then((s) => (s ? medusaHandles(s.token) : null)).catch(() => null);
+  const notInMedusa = handles ? shop.filter((p) => !builtIn.has(p.slug) && !handles.has(p.slug)) : [];
   const live = new Set(shop.map((p) => p.slug));
   const products = all.filter((p) => live.has(p.slug));
   const removed = all.filter((p) => !live.has(p.slug));
@@ -52,6 +59,30 @@ export default async function Page() {
           </ul>
         </Panel>
       </div>
+      {notInMedusa.length > 0 && (
+        <Panel
+          title={`Not in Products & stock yet (${notInMedusa.length})`}
+          action={<SyncProductsButton slugs={notInMedusa.map((p) => p.slug)} label="Sync all" />}
+          flush
+        >
+          <p className="border-b border-slate-100 px-4 py-2.5 text-[12.5px] text-slate-500">
+            These are in the shop but not in Medusa, so they can&apos;t be stocked or bought. Syncing creates them there with the same colours, sizes and price.
+          </p>
+          <ul className="divide-y divide-slate-100">
+            {notInMedusa.map((p) => (
+              <li key={p.slug} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                <div className="min-w-0">
+                  <p className="truncate text-[13px] font-medium text-slate-900">{p.title}</p>
+                  <p className="text-[12px] text-slate-500">
+                    {p.category} · {formatPrice(p.price)}
+                  </p>
+                </div>
+                <SyncProductsButton slugs={[p.slug]} label="Sync" />
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
       {removed.length > 0 && (
         <Panel title={`Removed from the shop (${removed.length})`} flush>
           <ul className="divide-y divide-slate-100">
