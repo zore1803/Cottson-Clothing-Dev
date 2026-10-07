@@ -19,7 +19,7 @@ export default async function Page() {
         customizationFee: CUSTOMIZATION_FEE,
         bulkTiers: BULK_TIERS,
         medusaUrl: process.env.NEXT_PUBLIC_MEDUSA_URL ?? "",
-        admin: { email: admin?.email ?? "", role: admin ? roleOf(admin) : "admin", name: [admin?.first_name, admin?.last_name].filter(Boolean).join(" ") },
+        admin: { email: admin?.email ?? "", role: admin ? await roleOf(admin) : "admin", name: [admin?.first_name, admin?.last_name].filter(Boolean).join(" ") },
       }}
     />
   );

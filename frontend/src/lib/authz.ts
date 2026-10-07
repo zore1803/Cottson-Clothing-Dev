@@ -43,7 +43,7 @@ export async function requireAdmin() {
 export async function requireSuperadmin() {
   const s = await getSession();
   if (s.role !== "admin") return deny(401, "Admin sign-in required");
-  return roleOf(s.admin) === "superadmin" ? s : deny(403, "Superadmin access required");
+  return (await roleOf(s.admin)) === "superadmin" ? s : deny(403, "Superadmin access required");
 }
 
 /** Route guard for customer-only actions (own account, own designs). Admins are refused: they have no customer profile. */

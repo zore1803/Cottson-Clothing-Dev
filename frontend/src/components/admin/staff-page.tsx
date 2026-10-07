@@ -1,23 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDownCircle, ArrowUpCircle, RefreshCw, Trash2, UserPlus } from "lucide-react";
+import { ArrowDownCircle, ArrowUpCircle, Copy, KeyRound, RefreshCw, Send, Trash2, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
-import type { StaffMember } from "@/lib/staff-store";
+import type { PendingInvite, StaffMember } from "@/lib/staff-store";
 import { Drawer, Notice, PageHeader, Panel, Segmented, Status, TableEmpty, btn, inputCls, rowHover, selectCls, shortDate, table, td, th } from "./ui";
 import { useAdminData } from "./use-admin-api";
 
-type Data = { staff: StaffMember[]; me: string };
+type Data = { staff: StaffMember[]; invites: PendingInvite[]; me: string; mailConfigured: boolean };
 type Api = ReturnType<typeof useAdminData>["api"];
-const MIN_PASSWORD = 8;
 
 export function StaffPage() {
   const { data, error, loading, reload, api } = useAdminData<Data>("/api/superadmin/staff");
   const [filter, setFilter] = useState<"all" | "admin" | "superadmin">("all");
   const [adding, setAdding] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [link, setLink] = useState<{ email: string; url: string } | null>(null);
 
   const staff = data?.staff ?? [];
+  const invites = data?.invites ?? [];
   const shown = filter === "all" ? staff : staff.filter((s) => s.role === filter);
   const count = (r: "admin" | "superadmin") => staff.filter((s) => s.role === r).length;
 
@@ -31,6 +32,44 @@ export function StaffPage() {
       await reload();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not change role");
+    }
+    setBusyId(null);
+  }
+
+  async function forceReset(m: StaffMember) {
+    if (!confirm(`Email ${m.email} a link to choose a new password?`)) return;
+    setBusyId(m.id);
+    try {
+      await api(`/api/superadmin/staff/${m.id}`, { method: "POST" });
+      toast.success(data?.mailConfigured ? `Reset link sent to ${m.email}` : "Reset requested. Email is not configured, so the link was written to the server log.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not send the reset link");
+    }
+    setBusyId(null);
+  }
+
+  async function resend(i: PendingInvite) {
+    setBusyId(i.id);
+    try {
+      const r = await api<{ emailed: boolean; link?: string }>("/api/superadmin/staff", { method: "POST", body: JSON.stringify({ email: i.email, role: i.role }) });
+      if (r.link) setLink({ email: i.email, url: r.link });
+      else toast.success(`Invite sent again to ${i.email}`);
+      await reload();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not resend the invite");
+    }
+    setBusyId(null);
+  }
+
+  async function revoke(i: PendingInvite) {
+    if (!confirm(`Cancel the invite for ${i.email}?`)) return;
+    setBusyId(i.id);
+    try {
+      await api(`/api/superadmin/invites/${i.id}`, { method: "DELETE" });
+      toast.success("Invite cancelled");
+      await reload();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not cancel the invite");
     }
     setBusyId(null);
   }
@@ -52,20 +91,44 @@ export function StaffPage() {
     <div className="space-y-5">
       <PageHeader
         title="Staff & roles"
-        description="Everyone who can sign in to the admin. Admins run the store; superadmins can also manage staff and add products."
+        description="Everyone who can sign in to the admin. Admins run the store; superadmins can also manage staff and products."
         actions={
           <>
             <button type="button" onClick={reload} disabled={loading} className={btn.secondary}>
               <RefreshCw size={13} className={loading ? "animate-spin" : ""} /> Refresh
             </button>
             <button type="button" onClick={() => setAdding(true)} className={btn.primary}>
-              <UserPlus size={13} /> Add staff
+              <UserPlus size={13} /> Invite staff
             </button>
           </>
         }
       />
 
       {error && <Notice tone="danger">{error}</Notice>}
+      {data && !data.mailConfigured && (
+        <Notice>Email is not set up (SMTP_HOST and SMTP_FROM), so invite and reset links cannot be emailed. Invites show a link to copy instead.</Notice>
+      )}
+      {link && (
+        <Notice>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="min-w-0 break-all">
+              Send this link to {link.email}: <code className="text-[12px]">{link.url}</code>
+            </span>
+            <span className="flex gap-1.5">
+              <button
+                type="button"
+                className={btn.secondary}
+                onClick={() => navigator.clipboard.writeText(link.url).then(() => toast.success("Link copied"), () => toast.error("Could not copy"))}
+              >
+                <Copy size={13} /> Copy
+              </button>
+              <button type="button" className={btn.ghost} aria-label="Dismiss" onClick={() => setLink(null)}>
+                <X size={13} />
+              </button>
+            </span>
+          </div>
+        </Notice>
+      )}
 
       <Segmented
         label="Filter by role"
@@ -129,6 +192,9 @@ export function StaffPage() {
                             <ArrowDownCircle size={13} /> Demote
                           </button>
                         )}
+                        <button type="button" disabled={busyId === m.id} onClick={() => forceReset(m)} title="Email a password reset link" aria-label={`Send ${m.email} a password reset link`} className={btn.ghost}>
+                          <KeyRound size={13} />
+                        </button>
                         <button
                           type="button"
                           disabled={locked || m.role === "superadmin" || busyId === m.id}
@@ -149,11 +215,39 @@ export function StaffPage() {
         </div>
       </Panel>
 
+      {invites.length > 0 && (
+        <Panel title={`Pending invites (${invites.length})`} flush>
+          <ul className="divide-y divide-slate-100">
+            {invites.map((i) => (
+              <li key={i.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 text-[13px]">
+                <div className="min-w-0">
+                  <div className="truncate font-medium text-slate-900">{i.email}</div>
+                  <div className="text-[12px] text-slate-500">
+                    {i.role === "superadmin" ? "Superadmin" : "Admin"} · invited {shortDate(i.createdAt)}
+                    {i.invitedBy ? ` by ${i.invitedBy}` : ""}
+                    {i.expired ? " · expired" : ""}
+                  </div>
+                </div>
+                <div className="flex gap-1.5">
+                  <button type="button" disabled={busyId === i.id} onClick={() => resend(i)} className={btn.secondary}>
+                    <Send size={13} /> {i.expired ? "Send new invite" : "Resend"}
+                  </button>
+                  <button type="button" disabled={busyId === i.id} onClick={() => revoke(i)} className={btn.ghost} aria-label={`Cancel invite for ${i.email}`}>
+                    <X size={13} />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
+
       <AddStaff
         open={adding}
         onClose={() => setAdding(false)}
-        onCreated={async () => {
+        onCreated={async (url, email) => {
           setAdding(false);
+          if (url) setLink({ email, url });
           await reload();
         }}
         api={api}
@@ -162,7 +256,7 @@ export function StaffPage() {
   );
 }
 
-function AddStaff({ open, onClose, onCreated, api }: { open: boolean; onClose: () => void; onCreated: () => Promise<void>; api: Api }) {
+function AddStaff({ open, onClose, onCreated, api }: { open: boolean; onClose: () => void; onCreated: (link: string | undefined, email: string) => Promise<void>; api: Api }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -172,40 +266,22 @@ function AddStaff({ open, onClose, onCreated, api }: { open: boolean; onClose: (
     setBusy(true);
     setError("");
     try {
-      await api("/api/superadmin/staff", {
-        method: "POST",
-        body: JSON.stringify({ email: f.get("email"), password: f.get("password"), firstName: f.get("firstName"), lastName: f.get("lastName"), role: f.get("role") }),
-      });
-      toast.success("Staff account created");
-      await onCreated();
+      const r = await api<{ email: string; emailed: boolean; link?: string }>("/api/superadmin/staff", { method: "POST", body: JSON.stringify({ email: f.get("email"), role: f.get("role") }) });
+      toast.success(r.emailed ? `Invite emailed to ${r.email}` : "Invite created");
+      await onCreated(r.link, r.email);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not create the account");
+      setError(err instanceof Error ? err.message : "Could not send the invite");
     }
     setBusy(false);
   }
 
   const label = "block text-[12.5px] font-medium text-slate-700";
   return (
-    <Drawer open={open} onClose={onClose} title="Add staff" subtitle="They sign in at /login with this email and password.">
+    <Drawer open={open} onClose={onClose} title="Invite staff" subtitle="They choose their own password from the invite link.">
       <form onSubmit={submit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <label className={label}>
-            First name
-            <input name="firstName" autoComplete="off" className={`${inputCls} mt-1 w-full`} />
-          </label>
-          <label className={label}>
-            Last name
-            <input name="lastName" autoComplete="off" className={`${inputCls} mt-1 w-full`} />
-          </label>
-        </div>
         <label className={label}>
           Email
           <input name="email" type="email" required autoComplete="off" className={`${inputCls} mt-1 w-full`} />
-        </label>
-        <label className={label}>
-          Temporary password
-          <input name="password" type="password" required minLength={MIN_PASSWORD} autoComplete="new-password" className={`${inputCls} mt-1 w-full`} />
-          <span className="mt-1 block text-[12px] font-normal text-slate-500">At least {MIN_PASSWORD} characters. Share it with them securely.</span>
         </label>
         <label className={label}>
           Role
@@ -220,7 +296,7 @@ function AddStaff({ open, onClose, onCreated, api }: { open: boolean; onClose: (
             Cancel
           </button>
           <button disabled={busy} className={btn.primary}>
-            {busy ? "Creating…" : "Create account"}
+            {busy ? "Sending..." : "Send invite"}
           </button>
         </div>
       </form>

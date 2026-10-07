@@ -11,7 +11,7 @@ export default async function SuperadminLayout({ children }: { children: React.R
   const session = await getAdmin();
   if (!session) redirect("/api/auth/logout");
   const { admin } = session;
-  if (roleOf(admin) !== "superadmin") redirect("/admin");
+  if ((await roleOf(admin)) !== "superadmin") redirect("/admin");
   return (
     <AdminShell role="superadmin" admin={{ email: admin.email, name: [admin.first_name, admin.last_name].filter(Boolean).join(" ") }}>
       {children}

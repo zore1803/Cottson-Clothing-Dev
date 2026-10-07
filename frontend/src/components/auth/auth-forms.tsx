@@ -106,14 +106,60 @@ export function ForgotPasswordForm() {
   );
 }
 
-export function ResetPasswordForm() {
+export function AcceptInviteForm() {
   const params = useSearchParams();
   const token = params.get("token") ?? "";
   const email = params.get("email") ?? "";
   const [done, setDone] = useState(false);
   const { busy, error, onSubmit } = useSubmit(async (f) => {
     if (f.password !== f.confirm) throw new Error("Passwords do not match");
-    await send("/api/auth/reset-password", { token, email, password: f.password });
+    await send("/api/auth/accept-invite", { token, email, password: f.password, firstName: f.firstName, lastName: f.lastName });
+    setDone(true);
+  });
+
+  if (!token || !email) return <p className="text-[15px] text-[#607487]">This invite link is invalid or incomplete. Ask the person who invited you for a new one.</p>;
+  if (done)
+    return (
+      <div className="rounded-2xl bg-[#F5F8FA] p-6">
+        <div className="flex items-center gap-3 text-[#113858]">
+          <CheckCircle2 className="size-6 text-emerald-500" />
+          <h2 className="text-lg font-semibold">You are all set</h2>
+        </div>
+        <p className="mt-2 text-[14px] text-[#607487]">Sign in with {email} and the password you just chose.</p>
+        <Link
+          href="/login?next=/admin"
+          className="mt-5 inline-flex h-[46px] items-center rounded-full bg-[#113858] px-7 text-[12px] font-semibold uppercase tracking-[0.08em] text-white transition hover:bg-[#0b243a]"
+        >
+          Sign in
+        </Link>
+      </div>
+    );
+  return (
+    <form method="post" onSubmit={onSubmit} className="space-y-5">
+      <p className="text-[14px] text-[#607487]">
+        Setting up <span className="font-semibold text-[#113858]">{email}</span>
+      </p>
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field id="firstName" label="First name" autoComplete="given-name" />
+        <Field id="lastName" label="Last name" autoComplete="family-name" />
+      </div>
+      <Field id="password" label="Password" type="password" required minLength={8} autoComplete="new-password" placeholder="At least 8 characters" />
+      <Field id="confirm" label="Confirm password" type="password" required minLength={8} autoComplete="new-password" placeholder="Repeat password" />
+      <FormError message={error} />
+      <SubmitButton busy={busy}>Create my account</SubmitButton>
+    </form>
+  );
+}
+
+export function ResetPasswordForm() {
+  const params = useSearchParams();
+  const token = params.get("token") ?? "";
+  const email = params.get("email") ?? "";
+  const actor = params.get("actor") === "user" ? "user" : "customer";
+  const [done, setDone] = useState(false);
+  const { busy, error, onSubmit } = useSubmit(async (f) => {
+    if (f.password !== f.confirm) throw new Error("Passwords do not match");
+    await send("/api/auth/reset-password", { token, email, actor, password: f.password });
     setDone(true);
   });
 

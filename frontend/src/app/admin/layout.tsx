@@ -11,5 +11,5 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await getAdmin();
   if (!session) redirect("/api/auth/logout");
   const { admin } = session;
-  return <AdminShell role={roleOf(admin)} admin={{ email: admin.email, name: [admin.first_name, admin.last_name].filter(Boolean).join(" ") }}>{children}</AdminShell>;
+  return <AdminShell role={await roleOf(admin)} admin={{ email: admin.email, name: [admin.first_name, admin.last_name].filter(Boolean).join(" ") }}>{children}</AdminShell>;
 }

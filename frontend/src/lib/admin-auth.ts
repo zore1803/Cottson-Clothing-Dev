@@ -1,6 +1,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { AuthError, medusa } from "@/lib/auth";
+import { StaffRole, connectMongo } from "@/lib/mongo";
 
 // Staff accounts are Medusa admin users (created with `npx medusa user`). Signing in with their
 // email and password on the normal login screen gives a Medusa JWT, kept in its own httpOnly
@@ -9,15 +10,31 @@ import { AuthError, medusa } from "@/lib/auth";
 export const ADMIN_COOKIE = "cottson_admin";
 const ADMIN_MAX_AGE = 60 * 60 * 24; // matches Medusa's default 1d JWT lifetime
 
-export type Admin = { id: string; email: string; first_name: string | null; last_name: string | null; metadata?: Record<string, unknown> | null };
-export type StaffRole = "admin" | "superadmin";
+export type Admin = { id: string; email: string; first_name: string | null; last_name: string | null };
+export type StaffRoleName = "admin" | "superadmin";
 
-/** Emails in SUPERADMIN_EMAILS are always superadmins (the bootstrap owners); nobody can demote them from the UI */
+/** Emails in SUPERADMIN_EMAILS become owners the first time they are seen: always superadmin, never removable from the UI */
 export const isOwnerEmail = (email: string) =>
   (process.env.SUPERADMIN_EMAILS ?? "").split(",").some((e) => e.trim() && e.trim().toLowerCase() === email.toLowerCase());
 
-/** Staff role: the owner list wins, otherwise Medusa's user metadata.role, otherwise plain admin */
-export const roleOf = (a: Pick<Admin, "email" | "metadata">): StaffRole => (isOwnerEmail(a.email) || a.metadata?.role === "superadmin" ? "superadmin" : "admin");
+/**
+ * Staff role from our own database (see StaffRole in lib/mongo.ts), never from anything an admin can
+ * edit in Medusa. If the database can't be reached, the answer is the lower role.
+ */
+export async function roleOf(a: Pick<Admin, "id" | "email">): Promise<StaffRoleName> {
+  try {
+    await connectMongo();
+    const row = await StaffRole.findOne({ userId: a.id }).lean();
+    if (row) return "superadmin";
+    if (isOwnerEmail(a.email)) {
+      await StaffRole.updateOne({ userId: a.id }, { userId: a.id, email: a.email.toLowerCase(), role: "superadmin", owner: true }, { upsert: true });
+      return "superadmin";
+    }
+  } catch {
+    /* fall through to the lower role */
+  }
+  return "admin";
+}
 
 /**
  * Exchanges admin credentials for a Medusa token; throws AuthError when they are not an admin's.

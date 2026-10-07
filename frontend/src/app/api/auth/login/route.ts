@@ -7,7 +7,7 @@ import { rateLimit } from "@/lib/security";
 // falls through to the normal customer login. The response says which one it was so the form
 // can send admins to /admin.
 export async function POST(req: Request) {
-  const limited = rateLimit(req, "login", 10, 10 * 60_000);
+  const limited = await rateLimit(req, "login", 10, 10 * 60_000);
   if (limited) return limited;
   try {
     const { email, password } = await req.json();
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
       const { token, admin } = await adminLogin(address, password);
       await clearSession(); // signing in as staff replaces any customer session
       await setAdminSession(token);
-      return Response.json({ ok: true, admin: true, superadmin: roleOf(admin) === "superadmin" });
+      return Response.json({ ok: true, admin: true, superadmin: (await roleOf(admin)) === "superadmin" });
     } catch (e) {
       if (!(e instanceof AuthError) || e.status >= 500) throw e;
     }

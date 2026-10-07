@@ -1,6 +1,7 @@
 "use client";
 
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, KeyRound } from "lucide-react";
+import { toast } from "sonner";
 import { DefinitionList, PageHeader, Panel, Status, btn, money } from "./ui";
 
 export type StoreSettings = {
@@ -23,7 +24,7 @@ export function SettingsPage({ s }: { s: StoreSettings }) {
     ) : s.paymentMode === "dummy" ? (
       <Status tone="warning">Test mode (dummy Razorpay, no money is taken)</Status>
     ) : (
-      <Status tone="success">{s.paymentMode}</Status>
+      <Status tone="success">Live (Razorpay)</Status>
     );
 
   return (
@@ -37,6 +38,17 @@ export function SettingsPage({ s }: { s: StoreSettings }) {
 
         <Panel title="Your account">
           <DefinitionList items={[["Name", s.admin.name || "—"], ["Email", s.admin.email], ["Role", s.admin.role === "superadmin" ? "Superadmin" : "Admin"]]} />
+          <button
+            type="button"
+            className={`${btn.secondary} mt-3 w-fit`}
+            onClick={async () => {
+              const res = await fetch("/api/admin/password-reset", { method: "POST" });
+              if (res.ok) toast.success("Check your email for a link to choose a new password");
+              else toast.error((await res.json().catch(() => ({}))).error ?? "Could not send the link");
+            }}
+          >
+            <KeyRound size={13} /> Change password
+          </button>
         </Panel>
 
         <Panel title="Pricing" className="lg:col-span-2">

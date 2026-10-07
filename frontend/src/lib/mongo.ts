@@ -128,3 +128,31 @@ export const CatalogProduct = models.CatalogProduct || model("CatalogProduct", C
 // in past orders; it just stops being listed, and can be restored.
 const HiddenProductSchema = new Schema({ slug: { type: String, required: true, unique: true } }, { timestamps: true });
 export const HiddenProduct = models.HiddenProduct || model("HiddenProduct", HiddenProductSchema);
+
+// Staff roles live here, not in Medusa's user metadata: any Medusa admin can edit their own
+// metadata through Medusa's API, which would let an admin promote themselves. Only superadmins get a
+// row; everyone else is a plain admin. Keyed by Medusa user id, which cannot be edited.
+const StaffRoleSchema = new Schema(
+  {
+    userId: { type: String, required: true, unique: true },
+    email: { type: String, required: true },
+    role: { type: String, enum: ["superadmin"], default: "superadmin" },
+    // Listed in SUPERADMIN_EMAILS when first seen: can't be demoted or removed from the UI
+    owner: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
+export const StaffRole = models.StaffRole || model("StaffRole", StaffRoleSchema);
+
+// A pending invite: Medusa holds the invite token; this keeps the role the inviter chose, which the
+// invitee can't influence when they accept.
+const StaffInviteSchema = new Schema(
+  {
+    email: { type: String, required: true, unique: true },
+    role: { type: String, enum: ["admin", "superadmin"], default: "admin" },
+    inviteId: { type: String, required: true },
+    invitedBy: String,
+  },
+  { timestamps: true }
+);
+export const StaffInvite = models.StaffInvite || model("StaffInvite", StaffInviteSchema);
