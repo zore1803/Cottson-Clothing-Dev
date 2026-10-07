@@ -40,7 +40,7 @@ test("preserves distinct photos and selected default colour", () => {
 test("requires a photo for every colour", () => {
   const data = validData();
   data.delete("image-white");
-  assert.throws(() => readProductColors(data, available), /photo URL for White/);
+  assert.throws(() => readProductColors(data, available), /photo for White/);
 });
 test("rejects unknown colours, empty selections and unavailable defaults", () => {
   for (const change of [(d) => d.append("colors", "__proto__"), (d) => d.delete("colors"), (d) => d.set("originalColor", "navy")]) {
@@ -53,8 +53,18 @@ test("rejects unsafe image URLs and another ImageKit account", () => {
   for (const url of ["javascript:alert(1)", "http://ik.imagekit.io/qiap0iq38/photo.jpg", "https://example.com/photo.jpg", "https://ik.imagekit.io/another-account/photo.jpg", "https://user:password@ik.imagekit.io/qiap0iq38/photo.jpg"]) {
     const data = validData();
     data.set("image-white", url);
-    assert.throws(() => readProductColors(data, available), /photo URL for White/);
+    assert.throws(() => readProductColors(data, available), /photo for White/);
   }
+});
+test("accepts photos uploaded to our own Cloudinary account only", () => {
+  const own = "https://res.cloudinary.com/demo-cloud/image/upload/v1/cottson/products/white.webp";
+  const data = validData();
+  data.set("image-white", own);
+  assert.equal(readProductColors(data, available, "demo-cloud").colorImages.white, own);
+  assert.throws(() => readProductColors(data, available, "another-cloud"), /photo for White/);
+  assert.throws(() => readProductColors(data, available), /photo for White/, "Cloudinary is refused when no account is configured");
+  data.set("image-white", "https://res.cloudinary.com/demo-cloud/raw/upload/white.svg");
+  assert.throws(() => readProductColors(data, available, "demo-cloud"), /photo for White/);
 });
 test("ignores unselected photos and deduplicates colours", () => {
   const data = validData();

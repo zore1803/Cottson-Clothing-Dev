@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   // Product photos served from ImageKit
   images: {
     remotePatterns: [
+      { protocol: "https", hostname: "res.cloudinary.com", port: "", pathname: "/**" },
       {
         protocol: "https",
         hostname: "ik.imagekit.io",

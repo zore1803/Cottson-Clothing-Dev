@@ -24,8 +24,23 @@ export function resolveColorPhoto(
   return undefined;
 }
 
+/**
+ * Photos must come from ImageKit (the existing library) or from our own Cloudinary account, which is
+ * where uploads from the superadmin form go. `cloudName` is our account; pass undefined to refuse Cloudinary.
+ */
+export function isAllowedPhotoUrl(imageUrl: string, cloudName?: string) {
+  try {
+    const url = new URL(imageUrl);
+    if (imageUrl.length > 2048 || url.protocol !== "https:" || url.username || url.password || url.port) return false;
+    if (url.hostname === "ik.imagekit.io") return url.pathname.startsWith("/qiap0iq38/");
+    return !!cloudName && url.hostname === "res.cloudinary.com" && url.pathname.startsWith(`/${cloudName}/image/upload/`);
+  } catch {
+    return false;
+  }
+}
+
 /** Validate the complete colour/photo set before saving a catalog product. */
-export function readProductColors(data: FormData, available: readonly { id: string; name: string }[]) {
+export function readProductColors(data: FormData, available: readonly { id: string; name: string }[], cloudName?: string) {
   const colors = [...new Set(data.getAll("colors").map(String))];
   const originalColor = String(data.get("originalColor") ?? "").trim();
   if (!colors.length || colors.length > available.length || colors.some((id) => !available.some((c) => c.id === id)) || !colors.includes(originalColor)) {
@@ -34,13 +49,8 @@ export function readProductColors(data: FormData, available: readonly { id: stri
   const colorImages: Record<string, string> = {};
   for (const id of colors) {
     const imageUrl = String(data.get(`image-${id}`) ?? "").trim();
-    try {
-      const url = new URL(imageUrl);
-      if (imageUrl.length > 2048 || url.protocol !== "https:" || url.hostname !== "ik.imagekit.io" || !url.pathname.startsWith("/qiap0iq38/") || url.username || url.password || url.port) throw new Error("Invalid photo URL");
-      colorImages[id] = imageUrl;
-    } catch {
-      throw new Error(`Enter a valid ImageKit photo URL for ${available.find((c) => c.id === id)!.name}.`);
-    }
+    if (!isAllowedPhotoUrl(imageUrl, cloudName)) throw new Error(`Add a photo for ${available.find((c) => c.id === id)!.name}: upload one or paste a valid ImageKit URL.`);
+    colorImages[id] = imageUrl;
   }
   return { colors, originalColor, colorImages };
 }

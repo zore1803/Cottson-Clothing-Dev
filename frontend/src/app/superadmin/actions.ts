@@ -12,7 +12,7 @@ export async function addProduct(_: { error: string; success: string }, data: Fo
   const slug = text("slug"), title = text("title"), category = text("category"), description = text("description");
   const price = Number(text("price")), minBulk = Number(text("minBulk")), productionDays = Number(text("productionDays"));
   let colorData: ReturnType<typeof readProductColors>;
-  try { colorData = readProductColors(data, COLORS); }
+  try { colorData = readProductColors(data, COLORS, process.env.CLOUDINARY_CLOUD_NAME); }
   catch (error) { return { error: (error as Error).message, success: "" }; }
   const { originalColor, colors, colorImages } = colorData;
   const sizes = [...new Set(text("sizes").split(",").map((s) => s.trim()).filter(Boolean))];
