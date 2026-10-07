@@ -33,7 +33,7 @@ export async function POST(req: Request) {
   }
 
   if (!verifySignature(orderId, paymentId, signature)) {
-    await Payment.updateOne({ _id: pay._id, status: "created" }, { status: "failed", error: "Signature mismatch" });
+    // Left open on purpose: a forged request must not be able to cancel a real customer's pending payment
     return fail("Payment could not be verified", 400);
   }
 
