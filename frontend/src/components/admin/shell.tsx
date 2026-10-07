@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Boxes, ClipboardList, Factory, LayoutDashboard, LogOut, Menu, PackagePlus, Receipt, Settings, ShieldCheck, Users, X } from "lucide-react";
+import { Boxes, ClipboardList, Factory, LayoutDashboard, LogOut, Menu, PackagePlus, Receipt, ScrollText, Settings, ShieldCheck, UserRound, Users, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV: { heading?: string; items: { href: string; label: string; icon: typeof Boxes; badge?: "toApprove" | "newQuotes" }[] }[] = [
@@ -13,6 +13,7 @@ const NAV: { heading?: string; items: { href: string; label: string; icon: typeo
     items: [
       { href: "/admin/orders", label: "Orders", icon: Receipt },
       { href: "/admin/quotes", label: "Quotes", icon: ClipboardList, badge: "newQuotes" },
+      { href: "/admin/customers", label: "Customers", icon: UserRound },
     ],
   },
   {
@@ -26,7 +27,7 @@ const NAV: { heading?: string; items: { href: string; label: string; icon: typeo
 ];
 
 // Extra screens only superadmins get, in the same shell
-const SUPER_NAV: (typeof NAV)[number] = { heading: "Superadmin", items: [{ href: "/superadmin/staff", label: "Staff & roles", icon: Users }, { href: "/superadmin/products", label: "Add products", icon: PackagePlus }] };
+const SUPER_NAV: (typeof NAV)[number] = { heading: "Superadmin", items: [{ href: "/superadmin/staff", label: "Staff & roles", icon: Users }, { href: "/superadmin/products", label: "Add products", icon: PackagePlus }, { href: "/superadmin/audit", label: "Audit log", icon: ScrollText }] };
 
 type Summary = { toApprove: number; newQuotes: number };
 

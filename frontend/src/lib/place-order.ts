@@ -31,7 +31,7 @@ export async function placeOrderForPayment(pay: PaymentDoc, paymentId: string): 
     await Payment.updateOne({ _id: pay._id }, { status: "paid", medusaOrderId: order.id, displayId: order.display_id, orderTotal: order.total });
 
     // Link saved designs to the order and move them into the production queue
-    if (pay.designIds.length) await Design.updateMany({ _id: { $in: pay.designIds } }, { medusaOrderId: order.id, status: "ordered" });
+    if (pay.designIds.length) await Design.updateMany({ _id: { $in: pay.designIds } }, { medusaOrderId: order.id, status: "ordered", orderedAt: new Date() });
 
     // Safety net: Medusa's charge should equal the storefront's pricing rules; a mismatch means the
     // backend price tiers drifted from lib/pricing.ts.

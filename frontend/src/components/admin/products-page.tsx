@@ -6,17 +6,15 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Notice, PageHeader, Segmented, TableEmpty, btn, inputCls, money, rowHover, table, td, th } from "./ui";
 import { useAdminData } from "./use-admin-api";
+import { LOW_STOCK as LOW, available } from "@/lib/stock";
 
 type Variant = { id: string; sku: string | null; color: string; size: string; tracked: boolean; stocked: number | null; reserved: number | null };
 type Product = { id: string; title: string; handle: string; category: string | null; status: string; thumbnail: string | null; price: number | null; variants: Variant[] };
 type Catalog = { products: Product[]; location: { name: string } | null };
 type Filter = "all" | "tracked" | "low" | "out";
 
-const LOW = 10;
 const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "2XL", "3XL", "4XL"];
 const sizeRank = (s: string) => (SIZE_ORDER.includes(s) ? SIZE_ORDER.indexOf(s) : SIZE_ORDER.length);
-/** Units that can still be sold (reserved units are already promised to placed orders) */
-const available = (v: Variant) => (v.tracked ? (v.stocked ?? 0) - (v.reserved ?? 0) : Infinity);
 
 export function ProductsPage() {
   const { data, setData, error, loading, reload, api } = useAdminData<Catalog>("/api/admin/products");

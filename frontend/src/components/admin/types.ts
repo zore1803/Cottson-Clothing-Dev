@@ -49,6 +49,8 @@ export type DesignRow = {
   medusaOrderId?: string;
   summary: string;
   createdAt: string;
+  orderedAt?: string;
+  productionDays?: number;
 };
 
 export type Tone = "neutral" | "info" | "success" | "warning" | "danger";

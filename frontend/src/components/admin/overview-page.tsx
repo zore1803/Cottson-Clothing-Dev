@@ -5,6 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { Notice, PageHeader, Panel, Status, money, shortDate, table, td, th, TableEmpty, rowHover } from "./ui";
 import { orderState, type AdminOrder } from "./types";
 import { useAdminData } from "./use-admin-api";
+import { DashboardPanels } from "./dashboard-panels";
 
 type Summary = { toApprove: number; newQuotes: number };
 
@@ -46,6 +47,8 @@ export function OverviewPage() {
           </div>
         ))}
       </div>
+
+      <DashboardPanels />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
         <Panel
