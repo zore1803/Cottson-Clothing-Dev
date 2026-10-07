@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { isSuperadmin } from "@/lib/superadmin";
 import { COLORS, PRODUCTS } from "@/lib/catalog";
-import { CatalogProduct, connectMongo } from "@/lib/mongo";
+import { CatalogProduct, HiddenProduct, connectMongo } from "@/lib/mongo";
 import { readProductColors } from "@/lib/product-colors";
 
 export async function addProduct(_: { error: string; success: string }, data: FormData) {
@@ -24,8 +24,7 @@ export async function addProduct(_: { error: string; success: string }, data: Fo
     revalidatePath("/products");
     revalidatePath(`/products/${slug}`);
     revalidatePath("/studio");
-    revalidatePath("/superadmin");
-    revalidatePath("/superadmin/panel");
+    revalidatePath("/superadmin/products");
     return { error: "", success: `Added ${title}. It is now visible in the shop.` };
   } catch (error) {
     if ((error as { code?: number }).code === 11000) return { error: "This slug already exists.", success: "" };
@@ -34,15 +33,34 @@ export async function addProduct(_: { error: string; success: string }, data: Fo
   }
 }
 
-export async function deleteProduct(slug: string) {
+const refresh = (slug: string) => {
+  for (const path of ["/", "/products", `/products/${slug}`, "/studio", "/cart", "/superadmin/products"]) revalidatePath(path);
+};
+
+/** Takes a product off the shop: products added here are deleted, built-in ones are hidden (and can be restored) */
+export async function removeProduct(slug: string) {
   if (!await isSuperadmin()) return { error: "Superadmin access required." };
   try {
     await connectMongo();
-    await CatalogProduct.deleteOne({ slug });
-    for (const path of ["/products", `/products/${slug}`, "/studio", "/superadmin/products"]) revalidatePath(path);
+    if (PRODUCTS.some((p) => p.slug === slug)) await HiddenProduct.updateOne({ slug }, { slug }, { upsert: true });
+    else await CatalogProduct.deleteOne({ slug });
+    refresh(slug);
     return { error: "" };
   } catch (error) {
-    console.error("Product deletion failed", error instanceof Error ? error.name : "Unknown error");
-    return { error: "Could not delete the product." };
+    console.error("Product removal failed", error instanceof Error ? error.name : "Unknown error");
+    return { error: "Could not remove the product." };
+  }
+}
+
+export async function restoreProduct(slug: string) {
+  if (!await isSuperadmin()) return { error: "Superadmin access required." };
+  try {
+    await connectMongo();
+    await HiddenProduct.deleteOne({ slug });
+    refresh(slug);
+    return { error: "" };
+  } catch (error) {
+    console.error("Product restore failed", error instanceof Error ? error.name : "Unknown error");
+    return { error: "Could not restore the product." };
   }
 }

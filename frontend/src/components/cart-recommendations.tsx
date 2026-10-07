@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { SimilarProductsCarousel } from "@/components/similar-products-carousel";
 import type { Product } from "@/lib/catalog";
 import { relatedProducts, type CartLine } from "@/lib/recommendations";
@@ -40,21 +39,17 @@ export function CartRecommendations({ lines, products }: { lines: CartLine[]; pr
 
   return (
     <>
-      <SimilarProductsCarousel products={related} eyebrow="Complete the order" title="Related products" />
+      {related.length > 0 ? (
+        <SimilarProductsCarousel products={related} eyebrow="Complete the order" title="Related products" />
+      ) : (
+        <SimilarProductsCarousel products={products.slice(0, 8)} eyebrow="Keep exploring" title="Discover our products" />
+      )}
       {picks.length > 0 && (
         <SimilarProductsCarousel
           products={picks}
           eyebrow={data?.topCategory ? `Based on your past ${data.topCategory.toLowerCase()} orders` : "Based on your past orders"}
           title="Picked for you"
         />
-      )}
-      {data && !data.signedIn && (
-        <p className="mx-auto max-w-6xl px-4 pb-16 text-center text-sm text-muted-foreground">
-          <Link href="/login?next=/cart" className="font-semibold text-[#113858] underline-offset-4 hover:underline">
-            Sign in
-          </Link>{" "}
-          to see picks based on your past orders.
-        </p>
       )}
     </>
   );

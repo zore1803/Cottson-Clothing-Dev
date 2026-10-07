@@ -123,3 +123,8 @@ if (models.CatalogProduct && !models.CatalogProduct.schema.path("colorImages")) 
   });
 }
 export const CatalogProduct = models.CatalogProduct || model("CatalogProduct", CatalogProductSchema);
+
+// Built-in (in-code) products a superadmin has taken off the shop. The product stays in code and
+// in past orders; it just stops being listed, and can be restored.
+const HiddenProductSchema = new Schema({ slug: { type: String, required: true, unique: true } }, { timestamps: true });
+export const HiddenProduct = models.HiddenProduct || model("HiddenProduct", HiddenProductSchema);
