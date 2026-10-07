@@ -9,6 +9,11 @@
 #     deploy and keep Medusa in sync with the catalog/pricing files.
 #   - the admin user is only created once ADMIN_EMAIL/ADMIN_PASSWORD are set (below) and
 #     "|| true" stops a later deploy failing once that user already exists.
+# Every deploy re-runs seed-cottson.ts, which deletes and recreates the COTTSON catalogue products.
+# Stock quantities set in the admin screen live on those products, so they are reset by a redeploy.
+# After the first successful deploy, remove the "seed-cottson.ts" line (not the pricing one) from
+# buildCommand below if you manage stock in the admin. Keep db:migrate and seed-cottson-pricing.ts.
+#
 # Open the deploy's build log (Logs tab, no Shell needed) to read the publishable key and
 # region id that seed-cottson.ts prints — you need both in Vercel.
 # Then set STORE_CORS / ADMIN_CORS / AUTH_CORS / FRONTEND_URL to your Vercel domain.
@@ -71,6 +76,14 @@ services:
       # Public URL of the frontend, used for product image URLs when seeding
       - key: FRONTEND_URL
         sync: false
+      # Same URL again: password-reset links point here
+      - key: STOREFRONT_URL
+        sync: false
+      # Shared secret with the storefront. Medusa refuses to complete a cart (so no order can be placed
+      # around the payment step) and the storefront refuses password-reset calls without it. Render
+      # generates it once; copy the value into Vercel as CHECKOUT_SECRET (Dashboard > Environment).
+      - key: CHECKOUT_SECRET
+        generateValue: true
       # Set both, redeploy once to create the admin login, then leave them — the "|| true"
       # above means a later deploy won't fail once the user already exists
       - key: ADMIN_EMAIL

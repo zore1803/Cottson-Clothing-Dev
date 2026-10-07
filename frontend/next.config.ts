@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Product photos served from ImageKit
+  // Remote product photos: Cloudinary (uploads) and ImageKit (the existing library)
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com", port: "", pathname: "/**" },
