@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Hero } from "@/components/home-migrated/hero";
 import { ProductShowcase } from "@/components/home-migrated/product-showcase";
 import { DesignStudioSection } from "@/components/home-migrated/design-studio-section";
@@ -7,6 +8,14 @@ import { TrustedBy } from "@/components/home-migrated/trusted-by";
 import { BusinessTrust } from "@/components/home-migrated/business-trust";
 import { CorporateNeeds } from "@/components/home-migrated/corporate-needs";
 import { WhatsAppCTA } from "@/components/shared/whatsapp-cta";
+
+export const metadata: Metadata = {
+  title: { absolute: "Cottson Clothing | Premium Corporate Clothing & Custom Wear" },
+  description: "Cottson Clothing crafts premium corporate clothing, custom executive wear and tailored office shirts. Modern design, dependable quality. Request a quote today.",
+  keywords: "corporate clothing, custom executive wear, tailored apparel, premium office shirts, corporate uniforms, custom corporate wear, executive shirts, office wear, corporate t-shirts, custom polo shirts, bulk corporate clothing, company uniforms, branded workwear, logo embroidered shirts, custom uniforms India, Cottson Clothing",
+  openGraph: { title: "Cottson Clothing | Premium Corporate Clothing & Custom Wear", description: "Cottson Clothing crafts premium corporate clothing, custom executive wear and tailored office shirts. Modern design, dependable quality. Request a quote today.", type: "website" },
+  twitter: { title: "Cottson Clothing | Premium Corporate Clothing & Custom Wear", description: "Cottson Clothing crafts premium corporate clothing, custom executive wear and tailored office shirts. Modern design, dependable quality. Request a quote today." },
+};
 
 export const revalidate = 3600;
 
