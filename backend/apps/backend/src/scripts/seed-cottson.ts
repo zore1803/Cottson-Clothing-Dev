@@ -138,6 +138,19 @@ export default async function seedCottson({ container }: ExecArgs) {
     sizeOpt ??= result.find((o) => o.title === "Garment Size");
   }
 
+  // Options that already existed may be missing newer colours / sizes: add them
+  const productModule = container.resolve(Modules.PRODUCT);
+  for (const [title, wanted] of [["Garment Color", allColors], ["Garment Size", allSizes]] as const) {
+    const existing = opts.find((o: { title: string }) => o.title === title) as { id: string; values: { value: string }[] } | undefined;
+    if (!existing) continue;
+    const have = existing.values.map((v) => v.value);
+    const missing = wanted.filter((v) => !have.includes(v));
+    if (missing.length) {
+      await productModule.updateProductOptions(existing.id, { values: [...have, ...missing] });
+      logger.info(`Added ${missing.join(", ")} to option ${title}`);
+    }
+  }
+
   // ---------- Products ----------
   const { data: [profile] } = await query.graph({ entity: "shipping_profile", fields: ["id"] });
   // The workflow's input type is stricter than what we build here (option ids, metadata shapes),
