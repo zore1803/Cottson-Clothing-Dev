@@ -11,7 +11,7 @@ The garment is drawn on a soft off-white background (#f5f5f5) with a subtle grou
 no mannequin, neck, arms or body.
 
 (The polo also has a **full-mannequin** style with front / back / side views: see
-[Mannequin templates](#mannequin-templates-mannequin) at the end. The ghost templates below are
+[Mannequin templates](#man  nequin-templates-mannequin) at the end. The ghost templates below are
 unaffected by it.)
 
 ## Files per template
