@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import { PRODUCTS } from "@/lib/catalog";
+import { listProducts } from "@/lib/catalog-server";
 import { CategoryFilter } from "@/components/category-filter";
 
 export const metadata: Metadata = { title: "Shop" };
 
-export default function ProductsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ProductsPage() {
+  const products = await listProducts();
   return (
     <div className="mx-auto max-w-7xl px-4 pt-28 pb-16 sm:pt-32">
-      <CategoryFilter products={PRODUCTS} />
+      <CategoryFilter products={products} />
     </div>
   );
 }

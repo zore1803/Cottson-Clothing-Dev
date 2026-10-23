@@ -7,7 +7,7 @@ export function ClientLogosMarquee() {
       <div className="mx-auto max-w-6xl px-4 text-center">
         <h2 className="text-2xl font-bold tracking-tight text-brand sm:text-3xl">Brands That Trust Us</h2>
         <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground sm:text-base">
-          A few of the teams we've kitted out.
+          A few of the teams we&apos;ve kitted out.
         </p>
       </div>
 

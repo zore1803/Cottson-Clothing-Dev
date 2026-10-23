@@ -1,7 +1,7 @@
 // One-off: for a real photo (with its own background, not a transparent cutout), segments
 // the person out for a clean studio-grey composite, and separately segments the garment for
-// the overlay-blend recolor engine's garment-layer.png. Writes model-photo.png,
-// garment-layer.png, and photo.jpg into outDir.
+// the overlay-blend recolor engine's garment-layer.webp. Writes model-photo.webp,
+// garment-layer.webp, and photo.jpg into outDir.
 //
 //   node scripts/make-product-from-photo.mjs <photo.png> <outDir> [backdropHex]
 
@@ -152,9 +152,9 @@ for (let p = 0; p < n; p++) {
   }
 }
 await fs.mkdir(outDir, { recursive: true });
-await sharp(composed, { raw: { width: W, height: H, channels: 3 } }).png().toFile(path.join(outDir, 'model-photo.png'));
+await sharp(composed, { raw: { width: W, height: H, channels: 3 } }).resize({ width: Math.min(W, 1600) }).webp({ quality: 90, smartSubsample: true }).toFile(path.join(outDir, 'model-photo.webp'));
 await sharp(composed, { raw: { width: W, height: H, channels: 3 } }).jpeg({ quality: 90 }).toFile(path.join(outDir, 'photo.jpg'));
-console.log('Wrote model-photo.png and photo.jpg');
+console.log('Wrote model-photo.webp and photo.jpg');
 
 // ---- garment layer: grayscale luminance of the (original, uncomposited) photo, alpha = garment mask ----
 // Pull the alpha edge a couple of pixels INSIDE the garment before feathering: the raw
@@ -179,5 +179,5 @@ for (let p = 0; p < n; p++) {
   garmentOut[p * 4 + 2] = g;
   garmentOut[p * 4 + 3] = topAlpha[p];
 }
-await sharp(garmentOut, { raw: { width: W, height: H, channels: 4 } }).png().toFile(path.join(outDir, 'garment-layer.png'));
-console.log('Wrote garment-layer.png');
+await sharp(garmentOut, { raw: { width: W, height: H, channels: 4 } }).resize({ width: Math.min(W, 1600) }).webp({ quality: 92, alphaQuality: 100 }).toFile(path.join(outDir, 'garment-layer.webp'));
+console.log('Wrote garment-layer.webp');

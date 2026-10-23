@@ -1,26 +1,48 @@
 import "server-only";
 
-// In-memory sliding-window limiter. Good enough for a single instance; swap for Redis
-// (Upstash etc.) if the site is ever scaled to several instances.
+// Fixed-window limiter. Counts live in Redis when REDIS_URL is set, so limits hold across restarts
+// and across several server instances; without Redis (or if it is down) each process counts in
+// memory instead, which is fine for local development and fails open rather than blocking sign-ins.
+import { getRedis } from "./redis";
+
 const hits = new Map<string, number[]>();
 
 export function clientIp(req: Request) {
   return req.headers.get("x-forwarded-for")?.split(",")[0].trim() || req.headers.get("x-real-ip") || "unknown";
 }
 
-/** Returns a 429 Response when `key` exceeded `limit` calls within `windowMs`, otherwise null */
-export function rateLimit(req: Request, name: string, limit: number, windowMs: number) {
-  const key = `${name}:${clientIp(req)}`;
+const tooMany = (windowMs: number) =>
+  Response.json({ error: "Too many requests, please try again shortly" }, { status: 429, headers: { "retry-after": String(Math.ceil(windowMs / 1000)) } });
+
+function memoryLimited(key: string, limit: number, windowMs: number) {
   const now = Date.now();
   const recent = (hits.get(key) ?? []).filter((t) => now - t < windowMs);
   if (recent.length >= limit) {
     hits.set(key, recent);
-    return Response.json({ error: "Too many requests, please try again shortly" }, { status: 429, headers: { "retry-after": String(Math.ceil(windowMs / 1000)) } });
+    return true;
   }
   recent.push(now);
   hits.set(key, recent);
   if (hits.size > 5000) for (const [k, v] of hits) if (!v.some((t) => now - t < windowMs)) hits.delete(k);
-  return null;
+  return false;
+}
+
+/** Returns a 429 Response when the caller exceeded `limit` calls within `windowMs`, otherwise null */
+export async function rateLimit(req: Request, name: string, limit: number, windowMs: number) {
+  const key = `${name}:${clientIp(req)}`;
+  const redis = getRedis();
+  if (redis) {
+    try {
+      const k = `rl:${key}`;
+      const n = await redis.incr(k);
+      if (n === 1) await redis.pexpire(k, windowMs);
+      else if (n > limit && (await redis.pttl(k)) < 0) await redis.pexpire(k, windowMs); // never leave a key without an expiry
+      return n > limit ? tooMany(windowMs) : null;
+    } catch {
+      /* Redis unavailable: fall through to the in-memory counter */
+    }
+  }
+  return memoryLimited(key, limit, windowMs) ? tooMany(windowMs) : null;
 }
 
 /** Parse a JSON body, returning null on malformed input instead of throwing */

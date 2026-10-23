@@ -23,7 +23,7 @@ interface TeamItem {
   url: string;
 }
 
-function formatTeamItem(item: any): TeamItem {
+function formatTeamItem(item: { public_id: string; format?: string; version?: number | string }): TeamItem {
   const ext = item.format || "jpg";
   return {
     id: item.public_id,

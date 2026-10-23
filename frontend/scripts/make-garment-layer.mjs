@@ -1,5 +1,5 @@
 // One-off: segments the garment out of a composited product photo and writes a
-// grayscale+alpha "garment-layer.png" for the overlay-blend recolor engine (see
+// grayscale+alpha "garment-layer.webp" for the overlay-blend recolor engine (see
 // src/lib/recolor-shader.ts). Same segmentation model as prepare-product.mjs, but the
 // output format matches the new pipeline (no mask.png/meta.json).
 //
@@ -159,5 +159,5 @@ for (let p = 0; p < n; p++) {
 }
 
 await fs.mkdir(outDir, { recursive: true });
-await sharp(out, { raw: { width: W, height: H, channels: 4 } }).png().toFile(path.join(outDir, 'garment-layer.png'));
-console.log('Wrote', path.join(outDir, 'garment-layer.png'));
+await sharp(out, { raw: { width: W, height: H, channels: 4 } }).resize({ width: Math.min(W, 1600) }).webp({ quality: 92, alphaQuality: 100 }).toFile(path.join(outDir, 'garment-layer.webp'));
+console.log('Wrote', path.join(outDir, 'garment-layer.webp'));

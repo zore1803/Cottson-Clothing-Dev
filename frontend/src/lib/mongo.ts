@@ -2,8 +2,8 @@ import "server-only";
 import dns from "node:dns";
 import mongoose, { Schema, model, models, type InferSchemaType } from "mongoose";
 
-// MongoDB holds COTTSON's own data (saved studio designs, bulk quotes).
-// Commerce data (products, carts, orders) lives in Medusa / Postgres.
+// MongoDB holds saved designs, bulk quotes and enquiry-only catalog additions.
+// Checkout products, carts and orders live in Medusa / Postgres.
 
 // Some Windows resolvers refuse the SRV lookups Atlas needs; use public DNS for them
 const PUBLIC_DNS = ["8.8.8.8", "1.1.1.1"];
@@ -35,12 +35,16 @@ const DesignSchema = new Schema(
     // Logos (data URLs for now; S3/R2 URLs once uploads go to storage) and text, in photo pixels
     elements: { type: [Schema.Types.Mixed], default: [] },
     preview: String,
+    // Cloudinary id of the preview, kept so unused uploads can be cleaned up later
+    previewPublicId: String,
     medusaOrderId: { type: String, index: true },
     // Medusa customer who saved the design; absent for guest designs
     customerId: { type: String, index: true },
     // Production workflow: pending until the order is placed, then moved along by the team
     status: { type: String, enum: DESIGN_STATUSES, default: "pending", index: true },
     statusNote: String,
+    // When the order was placed; production due dates count from here
+    orderedAt: Date,
   },
   { timestamps: true }
 );
@@ -88,3 +92,86 @@ const PaymentSchema = new Schema(
   { timestamps: true }
 );
 export const Payment = models.Payment || model("Payment", PaymentSchema);
+
+const CatalogProductSchema = new Schema({
+  slug: { type: String, required: true, unique: true },
+  title: { type: String, required: true },
+  category: { type: String, required: true },
+  description: { type: String, required: true },
+  price: { type: Number, required: true, min: 0 },
+  currency: { type: String, default: "INR" },
+  sizes: [String],
+  originalColor: String,
+  colors: [String],
+  minBulk: Number,
+  productionDays: Number,
+  imageUrl: String,
+  colorImages: { type: Map, of: String },
+  customColor: Boolean,
+  printOnDemand: Boolean,
+  express: Boolean,
+  promo: Boolean,
+  livePreview: { type: Boolean, default: false },
+}, { timestamps: true });
+// Keep added schema fields during Next.js hot reloads. An older cached model
+// otherwise silently drops the colour photos when creating a new product.
+if (models.CatalogProduct && !models.CatalogProduct.schema.path("colorImages")) {
+  models.CatalogProduct.schema.add({
+    colorImages: { type: Map, of: String },
+    customColor: Boolean,
+    printOnDemand: Boolean,
+    express: Boolean,
+    promo: Boolean,
+  });
+}
+export const CatalogProduct = models.CatalogProduct || model("CatalogProduct", CatalogProductSchema);
+
+// Built-in (in-code) products a superadmin has taken off the shop. The product stays in code and
+// in past orders; it just stops being listed, and can be restored.
+const HiddenProductSchema = new Schema({ slug: { type: String, required: true, unique: true } }, { timestamps: true });
+export const HiddenProduct = models.HiddenProduct || model("HiddenProduct", HiddenProductSchema);
+
+// Staff roles live here, not in Medusa's user metadata: any Medusa admin can edit their own
+// metadata through Medusa's API, which would let an admin promote themselves. Only superadmins get a
+// row; everyone else is a plain admin. Keyed by Medusa user id, which cannot be edited.
+const StaffRoleSchema = new Schema(
+  {
+    userId: { type: String, required: true, unique: true },
+    email: { type: String, required: true },
+    role: { type: String, enum: ["superadmin"], default: "superadmin" },
+    // Listed in SUPERADMIN_EMAILS when first seen: can't be demoted or removed from the UI
+    owner: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
+export const StaffRole = models.StaffRole || model("StaffRole", StaffRoleSchema);
+
+// A pending invite: Medusa holds the invite token; this keeps the role the inviter chose, which the
+// invitee can't influence when they accept.
+const StaffInviteSchema = new Schema(
+  {
+    email: { type: String, required: true, unique: true },
+    role: { type: String, enum: ["admin", "superadmin"], default: "admin" },
+    inviteId: { type: String, required: true },
+    // SHA-256 of the invite token, so the accept page can reject a wrong token before creating any login
+    tokenHash: String,
+    invitedBy: String,
+  },
+  { timestamps: true }
+);
+export const StaffInvite = models.StaffInvite || model("StaffInvite", StaffInviteSchema);
+
+// Who did what in the admin: one row per change, newest first. Written by lib/audit.ts, read on the
+// superadmin Audit log screen. Rows are never edited.
+const AuditLogSchema = new Schema(
+  {
+    at: { type: Date, default: Date.now, index: true },
+    actorId: String,
+    actorEmail: { type: String, index: true },
+    action: { type: String, required: true, index: true },
+    target: String,
+    detail: String,
+  },
+  { versionKey: false }
+);
+export const AuditLog = models.AuditLog || model("AuditLog", AuditLogSchema);

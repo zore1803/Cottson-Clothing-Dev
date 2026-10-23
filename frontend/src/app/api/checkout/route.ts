@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { connectMongo, Design, Payment } from "@/lib/mongo";
 import { isValidObjectId } from "mongoose";
-import { COLORS, getProduct } from "@/lib/catalog";
+import { COLORS, PRODUCTS } from "@/lib/catalog";
 import { summarizeDesign } from "@/lib/designs";
 import { rateLimit, readJson } from "@/lib/security";
 import { store, REGION } from "@/lib/medusa-store";
 import { createOrderId, paymentMode, razorpayKeyId } from "@/lib/razorpay-dummy";
+import { createRazorpayOrder } from "@/lib/razorpay";
 import { getToken } from "@/lib/auth";
 import { getSession } from "@/lib/authz";
+import { listProducts } from "@/lib/catalog-server";
 
 // Step 1 of checkout: validates the browser cart, builds it in Medusa (items, address, shipping),
 // and opens a payment order for the exact amount Medusa computed. The order itself is only placed
@@ -21,7 +23,7 @@ const MAX_QTY = 10_000;
 const bad = (error: string) => NextResponse.json({ error }, { status: 400 });
 
 export async function POST(req: Request) {
-  const limited = rateLimit(req, "checkout", 10, 10 * 60_000);
+  const limited = await rateLimit(req, "checkout", 10, 10 * 60_000);
   if (limited) return limited;
   if (paymentMode() === "off") return NextResponse.json({ error: "Online payments are not available right now" }, { status: 503 });
   // Staff accounts manage orders; they do not place them
@@ -38,6 +40,9 @@ export async function POST(req: Request) {
     // Never trust the browser's cart: check every line against the catalog. Prices are not
     // taken from the request at all; Medusa prices each variant (incl. bulk tiers) itself.
     const designIds = new Set<string>();
+    // The shop catalogue: built-in products plus ones a superadmin added, minus ones they removed
+    const catalog = await listProducts().catch(() => PRODUCTS);
+    const getProduct = (slug: string) => catalog.find((p) => p.slug === slug);
     for (const i of items) {
       const p = typeof i?.slug === "string" ? getProduct(i.slug) : undefined;
       if (!p) return bad("An item in your cart is no longer available");
@@ -129,7 +134,7 @@ export async function POST(req: Request) {
     const amount = Math.round(priced.total * 100); // paise
     if (!(amount > 0)) throw new Error("Could not price your order");
 
-    const razorpayOrderId = createOrderId();
+    const razorpayOrderId = paymentMode() === "razorpay" ? await createRazorpayOrder(amount, cart.id) : createOrderId();
     await connectMongo();
     await Payment.create({
       razorpayOrderId,
@@ -137,7 +142,7 @@ export async function POST(req: Request) {
       cartId: cart.id,
       amount,
       email: customer.email,
-      lines: items.map((i) => ({ slug: i.slug, qty: i.qty, designId: i.designId })),
+      lines: items.map((i) => ({ slug: i.slug, qty: i.qty, designId: i.designId, price: getProduct(i.slug)!.price })),
       designIds: [...designIds],
     });
 

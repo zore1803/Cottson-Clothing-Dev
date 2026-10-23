@@ -130,7 +130,7 @@ function PillSelect<T extends string>({
   );
 }
 
-export function DesignStudio({ product, initialColor }: { product: Product; initialColor: string }) {
+export function DesignStudio({ product, initialColor, products = PRODUCTS }: { product: Product; initialColor: string; products?: Product[] }) {
   const router = useRouter();
   const addToCart = useCart((s) => s.add);
   // Real-world size of this product's photo frame, so the logo is sized in true cm
@@ -283,6 +283,7 @@ export function DesignStudio({ product, initialColor }: { product: Product; init
     const load = (src: string) =>
       new Promise<HTMLImageElement>((res, rej) => {
         const i = new window.Image();
+        i.crossOrigin = "anonymous";
         i.onload = () => res(i);
         i.onerror = rej;
         i.src = src;
@@ -367,6 +368,7 @@ export function DesignStudio({ product, initialColor }: { product: Product; init
           size,
           qty: n,
           basePrice: product.price,
+          imageUrl: variantUrl(product, colorId),
           preview,
           design: customized ? { product: product.slug, color: colorId } : undefined,
         });
@@ -503,7 +505,7 @@ export function DesignStudio({ product, initialColor }: { product: Product; init
                 <PillSelect
                   label="Product"
                   value={product.slug}
-                  options={PRODUCTS.map((p) => ({ value: p.slug, label: p.title }))}
+                  options={products.map((p) => ({ value: p.slug, label: p.title }))}
                   onChange={(slug) => router.push(`/studio?product=${slug}`)}
                 />
               </div>

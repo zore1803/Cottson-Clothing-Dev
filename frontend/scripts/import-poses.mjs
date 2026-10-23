@@ -9,10 +9,10 @@
 // reused across every photo instead of once per process, since this runs over ~100+ images.
 //
 // Output layout per product:
-//   public/products/<slug>/photos/<i>/model-photo.png   (i = 0..poses-1)
-//   public/products/<slug>/photos/<i>/garment-layer.png
-//   public/products/<slug>/model-photo.png               (= photos/0, duplicated at the
-//   public/products/<slug>/garment-layer.png                product root so the existing
+//   public/products/<slug>/photos/<i>/model-photo.webp  (i = 0..poses-1)
+//   public/products/<slug>/photos/<i>/garment-layer.webp
+//   public/products/<slug>/model-photo.webp              (= photos/0, duplicated at the
+//   public/products/<slug>/garment-layer.webp               product root so the existing
 //   public/products/<slug>/photo.jpg                        single-pose code paths — listing
 //                                                            cards, render-variants.mjs, the
 //                                                            live shader with no pose given —
@@ -168,7 +168,7 @@ async function processPhoto(photoPath, outDir) {
   }
 
   await fs.mkdir(outDir, { recursive: true });
-  await sharp(composed, { raw: { width: W, height: H, channels: 3 } }).png().toFile(path.join(outDir, 'model-photo.png'));
+  await sharp(composed, { raw: { width: W, height: H, channels: 3 } }).resize({ width: Math.min(W, 1600) }).webp({ quality: 90, smartSubsample: true }).toFile(path.join(outDir, 'model-photo.webp'));
 
   const topAlphaRaw = Buffer.alloc(n);
   for (let p = 0; p < n; p++) topAlphaRaw[p] = top[p] ? 255 : 0;
@@ -183,7 +183,7 @@ async function processPhoto(photoPath, outDir) {
     garmentOut[p * 4 + 2] = g;
     garmentOut[p * 4 + 3] = topAlpha[p];
   }
-  await sharp(garmentOut, { raw: { width: W, height: H, channels: 4 } }).png().toFile(path.join(outDir, 'garment-layer.png'));
+  await sharp(garmentOut, { raw: { width: W, height: H, channels: 4 } }).resize({ width: Math.min(W, 1600) }).webp({ quality: 92, alphaQuality: 100 }).toFile(path.join(outDir, 'garment-layer.webp'));
 
   return { W, H };
 }
@@ -204,9 +204,9 @@ for (const product of manifest.products) {
     console.log(`  pose ${i}: ${files[i]}`);
     await processPhoto(photoPath, poseDir);
     if (i === 0) {
-      await fs.copyFile(path.join(poseDir, 'model-photo.png'), path.join(outRoot, 'model-photo.png'));
-      await fs.copyFile(path.join(poseDir, 'garment-layer.png'), path.join(outRoot, 'garment-layer.png'));
-      await sharp(path.join(poseDir, 'model-photo.png')).jpeg({ quality: 90 }).toFile(path.join(outRoot, 'photo.jpg'));
+      await fs.copyFile(path.join(poseDir, 'model-photo.webp'), path.join(outRoot, 'model-photo.webp'));
+      await fs.copyFile(path.join(poseDir, 'garment-layer.webp'), path.join(outRoot, 'garment-layer.webp'));
+      await sharp(path.join(poseDir, 'model-photo.webp')).jpeg({ quality: 90 }).toFile(path.join(outRoot, 'photo.jpg'));
     }
   }
   results.push({ slug: product.slug, poses: files.length });

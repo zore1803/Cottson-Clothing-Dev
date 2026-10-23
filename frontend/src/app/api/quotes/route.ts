@@ -6,7 +6,7 @@ import { clean, rateLimit, readJson } from "@/lib/security";
 
 // Bulk-order quote requests from the home and contact pages
 export async function POST(req: Request) {
-  const limited = rateLimit(req, "quotes", 5, 60 * 60_000);
+  const limited = await rateLimit(req, "quotes", 5, 60 * 60_000);
   if (limited) return limited;
 
   const b = await readJson(req);

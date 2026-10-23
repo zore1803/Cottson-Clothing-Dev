@@ -6,7 +6,7 @@ import { SiteFooter } from "@/components/site-footer";
 
 // The storefront header and footer wrap every page except the staff area, which has its own chrome
 export function SiteShell({ children }: { children: React.ReactNode }) {
-  const staff = usePathname().startsWith("/admin");
+  const staff = /^\/(super)?admin/.test(usePathname());
   return (
     <>
       {!staff && <SiteHeader />}

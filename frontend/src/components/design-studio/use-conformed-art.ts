@@ -29,6 +29,7 @@ function loadPhoto(src: string): Promise<Photo> {
   if (!p) {
     p = new Promise<Photo>((resolve, reject) => {
       const img = new window.Image();
+      img.crossOrigin = "anonymous";
       img.onload = () => {
         const c = document.createElement("canvas");
         c.width = img.naturalWidth;

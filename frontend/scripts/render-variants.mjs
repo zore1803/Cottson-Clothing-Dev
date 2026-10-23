@@ -2,7 +2,7 @@
 //
 //   node scripts/render-variants.mjs [--only=slug1,slug2]
 //
-// Reads model-photo.png (untouched photo) + garment-layer.png (the cached segmentation mask,
+// Reads model-photo.webp (untouched photo) + garment-layer.webp (the cached segmentation mask,
 // see scripts/make-garment-layer.mjs) and writes public/products/<slug>/variants/<colorId>.webp.
 //
 // Recolor method: convert each garment pixel to CIE Lab and replace a*/b* (color) with the
@@ -32,11 +32,11 @@ const only = onlyArg ? new Set(onlyArg.slice(7).split(',')) : null;
 for (const product of catalog.products) {
   if (only && !only.has(product.slug)) continue;
   const dir = path.join(root, 'public/products', product.slug);
-  const { data: base, info } = await sharp(path.join(dir, 'model-photo.png')).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const { data: base, info } = await sharp(path.join(dir, 'model-photo.webp')).removeAlpha().raw().toBuffer({ resolveWithObject: true });
   const W = info.width, H = info.height, n = W * H;
   // Only the mask's alpha channel is used — the garment's own color per pixel is read straight
   // from the untouched base photo, not from the layer's stored grayscale.
-  const { data: garment } = await sharp(path.join(dir, 'garment-layer.png')).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const { data: garment } = await sharp(path.join(dir, 'garment-layer.webp')).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
 
   // The garment's own average lightness, so per-pixel L can be re-centered on the target
   // color's L while keeping each pixel's shading relative to that average (see comment above).

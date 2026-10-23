@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Product photos served from ImageKit
   images: {
     remotePatterns: [
+      { protocol: "https", hostname: "res.cloudinary.com", port: "", pathname: "/**" },
       {
         protocol: "https",
         hostname: "ik.imagekit.io",
@@ -26,6 +28,7 @@ const nextConfig: NextConfig = {
       },
       // Admin pages and API responses must never be cached or indexed
       { source: "/admin/:path*", headers: [{ key: "Cache-Control", value: "no-store" }, { key: "X-Robots-Tag", value: "noindex, nofollow" }] },
+      { source: "/superadmin/:path*", headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0, must-revalidate" }, { key: "X-Robots-Tag", value: "noindex, nofollow" }] },
       { source: "/api/:path*", headers: [{ key: "Cache-Control", value: "no-store" }] },
     ];
   },

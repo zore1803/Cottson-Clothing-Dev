@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
 import type { Product } from "@/lib/catalog";
 
-export function SimilarProductsCarousel({ products }: { products: Product[] }) {
+export function SimilarProductsCarousel({ products, eyebrow = "Keep exploring", title = "Similar products" }: { products: Product[]; eyebrow?: string; title?: string }) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: "left" | "right") => {
@@ -24,8 +24,8 @@ export function SimilarProductsCarousel({ products }: { products: Product[] }) {
     <section className="mx-auto max-w-6xl px-4 py-16 relative">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#607487] sm:text-[12px]">Keep exploring</p>
-          <h2 className="text-[28px] font-bold tracking-[-0.025em] text-[#113858] sm:text-[34px]">Similar products</h2>
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#607487] sm:text-[12px]">{eyebrow}</p>
+          <h2 className="text-[28px] font-bold tracking-[-0.025em] text-[#113858] sm:text-[34px]">{title}</h2>
         </div>
         <div className="hidden sm:flex items-center gap-2">
           <button
