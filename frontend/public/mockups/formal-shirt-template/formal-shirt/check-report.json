@@ -1,0 +1,7 @@
+{
+ "size_ok": true,
+ "body_mask_empty": false,
+ "body_outside_shirt_px": 0,
+ "coverage_max_abs_err": 0.004,
+ "PASS": true
+}

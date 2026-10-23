@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { Field, FormError, SubmitButton, send } from "@/components/auth/fields";
+import { Field, FormError, PhoneField, SubmitButton, send } from "@/components/auth/fields";
 import { Avatar, Card, btnGhost, notifyAccountChanged, type AccountCustomer } from "./shared";
 
 export function ProfileSection({
@@ -63,7 +63,7 @@ export function ProfileSection({
             <Field id="firstName" label="First name" required defaultValue={customer.first_name ?? ""} autoComplete="given-name" />
             <Field id="lastName" label="Last name" defaultValue={customer.last_name ?? ""} autoComplete="family-name" />
             <Field id="email" label="Email" type="email" value={customer.email} readOnly disabled />
-            <Field id="phone" label="Phone" type="tel" defaultValue={customer.phone ?? ""} autoComplete="tel" placeholder="+91 00000 00000" />
+            <PhoneField defaultValue={customer.phone ?? ""} />
             <Field id="company" label="Company name" defaultValue={customer.company_name ?? ""} autoComplete="organization" placeholder="Your company" />
             <Field id="gst" label="GST number" defaultValue={customer.gst} maxLength={15} placeholder="15-character GSTIN" />
           </div>

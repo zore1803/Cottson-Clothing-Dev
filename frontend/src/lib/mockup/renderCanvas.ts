@@ -220,6 +220,49 @@ function drawGroundShadow(ctx: CanvasRenderingContext2D, t: PreparedTemplate) {
   ctx.restore();
 }
 
+/**
+ * Make flat artwork read as thread: a fine diagonal satin-stitch texture over the colours, plus a
+ * raised edge (light on the upper-left rim, dark on the lower-right) taken from the logo's alpha.
+ * Works in place; the logo's own alpha is preserved.
+ */
+function stitch(c: HTMLCanvasElement) {
+  const ctx = c.getContext("2d")!;
+  const { width: w, height: h } = c;
+  // Thread texture: 4px tile with a lit and a shaded diagonal, clipped to the artwork
+  const tile = canvas(4, 4);
+  const tx = tile.getContext("2d")!;
+  tx.fillStyle = "rgba(255,255,255,0.07)";
+  for (let i = 0; i < 4; i++) tx.fillRect(i, i, 1, 1);
+  tx.fillStyle = "rgba(0,0,0,0.10)";
+  for (let i = 0; i < 4; i++) tx.fillRect((i + 2) % 4, i, 1, 1);
+  ctx.save();
+  ctx.globalCompositeOperation = "source-atop";
+  ctx.fillStyle = ctx.createPattern(tile, "repeat")!;
+  ctx.fillRect(0, 0, w, h);
+  ctx.restore();
+  // Raised rim from the alpha: art minus art shifted = a one-pixel edge on one side
+  const rim = (dx: number, dy: number, colour: string) => {
+    const e = canvas(w, h);
+    const ex = e.getContext("2d")!;
+    ex.drawImage(c, 0, 0);
+    ex.globalCompositeOperation = "destination-out";
+    ex.drawImage(c, dx, dy);
+    ex.globalCompositeOperation = "source-in";
+    ex.fillStyle = colour;
+    ex.fillRect(0, 0, w, h);
+    ctx.drawImage(e, 0, 0);
+  };
+  const soft = canvas(w, h);
+  const sx = soft.getContext("2d")!;
+  sx.filter = "blur(0.5px)";
+  sx.drawImage(c, 0, 0);
+  ctx.globalCompositeOperation = "copy";
+  ctx.drawImage(soft, 0, 0);
+  ctx.globalCompositeOperation = "source-over";
+  rim(1, 1, "rgba(255,255,255,0.14)");
+  rim(-1, -1, "rgba(0,0,0,0.16)");
+}
+
 /** The logo with fabric folds multiplied in and its own alpha restored */
 function shadeLogo(t: PreparedTemplate, logo: HTMLImageElement, placement: LogoPlacement) {
   const zone = placedZone(t.config, placement.zone, placement.orientation);
@@ -233,7 +276,7 @@ function shadeLogo(t: PreparedTemplate, logo: HTMLImageElement, placement: LogoP
   ctx.save();
   ctx.globalCompositeOperation = "multiply";
   // Light touch: just enough for folds to show, so the logo keeps its uploaded colours
-  ctx.globalAlpha = 0.2;
+  ctx.globalAlpha = placement.finish === "embroidery" ? 0.7 : 0.2;
   ctx.translate(c.width / 2, c.height / 2);
   ctx.rotate((-zone.rotation * Math.PI) / 180);
   ctx.translate(-fit.cx, -fit.cy);
@@ -242,6 +285,7 @@ function shadeLogo(t: PreparedTemplate, logo: HTMLImageElement, placement: LogoP
   ctx.globalCompositeOperation = "destination-in";
   ctx.drawImage(logo, 0, 0, c.width, c.height);
   ctx.globalCompositeOperation = "source-over";
+  if (placement.finish === "embroidery") stitch(c);
   return { canvas: c, fit, rotation: zone.rotation };
 }
 
@@ -254,10 +298,11 @@ function drawLogo(ctx: CanvasRenderingContext2D, t: PreparedTemplate, logo: HTML
   ctx.rotate((rotation * Math.PI) / 180);
   if (placement.finish === "embroidery") {
     // Thread stands slightly off the fabric: a soft contact shadow only (no outline around the logo)
-    ctx.shadowColor = "rgba(0,0,0,0.35)";
+    ctx.shadowColor = "rgba(0,0,0,0.22)";
     ctx.shadowBlur = 1.5;
-    ctx.shadowOffsetX = 0.6;
-    ctx.shadowOffsetY = 0.9;
+    ctx.shadowOffsetX = 0.4;
+    ctx.shadowOffsetY = 0.7;
+    ctx.globalAlpha = 0.94;
   }
   ctx.drawImage(art, fit.x, fit.y, fit.w, fit.h);
   ctx.restore();

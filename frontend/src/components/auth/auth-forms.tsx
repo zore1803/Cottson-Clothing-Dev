@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
-import { Field, FormError, SubmitButton, send } from "./fields";
+import { Field, FormError, PhoneField, SubmitButton, send } from "./fields";
 
 const link = "font-semibold text-[#113858] underline-offset-4 hover:underline";
 
@@ -68,7 +68,7 @@ export function RegisterForm() {
         <Field id="lastName" label="Last name" autoComplete="family-name" placeholder="Last name" />
       </div>
       <Field id="email" label="Email address" type="email" required autoComplete="email" placeholder="name@company.com" />
-      <Field id="phone" label="Phone" type="tel" autoComplete="tel" placeholder="+91 00000 00000" />
+      <PhoneField />
       <Field id="password" label="Password" type="password" required minLength={8} autoComplete="new-password" placeholder="At least 8 characters" />
       <FormError message={error} />
       <SubmitButton busy={busy}>Create account</SubmitButton>

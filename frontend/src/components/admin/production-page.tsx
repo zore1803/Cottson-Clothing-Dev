@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarClock, FileDown, GripVertical, RefreshCw, Search } from "lucide-react";
 import { toast } from "sonner";
 import { getProduct } from "@/lib/catalog";
@@ -18,6 +18,49 @@ export function ProductionPage() {
   const [now] = useState(() => Date.now()); // fixed for this visit; Refresh reloads the page data, a new visit gets a new time
   const [dragId, setDragId] = useState<string | null>(null);
   const [overStep, setOverStep] = useState<string | null>(null);
+  const blank = useRef<HTMLImageElement | null>(null);
+  const floating = useRef<{ el: HTMLElement; dx: number; dy: number; track: (e: DragEvent) => void; end: () => void } | null>(null);
+
+  function startFloating(e: React.DragEvent<HTMLElement>) {
+    stopFloating(); // never leave an old copy behind
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const el = card.cloneNode(true) as HTMLElement;
+    el.removeAttribute("draggable");
+    el.style.cssText = `position:fixed;left:0;top:0;width:${rect.width}px;margin:0;opacity:1;pointer-events:none;z-index:9999;box-shadow:0 12px 28px rgba(15,23,42,.22);transform:translate(${rect.left}px,${rect.top}px) rotate(1.5deg)`;
+    el.classList.remove("opacity-40");
+    document.body.appendChild(el);
+    const dx = e.clientX - rect.left;
+    const dy = e.clientY - rect.top;
+    const track = (ev: DragEvent) => {
+      if (ev.clientX || ev.clientY) el.style.transform = `translate(${ev.clientX - dx}px,${ev.clientY - dy}px) rotate(1.5deg)`;
+    };
+    window.addEventListener("dragover", track);
+    // The source card can be unmounted by the move (so its own dragend never fires): end on the window too
+    const end = () => stopFloating();
+    window.addEventListener("drop", end);
+    window.addEventListener("dragend", end);
+    floating.current = { el, dx, dy, track, end };
+    if (blank.current) e.dataTransfer.setDragImage(blank.current, 0, 0);
+  }
+
+  function stopFloating() {
+    if (!floating.current) return;
+    window.removeEventListener("dragover", floating.current.track);
+    window.removeEventListener("drop", floating.current.end);
+    window.removeEventListener("dragend", floating.current.end);
+    floating.current.el.remove();
+    floating.current = null;
+  }
+
+  // The browser's own drag preview is translucent (Firefox even fades its edges), so the native one is hidden
+  // and a full-opacity copy of the card follows the cursor instead
+  useEffect(() => {
+    const img = new Image();
+    img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    blank.current = img;
+    return () => stopFloating();
+  }, []);
 
   const orderNo = useMemo(() => new Map((orders.data?.orders ?? []).map((o) => [o.id, o.display_id])), [orders.data]);
   const rows = useMemo(() => {
@@ -120,11 +163,13 @@ export function ProductionPage() {
                       key={d.id}
                       draggable
                       onDragStart={(e) => {
-                        setDragId(d.id);
                         e.dataTransfer.effectAllowed = "move";
                         e.dataTransfer.setData("text/plain", d.id);
+                        startFloating(e);
+                        setDragId(d.id);
                       }}
                       onDragEnd={() => {
+                        stopFloating();
                         setDragId(null);
                         setOverStep(null);
                       }}

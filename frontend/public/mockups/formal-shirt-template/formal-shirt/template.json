@@ -1,0 +1,196 @@
+{
+  "schema": "cottson-mockup-template@inferred",
+  "id": "formal-shirt",
+  "label": "Formal shirt",
+  "canvas": {
+    "width": 1200,
+    "height": 1400
+  },
+  "mannequin": {
+    "file": "mannequin.png",
+    "recolour": false,
+    "drawOrder": "first"
+  },
+  "base": "base.png",
+  "compositing": "Draw mannequin first. Then add the recoloured regions together (canvas lighter on a transparent offscreen canvas) and draw the result over it. Do not draw regions one after another with source-over.",
+  "scale": {
+    "pxPerCm": 18.85,
+    "assumption": "flat chest 52 cm (size M) measured at canvas row 650 -- NOT confirmed by a size tag in this image, lower confidence than the crew tee"
+  },
+  "units": {
+    "zoneCoordinates": "centre x/y and w/h in canvas px, rotation in degrees clockwise",
+    "scaleX": "horizontal squeeze applied to the logo"
+  },
+  "logo": {
+    "fit": "contain",
+    "sizePercent": {
+      "min": 50,
+      "max": 100
+    },
+    "fileMaxBytes": 2097152
+  },
+  "regions": [
+    {
+      "id": "body",
+      "label": "Shirt colour",
+      "mask": "mask-body.png",
+      "default": "#FFFFFF",
+      "follows": null
+    }
+  ],
+  "zones": [
+    {
+      "id": "chest-left",
+      "label": "Left chest (wearer's left)",
+      "part": "body",
+      "x": 835.6,
+      "y": 363.7,
+      "w": 131.9,
+      "h": 131.9,
+      "rotation": 0,
+      "scaleX": 1,
+      "defaultSize": 100,
+      "finishingPosition": "left chest",
+      "cm": [
+        7.0,
+        7.0
+      ],
+      "size": {
+        "min": 50,
+        "max": 100
+      }
+    },
+    {
+      "id": "chest-right",
+      "label": "Right chest (wearer's right)",
+      "part": "body",
+      "x": 364.4,
+      "y": 429.6,
+      "w": 150.8,
+      "h": 150.8,
+      "rotation": 0,
+      "scaleX": 1,
+      "defaultSize": 100,
+      "finishingPosition": "right chest",
+      "cm": [
+        8.0,
+        8.0
+      ],
+      "size": {
+        "min": 50,
+        "max": 100
+      }
+    },
+    {
+      "id": "chest-center",
+      "label": "Centre chest",
+      "part": "body",
+      "x": 600.0,
+      "y": 354.2,
+      "w": 301.5,
+      "h": 131.9,
+      "rotation": 0,
+      "scaleX": 1,
+      "defaultSize": 100,
+      "finishingPosition": "center chest",
+      "cm": [
+        16.0,
+        7.0
+      ],
+      "size": {
+        "min": 50,
+        "max": 100
+      }
+    },
+    {
+      "id": "left-sleeve-upper",
+      "label": "Left sleeve, upper (wearer's left)",
+      "part": "sleeve",
+      "x": 937.5,
+      "y": 369.2,
+      "w": 144.0,
+      "h": 144.0,
+      "rotation": 0,
+      "scaleX": 1,
+      "defaultSize": 100,
+      "cm": [
+        7.6,
+        7.6
+      ],
+      "size": {
+        "min": 50,
+        "max": 100
+      }
+    },
+    {
+      "id": "left-sleeve-forearm",
+      "label": "Left sleeve, forearm (wearer's left)",
+      "part": "sleeve",
+      "x": 1036.0,
+      "y": 750.0,
+      "w": 136.0,
+      "h": 136.0,
+      "rotation": 0,
+      "scaleX": 1,
+      "defaultSize": 70,
+      "cm": [
+        7.2,
+        7.2
+      ],
+      "size": {
+        "min": 50,
+        "max": 100
+      }
+    },
+    {
+      "id": "right-sleeve-upper",
+      "label": "Right sleeve, upper (wearer's right)",
+      "part": "sleeve",
+      "x": 271.0,
+      "y": 374.1,
+      "w": 144.0,
+      "h": 144.0,
+      "rotation": 0,
+      "scaleX": 1,
+      "defaultSize": 100,
+      "cm": [
+        7.6,
+        7.6
+      ],
+      "size": {
+        "min": 50,
+        "max": 100
+      }
+    },
+    {
+      "id": "right-sleeve-forearm",
+      "label": "Right sleeve, forearm (wearer's right)",
+      "part": "sleeve",
+      "x": 177.0,
+      "y": 752.7,
+      "w": 134.0,
+      "h": 134.0,
+      "rotation": 0,
+      "scaleX": 1,
+      "defaultSize": 70,
+      "cm": [
+        7.1,
+        7.1
+      ],
+      "size": {
+        "min": 50,
+        "max": 100
+      }
+    }
+  ],
+  "notes": [
+    "Rebuilt from a third source photo (image-removebg-preview_2_.png) at the user's request -- the first formal-shirt photo again, but smaller (896x1114, exactly half-scale) and without the rainbow glitch artifact. This REPLACES the black-background (825x1024) build, not a patch on it.",
+    "Single colour region: body, sleeves, collar and cuffs are all one mask (mask-body.png).",
+    "_ref-mask-sleeve.png, _ref-mask-collar.png, _ref-mask-cuff.png are kept for reference only (logo zone placement), not shipped as colour regions.",
+    "Built by reusing the geometry already traced on the full-size version of this same photo (neck boundary, collar polygon, sleeve/cuff bands, the two fold-crease softening patches) scaled by exactly 0.5, rather than re-tracing from scratch -- confirmed the two images are the same pose at exactly half resolution before doing this.",
+    "Checked at full resolution on white, navy, sky blue, black and red: no neck/collar smudge, no sleeve artifact (this source has no glitch to begin with), clean cuffs, clean canvas corners, and the two fold-crease patches (same locations, scaled) still read as soft natural shading rather than a hard line.",
+    "Source image is smaller than the 1792x2228 original it was derived from -- upscaled about 1.5x onto the canvas (less than the black-background build's 1.3x headroom was relative to ITS source, so check sharpness at large preview sizes).",
+    "No size tag visible, so the 52cm/size-M scale assumption is unconfirmed.",
+    "Chest and sleeve zones passed the placement checks without needing a manual nudge around the pocket this time (different px/cm scale shifted them clear on their own) -- verify visually anyway."
+  ]
+}

@@ -1,0 +1,65 @@
+{
+ "chest-left": {
+  "on_part_pct": 100.0,
+  "centre_to_edge_px": 140.6,
+  "edge_margin_ok": true,
+  "clearance_px": {
+   "collar": 54.8
+  },
+  "pass_": true
+ },
+ "chest-right": {
+  "on_part_pct": 100.0,
+  "centre_to_edge_px": 176.5,
+  "edge_margin_ok": true,
+  "clearance_px": {
+   "collar": 111.0
+  },
+  "pass_": true
+ },
+ "chest-center": {
+  "on_part_pct": 100.0,
+  "centre_to_edge_px": 115.0,
+  "edge_margin_ok": true,
+  "clearance_px": {
+   "collar": 47.0
+  },
+  "pass_": true
+ },
+ "right-sleeve-upper": {
+  "on_part_pct": 99.2,
+  "centre_to_edge_px": 87.7,
+  "edge_margin_ok": true,
+  "clearance_px": {
+   "collar": 108.1
+  },
+  "pass_": true
+ },
+ "right-sleeve-forearm": {
+  "on_part_pct": 100.0,
+  "centre_to_edge_px": 78.4,
+  "edge_margin_ok": true,
+  "clearance_px": {
+   "cuff": 395.0
+  },
+  "pass_": true
+ },
+ "left-sleeve-upper": {
+  "on_part_pct": 99.1,
+  "centre_to_edge_px": 86.3,
+  "edge_margin_ok": true,
+  "clearance_px": {
+   "collar": 112.1
+  },
+  "pass_": true
+ },
+ "left-sleeve-forearm": {
+  "on_part_pct": 100.0,
+  "centre_to_edge_px": 78.3,
+  "edge_margin_ok": true,
+  "clearance_px": {
+   "cuff": 396.0
+  },
+  "pass_": true
+ }
+}
