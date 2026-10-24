@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { RegisterForm } from "@/components/auth/auth-forms";
 
 export const metadata: Metadata = { title: "Create account" };
 
-export default function RegisterPage() {
+export default async function RegisterPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  const { next } = await searchParams;
+  // Keep the "come back to" page when switching to sign-in
+  const qs = next?.startsWith("/") && !next.startsWith("//") ? `?next=${encodeURIComponent(next)}` : "";
   return (
     <AuthShell
       eyebrow="Join Cottson"
@@ -14,13 +18,15 @@ export default function RegisterPage() {
       footer={
         <>
           Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-[#113858] underline-offset-4 hover:underline">
+          <Link href={`/login${qs}`} className="font-semibold text-[#113858] underline-offset-4 hover:underline">
             Sign in
           </Link>
         </>
       }
     >
-      <RegisterForm />
+      <Suspense fallback={null}>
+        <RegisterForm />
+      </Suspense>
     </AuthShell>
   );
 }

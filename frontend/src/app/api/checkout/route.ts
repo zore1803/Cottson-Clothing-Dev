@@ -26,8 +26,10 @@ export async function POST(req: Request) {
   const limited = await rateLimit(req, "checkout", 10, 10 * 60_000);
   if (limited) return limited;
   if (paymentMode() === "off") return NextResponse.json({ error: "Online payments are not available right now" }, { status: 503 });
-  // Staff accounts manage orders; they do not place them
-  if ((await getSession()).role === "admin") return NextResponse.json({ error: "You are signed in as an admin. Sign out to place an order." }, { status: 403 });
+  // Orders need a customer account so they can be tracked. Staff accounts manage orders; they do not place them.
+  const session = await getSession();
+  if (session.role === "admin") return NextResponse.json({ error: "You are signed in as an admin. Sign out to place an order." }, { status: 403 });
+  if (session.role !== "customer") return NextResponse.json({ error: "Please sign in to place an order" }, { status: 401 });
   try {
     const body = await readJson(req);
     const items = body?.items as Item[] | undefined;

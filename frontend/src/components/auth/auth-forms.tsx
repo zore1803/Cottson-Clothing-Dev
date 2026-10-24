@@ -56,9 +56,10 @@ export function LoginForm() {
 
 export function RegisterForm() {
   const router = useRouter();
+  const next = safeNext(useSearchParams().get("next"));
   const { busy, error, onSubmit } = useSubmit(async (f) => {
     await send("/api/auth/register", f);
-    router.replace("/");
+    router.replace(next);
     router.refresh();
   });
   return (

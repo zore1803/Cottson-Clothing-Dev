@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useCart, cartTotal, unitPriceOf } from "@/lib/cart-store";
 import { garmentUnitPrice, shippingFor } from "@/lib/pricing";
@@ -41,6 +42,8 @@ export default function CheckoutPage() {
   const [payment, setPayment] = useState<PaymentOrder | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [prefill, setPrefill] = useState<Record<string, string>>({});
+  const [signedIn, setSignedIn] = useState(false);
+  const router = useRouter();
 
   // Signed-in customers get their saved details filled in
   useEffect(() => {
@@ -48,7 +51,12 @@ export default function CheckoutPage() {
       .then((r) => r.json())
       .then(({ customer: c, admin }) => {
         if (admin) setIsAdmin(true);
-        if (!c) return;
+        if (!c) {
+          // Orders need an account so they can be tracked; the cart lives in the browser and survives sign-in
+          if (!admin) router.replace("/login?next=/checkout");
+          return;
+        }
+        setSignedIn(true);
         const a = c.addresses?.find((x: { is_default_shipping: boolean }) => x.is_default_shipping) ?? c.addresses?.[0];
         setPrefill({
           name: [c.first_name, c.last_name].filter(Boolean).join(" "),
@@ -60,9 +68,11 @@ export default function CheckoutPage() {
         });
       })
       .catch(() => {});
-  }, []);
+  }, [router]);
 
   if (!mounted) return null;
+  // Wait for the sign-in check; a guest is already on the way to the login page
+  if (!isAdmin && !signedIn) return null;
 
   const subtotal = cartTotal(items);
   const shipping = shippingFor(subtotal);
