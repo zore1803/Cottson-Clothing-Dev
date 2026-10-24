@@ -91,7 +91,6 @@ const PRODUCT_COLOR_IMAGES: Record<string, Record<string, string>> = {
     "black": "/products/relaxed-polo-black/photo.jpg",
     "white": "/products/relaxed-polo-black/variants/white.webp",
     "navy": "/products/relaxed-polo-black/variants/navy.webp",
-    "olive": "/products/relaxed-polo-black/variants/olive.webp",
     "beige": "/products/relaxed-polo-black/variants/beige.webp",
   },
   // Classic Crew Tee — Black
@@ -153,7 +152,6 @@ const PRODUCT_COLOR_IMAGES: Record<string, Record<string, string>> = {
     "black": "https://ik.imagekit.io/qiap0iq38/COTTSON/Jackets/WhatsApp%20Image%202026-10-02%20at%2014.37.31.jpeg",
     "grey": "https://ik.imagekit.io/qiap0iq38/COTTSON/Jackets/Cottson%20Gray%20Zip%20Vest%20Catalog%20Portrait.png",
     "navy": "https://ik.imagekit.io/qiap0iq38/COTTSON/Jackets/Navy%20COTTSON%20Hoodie%20Vest%20Portrait.png",
-    "olive": "https://ik.imagekit.io/qiap0iq38/COTTSON/Jackets/Olive%20Hooded%20Vest%20Studio%20Portrait.png",
   },
   // Track Jacket — Black
   "track-jacket-black": {
@@ -370,7 +368,10 @@ export const GarmentPhoto = forwardRef<
 
       const alt = isPose
         ? `${product.title} — alternate angle`
-        : `${product.title} — ${colorById(colorId).name}`;
+        : // Some catalogue titles already end in the colour ("Classic Polo — Navy"); don't say it twice
+          product.title.toLowerCase().includes(colorById(colorId).name.toLowerCase())
+          ? product.title
+          : `${product.title} — ${colorById(colorId).name}`;
 
       return (
         <Image

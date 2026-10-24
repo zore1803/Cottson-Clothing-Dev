@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Check, CheckCircle2, Package, Printer } from "lucide-react";
+import { ArrowLeft, Check, CheckCircle2, ExternalLink, Package, Printer, Truck } from "lucide-react";
 import { formatPrice } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -22,6 +22,13 @@ export type Receipt = {
   total: number;
   /** Set when shown from the account's order history instead of right after paying */
   detail?: { status: string; tone: string; steps?: TimelineStep[] };
+  /** Shiprocket shipment tracking info */
+  shipment?: {
+    awb?: string;
+    courier?: string;
+    status?: string;
+    trackingUrl?: string;
+  };
 };
 
 export type TimelineStep = { label: string; hint: string; done: boolean; at?: string };
@@ -129,6 +136,34 @@ export function OrderReceipt({ r }: { r: Receipt }) {
       )}
 
       {r.detail?.steps && <Timeline steps={r.detail.steps} />}
+
+      {r.shipment?.awb && (
+        <div className="no-print mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-sky-100 bg-sky-50/70 p-5">
+          <div className="flex items-center gap-3.5">
+            <span className="grid size-11 place-items-center rounded-xl bg-sky-100 text-[#113858] shadow-sm">
+              <Truck size={22} />
+            </span>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                Shipment Tracking {r.shipment.courier ? `· ${r.shipment.courier}` : ""}
+              </p>
+              <p className="mt-0.5 font-mono text-[15px] font-semibold text-slate-900">
+                AWB: {r.shipment.awb}
+              </p>
+            </div>
+          </div>
+          {r.shipment.trackingUrl && (
+            <a
+              href={r.shipment.trackingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(buttonVariants({ size: "default" }), "inline-flex items-center gap-2 bg-[#113858] hover:bg-[#0c2840] text-white shadow-sm font-medium h-10 px-5 rounded-xl")}
+            >
+              <ExternalLink size={15} /> Track package
+            </a>
+          )}
+        </div>
+      )}
 
       <article id="order-receipt" className="mt-8 overflow-hidden rounded-2xl border bg-white shadow-sm">
         <header className="flex flex-wrap items-center justify-between gap-3 bg-[#113858] px-6 py-5 text-white">

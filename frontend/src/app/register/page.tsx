@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { RegisterForm } from "@/components/auth/auth-forms";
 
-export const metadata: Metadata = { title: "Create account" };
+export const metadata: Metadata = { title: "Create account", robots: { index: false, follow: false } };
 
 export default async function RegisterPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next } = await searchParams;

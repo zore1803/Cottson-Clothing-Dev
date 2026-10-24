@@ -13,8 +13,8 @@ export const metadata: Metadata = {
   title: { absolute: "Cottson Clothing | Premium Corporate Clothing & Custom Wear" },
   description: "Cottson Clothing crafts premium corporate clothing, custom executive wear and tailored office shirts. Modern design, dependable quality. Request a quote today.",
   keywords: "corporate clothing, custom executive wear, tailored apparel, premium office shirts, corporate uniforms, custom corporate wear, executive shirts, office wear, corporate t-shirts, custom polo shirts, bulk corporate clothing, company uniforms, branded workwear, logo embroidered shirts, custom uniforms India, Cottson Clothing",
-  openGraph: { title: "Cottson Clothing | Premium Corporate Clothing & Custom Wear", description: "Cottson Clothing crafts premium corporate clothing, custom executive wear and tailored office shirts. Modern design, dependable quality. Request a quote today.", type: "website" },
-  twitter: { title: "Cottson Clothing | Premium Corporate Clothing & Custom Wear", description: "Cottson Clothing crafts premium corporate clothing, custom executive wear and tailored office shirts. Modern design, dependable quality. Request a quote today." },
+  openGraph: { title: "Cottson Clothing | Premium Corporate Clothing & Custom Wear", description: "Cottson Clothing crafts premium corporate clothing, custom executive wear and tailored office shirts. Modern design, dependable quality. Request a quote today.", type: "website", siteName: "Cottson Clothing", locale: "en_IN" },
+  twitter: { card: "summary_large_image", title: "Cottson Clothing | Premium Corporate Clothing & Custom Wear", description: "Cottson Clothing crafts premium corporate clothing, custom executive wear and tailored office shirts. Modern design, dependable quality. Request a quote today." },
 };
 
 export const revalidate = 3600;

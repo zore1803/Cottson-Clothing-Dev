@@ -138,7 +138,6 @@
         "black",
         "white",
         "navy",
-        "olive",
         "beige"
       ],
       "minBulk": 25,
@@ -374,8 +373,7 @@
       "colors": [
         "black",
         "grey",
-        "navy",
-        "olive"
+        "navy"
       ],
       "minBulk": 25,
       "poses": 6,

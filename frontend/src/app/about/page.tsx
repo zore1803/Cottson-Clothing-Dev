@@ -220,10 +220,10 @@ function HowItAllBegan() {
         <div className="mx-auto mb-14 max-w-[840px] text-center md:mb-20">
           <EyebrowPill text="Our Textile Heritage · Est. 1956" />
 
-          <h2 className="text-[36px] font-semibold leading-[1.08] tracking-[-0.045em] text-[#113858] sm:text-[46px] lg:text-[56px]">
+          <h1 className="text-[36px] font-semibold leading-[1.08] tracking-[-0.045em] text-[#113858] sm:text-[46px] lg:text-[56px]">
             How It All Began
             <span className="block text-[#113858]/40">The Cottson Story</span>
-          </h2>
+          </h1>
 
           <p className="mx-auto mt-5 max-w-[640px] text-[14px] leading-[1.8] text-[#607487] sm:text-[15px]">
             Seven decades of textile mastery, passed down through generations

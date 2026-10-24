@@ -22,11 +22,6 @@
       "hex": "#1f2a44"
     },
     {
-      "id": "royal",
-      "name": "Royal Blue",
-      "hex": "#1d3fd6"
-    },
-    {
       "id": "sky",
       "name": "Sky Blue",
       "hex": "#8fc7ec"
@@ -45,11 +40,6 @@
       "id": "pink",
       "name": "Pink",
       "hex": "#ef6b9a"
-    },
-    {
-      "id": "olive",
-      "name": "Olive",
-      "hex": "#5b6632"
     },
     {
       "id": "forest",
@@ -87,11 +77,6 @@
       "id": "navy",
       "name": "Navy",
       "hex": "#1f2a44"
-    },
-    {
-      "id": "royal",
-      "name": "Royal Blue",
-      "hex": "#1d3fd6"
     },
     {
       "id": "sky",

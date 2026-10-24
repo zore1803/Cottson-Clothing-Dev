@@ -47,7 +47,15 @@ export const TRIM_COLORS: Color[] = colorData.trim;
 export const COLORS: Color[] = [...GARMENT_COLORS, ...TRIM_COLORS.filter((t) => !GARMENT_COLORS.some((g) => g.id === t.id))];
 export const PRODUCTS: Product[] = data.products;
 
-export const colorById = (id: string) => COLORS.find((c) => c.id === id)!;
+/**
+ * Colours taken off the shop. They are not in the swatch lists above, so nobody can pick them any more,
+ * but old saved designs, orders and shared links may still name them, so lookups keep resolving them.
+ */
+const RETIRED_COLORS: Color[] = [
+  { id: "royal", name: "Royal Blue", hex: "#1d3fd6" },
+  { id: "olive", name: "Olive", hex: "#5b6632" },
+];
+export const colorById = (id: string) => (COLORS.find((c) => c.id === id) ?? RETIRED_COLORS.find((c) => c.id === id))!;
 export const getProduct = (slug: string) => PRODUCTS.find((p) => p.slug === slug);
 
 export const assetUrl = (

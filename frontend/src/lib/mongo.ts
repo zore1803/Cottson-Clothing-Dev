@@ -174,4 +174,36 @@ const AuditLogSchema = new Schema(
   },
   { versionKey: false }
 );
-export const AuditLog = models.AuditLog || model("AuditLog", AuditLogSchema);
+export const AuditLog = models.AuditLog || model("AuditLog", AuditLogSchema)
+
+// One row per order that has been handed to Shiprocket. Status mirrors Shiprocket's lifecycle:
+// pending -> created -> awb_assigned -> picked_up -> in_transit -> delivered | cancelled
+const ShipmentSchema = new Schema(
+  {
+    medusaOrderId: { type: String, required: true, unique: true, index: true },
+    displayId: Number,
+    // IDs returned by Shiprocket
+    shiprocketOrderId: { type: Number, index: true },
+    shipmentId: Number,
+    // AWB assigned by Shiprocket after courier selection
+    awb: String,
+    courier: String,
+    courierId: Number,
+    trackingUrl: String,
+    // Our lifecycle status
+    status: {
+      type: String,
+      enum: ["pending", "created", "awb_assigned", "picked_up", "in_transit", "out_for_delivery", "delivered", "cancelled", "failed"],
+      default: "pending",
+      index: true,
+    },
+    statusUpdatedAt: Date,
+    // Last raw webhook / tracking payload from Shiprocket (for debugging)
+    rawStatus: Schema.Types.Mixed,
+    // Error message if creation failed, so staff can retry
+    error: String,
+  },
+  { timestamps: true }
+)
+export type ShipmentDoc = InferSchemaType<typeof ShipmentSchema>
+export const Shipment = models.Shipment || model("Shipment", ShipmentSchema)

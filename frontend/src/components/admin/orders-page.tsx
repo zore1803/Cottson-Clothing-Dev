@@ -2,12 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ExternalLink, RefreshCw, Search } from "lucide-react";
+import { ExternalLink, Package, RefreshCw, Search, Truck, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DefinitionList, Drawer, Notice, PageHeader, Segmented, Status, TableEmpty, btn, dateTime, inputCls, money, rowHover, selectCls, shortDate, table, td, th } from "./ui";
-import { DESIGN_STEPS, MEDUSA_URL, designLabel, designTone, orderState, type AdminOrder } from "./types";
+import { DESIGN_STEPS, MEDUSA_URL, SHIPMENT_STATUS_LABEL, SHIPMENT_STATUS_TONE, designLabel, designTone, orderState, type AdminOrder } from "./types";
 import { useAdminData } from "./use-admin-api";
+
 
 type Filter = "all" | "Processing" | "Shipped" | "Completed" | "Cancelled";
 const FILTERS: Filter[] = ["all", "Processing", "Shipped", "Completed", "Cancelled"];
@@ -118,6 +119,58 @@ function OrderDetail({ order: o, onDesignStatus }: { order: AdminOrder; onDesign
   const st = orderState(o);
   const a = o.shipping_address;
   const name = a ? [a.first_name, a.last_name !== "-" && a.last_name].filter(Boolean).join(" ") : "";
+  const [shipment, setShipment] = useState(o.shipment ?? null);
+  const [shipBusy, setShipBusy] = useState(false);
+
+  async function createShipment() {
+    setShipBusy(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${o.id}/shipment`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Could not create shipment");
+      toast.success(data.message ?? "Shipment creation initiated");
+      // Poll for result after 4 seconds
+      setTimeout(async () => {
+        try {
+          const r = await fetch(`/api/admin/orders/${o.id}/shipment`);
+          const d = await r.json();
+          if (d.shipment) setShipment(d.shipment);
+        } catch { /* silent */ }
+        setShipBusy(false);
+      }, 4000);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+      setShipBusy(false);
+    }
+  }
+
+  async function cancelShipment() {
+    if (!confirm("Cancel this Shiprocket shipment?")) return;
+    setShipBusy(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${o.id}/shipment`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Could not cancel shipment");
+      toast.success("Shipment cancelled");
+      setShipment((s) => s ? { ...s, status: "cancelled" } : null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setShipBusy(false);
+    }
+  }
+
+  async function refreshTracking() {
+    setShipBusy(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${o.id}/shipment`);
+      const data = await res.json();
+      if (data.shipment) setShipment(data.shipment);
+    } catch { /* silent */ } finally {
+      setShipBusy(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <DefinitionList
@@ -130,6 +183,76 @@ function OrderDetail({ order: o, onDesignStatus }: { order: AdminOrder; onDesign
           ["Total", <span key="t" className="font-semibold tabular-nums">{money(o.total)}</span>],
         ]}
       />
+
+      {/* Shipment section */}
+      <section>
+        <h3 className="mb-2 text-[12px] font-medium uppercase tracking-wide text-slate-500 flex items-center gap-1.5">
+          <Truck size={12} /> Shipment
+        </h3>
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-3 space-y-3">
+          {!shipment || shipment.status === "pending" || shipment.status === "failed" ? (
+            <div className="space-y-2">
+              {shipment?.error && (
+                <p className="text-[12px] text-red-600 flex items-center gap-1"><XCircle size={12} /> {shipment.error}</p>
+              )}
+              {(!shipment || shipment.status === "failed") && (
+                <p className="text-[12px] text-slate-500">No Shiprocket shipment yet.</p>
+              )}
+              <button type="button" onClick={createShipment} disabled={shipBusy} className={cn(btn.primary, "text-[12px] h-7 px-3")}>
+                <Package size={12} /> {shipBusy ? "Creating…" : "Create Shipment"}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2 text-[13px]">
+              <div className="flex items-center justify-between gap-2">
+                <Status tone={SHIPMENT_STATUS_TONE[shipment.status ?? "pending"] ?? "neutral"}>
+                  {SHIPMENT_STATUS_LABEL[shipment.status ?? "pending"] ?? shipment.status}
+                </Status>
+                <button type="button" onClick={refreshTracking} disabled={shipBusy} className={cn(btn.ghost, "h-6 px-2 text-[11px]")}>
+                  <RefreshCw size={10} className={shipBusy ? "animate-spin" : ""} /> Refresh
+                </button>
+              </div>
+              <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-[12px]">
+                {shipment.awb && (
+                  <>
+                    <dt className="text-slate-500">AWB</dt>
+                    <dd className="font-mono text-slate-800">{shipment.awb}</dd>
+                  </>
+                )}
+                {shipment.courier && (
+                  <>
+                    <dt className="text-slate-500">Courier</dt>
+                    <dd className="text-slate-800">{shipment.courier}</dd>
+                  </>
+                )}
+                {shipment.shiprocketOrderId && (
+                  <>
+                    <dt className="text-slate-500">SR Order</dt>
+                    <dd className="font-mono text-slate-800">#{shipment.shiprocketOrderId}</dd>
+                  </>
+                )}
+              </dl>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {shipment.trackingUrl && (
+                  <a href={shipment.trackingUrl} target="_blank" rel="noreferrer" className={cn(btn.secondary, "h-7 px-3 text-[12px]")}>
+                    <ExternalLink size={12} /> Track Package
+                  </a>
+                )}
+                {shipment.status !== "delivered" && shipment.status !== "cancelled" && (
+                  <button type="button" onClick={cancelShipment} disabled={shipBusy} className={cn(btn.ghost, "h-7 px-3 text-[12px] text-red-600 hover:bg-red-50")}>
+                    <XCircle size={12} /> Cancel
+                  </button>
+                )}
+                {(shipment.status === "failed" || shipment.status === "cancelled") && (
+                  <button type="button" onClick={createShipment} disabled={shipBusy} className={cn(btn.secondary, "h-7 px-3 text-[12px]")}>
+                    <Package size={12} /> Retry
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
 
       <section>
         <h3 className="mb-2 text-[12px] font-medium uppercase tracking-wide text-slate-500">Items</h3>

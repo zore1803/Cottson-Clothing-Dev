@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { MockupLiveCustomizer } from "@/components/mockup-live-customizer";
 
-export const metadata: Metadata = { title: "Mockup" };
+export const metadata: Metadata = { title: "Mockup", robots: { index: false, follow: true } };
 
 export default function MockupPage() {
   return (

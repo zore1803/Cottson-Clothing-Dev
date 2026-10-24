@@ -22,8 +22,17 @@ export type AdminOrder = {
   payment_status?: string;
   items: OrderItem[];
   razorpay?: { id?: string; status: string; mode?: string; method?: string };
+  shipment?: {
+    awb?: string;
+    status?: string;
+    trackingUrl?: string;
+    courier?: string;
+    error?: string;
+    shiprocketOrderId?: number;
+  };
   shipping_address?: { first_name?: string | null; last_name?: string | null; address_1?: string | null; city?: string | null; postal_code?: string | null; phone?: string | null } | null;
 };
+
 
 export type Quote = {
   _id: string;
@@ -76,4 +85,30 @@ export function orderState(o: AdminOrder): { label: string; tone: Tone } {
   return { label: "Processing", tone: "warning" };
 }
 
-export const MEDUSA_URL = process.env.NEXT_PUBLIC_MEDUSA_URL ?? "";
+export const MEDUSA_URL = process.env.NEXT_PUBLIC_MEDUSA_URL ?? ""
+
+// Shiprocket shipment status display helpers
+export const SHIPMENT_STATUS_LABEL: Record<string, string> = {
+  pending: "Pending",
+  created: "Created",
+  awb_assigned: "AWB Assigned",
+  picked_up: "Picked Up",
+  in_transit: "In Transit",
+  out_for_delivery: "Out for Delivery",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
+  failed: "Failed",
+}
+
+export const SHIPMENT_STATUS_TONE: Record<string, Tone> = {
+  pending: "neutral",
+  created: "info",
+  awb_assigned: "info",
+  picked_up: "info",
+  in_transit: "warning",
+  out_for_delivery: "warning",
+  delivered: "success",
+  cancelled: "neutral",
+  failed: "danger",
+}
+

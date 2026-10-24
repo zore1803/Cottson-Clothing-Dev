@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getCustomer, getToken, medusa } from "@/lib/auth";
-import { connectMongo, Design, Payment } from "@/lib/mongo";
+import { connectMongo, Design, Payment, Shipment } from "@/lib/mongo";
 import { OrderReceipt, type Receipt, type TimelineStep } from "@/components/checkout/order-receipt";
 import { orderRef } from "@/lib/order-ref";
 import { statusOf } from "@/components/account/orders-section";
 import type { Order } from "@/components/account/shared";
 
-export const metadata: Metadata = { title: "Order details" };
+export const metadata: Metadata = { title: "Order details", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 type FullOrder = Order & {
@@ -36,24 +36,27 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   // The payment reference lives with our own payment record; the order still shows without it
   let pay: { razorpayPaymentId?: string; method?: string; mode?: string } | null = null;
   let designStates: string[] = []; // production stage of each customised piece on this order
+  let shipment: { awb?: string; courier?: string; status?: string; trackingUrl?: string } | null = null;
   try {
     await connectMongo();
     pay = await Payment.findOne({ medusaOrderId: order.id }, "razorpayPaymentId method mode").lean();
     designStates = (await Design.find({ medusaOrderId: order.id }, "status").lean()).map((d: { status: string }) => d.status);
+    const s = await Shipment.findOne({ medusaOrderId: order.id }, "awb courier status trackingUrl").lean();
+    if (s) shipment = { awb: s.awb ?? undefined, courier: s.courier ?? undefined, status: s.status ?? undefined, trackingUrl: s.trackingUrl ?? undefined };
   } catch {}
 
   const a = order.shipping_address;
 
   // Stages the customer sees. Dispatch and delivery come from Medusa's fulfilment status; "in production"
   // from the production board (a design moved to In production or beyond).
-  const delivered = order.fulfillment_status === "delivered";
-  const dispatched = delivered || order.fulfillment_status === "shipped" || order.fulfillment_status === "partially_shipped" || (designStates.length > 0 && designStates.every((d) => d === "shipped"));
+  const delivered = order.fulfillment_status === "delivered" || shipment?.status === "delivered";
+  const dispatched = delivered || order.fulfillment_status === "shipped" || order.fulfillment_status === "partially_shipped" || (designStates.length > 0 && designStates.every((d) => d === "shipped")) || (!!shipment && ["picked_up", "in_transit", "out_for_delivery", "delivered"].includes(shipment.status ?? ""));
   const inProduction = dispatched || designStates.some((d) => d === "in_production" || d === "shipped");
   const cancelled = order.status === "canceled";
   const steps: TimelineStep[] = [
     { label: "Order confirmed", hint: "", done: true, at: new Date(order.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) },
     { label: "In production", hint: "We are making your order", done: inProduction },
-    { label: "Dispatched", hint: "On its way soon", done: dispatched },
+    { label: "Dispatched", hint: shipment?.awb ? `AWB: ${shipment.awb}${shipment.courier ? ` · ${shipment.courier}` : ""}` : "On its way soon", done: dispatched },
     { label: "Delivered", hint: "Arriving at your address", done: delivered },
   ];
   const s = !cancelled && inProduction && !dispatched ? { label: "In production", tone: "bg-amber-50 text-amber-700" } : statusOf(order);
@@ -78,7 +81,9 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
     shipping: order.shipping_total,
     total: order.total,
     detail: { status: s.label, tone: s.tone, steps: cancelled ? undefined : steps },
+    shipment: shipment ?? undefined,
   };
 
   return <OrderReceipt r={receipt} />;
 }
+

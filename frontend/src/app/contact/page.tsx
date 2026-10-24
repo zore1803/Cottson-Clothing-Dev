@@ -6,14 +6,16 @@ import { AboutReels } from "@/components/shared/about-reels";
 import { WhatsAppCTA } from "@/components/shared/whatsapp-cta";
 
 export const metadata: Metadata = {
-  title: "Contact Us · Custom Corporate Apparel & Uniform Inquiries",
+  title: "Contact Us · Corporate Uniform Enquiries",
   description:
     "Get in touch with Cottson Clothing. Discuss your team wear requirements, corporate uniforms, custom merchandise and get a tailored bulk quote.",
+  alternates: { canonical: "/contact" },
 };
 
 export default function ContactPage() {
   return (
-    <main className="min-h-screen overflow-x-hidden bg-white">
+    // The site shell already provides the page's <main>; a second one is invalid HTML
+    <div className="min-h-screen overflow-x-hidden bg-white">
       {/* 1. Contact Hero with Brand Intro */}
       <ContactHero />
 
@@ -28,6 +30,6 @@ export default function ContactPage() {
 
       {/* 5. WhatsApp Instant Chat CTA */}
       <WhatsAppCTA />
-    </main>
+    </div>
   );
 }

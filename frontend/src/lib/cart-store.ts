@@ -5,6 +5,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { lineUnitPrice } from "@/lib/pricing";
+import { COLORS } from "@/lib/catalog";
 
 export type CartItem = {
   id: string;
@@ -62,6 +63,11 @@ export const useCart = create<CartState>()(
       version: 2,
       // Carts saved before pricing moved to basePrice can't be priced reliably; start fresh
       migrate: () => ({ items: [] }),
+      // Drop lines in a colour that is no longer sold (checkout would refuse them), keep the rest of the cart
+      merge: (saved, current) => {
+        const items = ((saved as { items?: CartItem[] } | undefined)?.items ?? []).filter((i) => COLORS.some((c) => c.id === i.colorId));
+        return { ...current, items };
+      },
     }
   )
 );

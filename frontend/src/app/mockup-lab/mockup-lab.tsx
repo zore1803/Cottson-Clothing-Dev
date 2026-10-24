@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronDown, Search, Upload, X } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Search, Upload, X } from "lucide-react";
 import {
   PRODUCTS,
   GARMENT_COLORS,
@@ -11,9 +11,10 @@ import {
 } from "@/lib/catalog";
 import { MockupPreview } from "@/components/mockup-preview";
 import { MannequinPreview } from "@/components/mannequin-preview";
+import { FabricDetail } from "@/components/fabric-detail";
 import { MannequinControls, MannequinLogoPanel, StyleToggle, viewLabel } from "@/components/mannequin-customiser";
 import { uiStateToParams } from "@/lib/mockup/mannequinUrl";
-import { viewForPlacement, type MannequinUiState, type PlacementId, type SectionKey } from "@/lib/mockup/mannequinState";
+import { colourOf, viewForPlacement, type MannequinUiState, type PlacementId, type SectionKey } from "@/lib/mockup/mannequinState";
 import type { MannequinZone } from "@/lib/mockup/mannequin";
 import {
   activeRegions,
@@ -280,6 +281,21 @@ export function MockupLab({
   const [openPart, setOpenPart] = useState<RegionId | null>("body");
 
   const merged = { ...defaultColours(slug), ...colours };
+
+  // Polos step through three views: the garment, a zoomed fabric close-up with the embroidery, and plain
+  // fabric. Both close-ups are tinted with the body colour.
+  const SLIDES = [
+    { id: "garment", label: "Full polo" },
+    { id: "fabric", label: "Fabric with embroidery" },
+    { id: "blank", label: "Plain fabric" },
+  ] as const;
+  const [slide, setSlide] = useState<(typeof SLIDES)[number]["id"]>("garment");
+  const fabricAvailable = hasMannequin(slug);
+  const showFabric = fabricAvailable && slide !== "garment";
+  const fabricColour = mannequinOn ? colourOf("body", ui.colours, defaultColours(slug).body ?? "#f5f5f2").hex : (merged.body ?? "#f5f5f2");
+  const stepSlide = (by: number) =>
+    setSlide((s) => SLIDES[(SLIDES.findIndex((x) => x.id === s) + by + SLIDES.length) % SLIDES.length].id);
+
   const logo = useMemo(
     () => (logoSrc ? { src: logoSrc, zone, scale, finish, orientation } : null),
     [logoSrc, zone, scale, finish, orientation],
@@ -520,7 +536,50 @@ export function MockupLab({
         )}
       </div>
 
-      <div className={cn("flex justify-center md:order-2 md:sticky md:top-32 md:self-start", mannequinOn && "order-1 flex-col items-center gap-2")}>
+      <div className={cn("relative flex justify-center md:order-2 md:sticky md:top-32 md:self-start", mannequinOn && "order-1 flex-col items-center gap-2")}>
+        {fabricAvailable && (
+          <>
+            {([["left", ChevronLeft], ["right", ChevronRight]] as const).map(([side, Icon]) => (
+              <button
+                key={side}
+                type="button"
+                onClick={() => stepSlide(side === "left" ? -1 : 1)}
+                aria-label={side === "left" ? "Previous view" : "Next view"}
+                className={cn(
+                  "absolute top-1/2 z-10 grid size-10 -translate-y-1/2 place-items-center rounded-full border bg-white text-brand shadow-md transition hover:scale-105 hover:bg-[#EAF1F7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+                  side === "left" ? "left-0" : "right-0",
+                )}
+              >
+                <Icon className="size-5" aria-hidden />
+              </button>
+            ))}
+            <div role="group" aria-label="Choose a view" className="absolute bottom-0 left-1/2 z-10 flex -translate-x-1/2 gap-2 rounded-full bg-white/85 px-3 py-2 shadow-sm backdrop-blur">
+              {SLIDES.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setSlide(s.id)}
+                  aria-label={s.label}
+                  aria-current={slide === s.id}
+                  title={s.label}
+                  className={cn("size-2.5 rounded-full transition", slide === s.id ? "bg-brand" : "bg-brand/25 hover:bg-brand/50")}
+                />
+              ))}
+            </div>
+          </>
+        )}
+        {showFabric && (
+          // Laid over the polo's space, so the page keeps the same height in every view (a shorter page would pull the footer up into the screen)
+          <div className="absolute inset-0 grid place-items-center">
+            <FabricDetail
+              colour={fabricColour}
+              variant={slide === "blank" ? "blank" : "branded"}
+              className="w-full max-w-[min(560px,calc(100vh-14rem))]"
+            />
+          </div>
+        )}
+        {/* Kept mounted and in the layout (just invisible) while a close-up shows, so flipping back is instant and nothing shifts */}
+        <div className={showFabric ? "invisible contents" : "contents"}>
         {mannequinOn ? (
           <>
             <MannequinPreview
@@ -555,6 +614,7 @@ export function MockupLab({
           className="w-full max-w-[560px] md:h-[calc(100vh-10rem)] md:w-auto md:max-w-full"
         />
         )}
+        </div>
       </div>
 
       <div className={cn("space-y-5 text-sm md:order-1", mannequinOn && "order-3")}>

@@ -51,7 +51,7 @@
       "currency": "INR",
       "sizes": ["S", "M", "L", "XL", "XXL"],
       "originalColor": "black",
-      "colors": ["black", "white", "navy", "olive", "beige"],
+      "colors": ["black", "white", "navy", "beige"],
       "minBulk": 25,
       "source": { "dir": "04", "prefix": "04_" }
     },
@@ -155,7 +155,7 @@
       "currency": "INR",
       "sizes": ["S", "M", "L", "XL", "XXL"],
       "originalColor": "black",
-      "colors": ["black", "grey", "navy", "olive"],
+      "colors": ["black", "grey", "navy"],
       "minBulk": 25,
       "source": { "dir": "14", "prefix": "14_" }
     },

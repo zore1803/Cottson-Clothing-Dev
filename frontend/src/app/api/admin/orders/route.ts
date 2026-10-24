@@ -1,6 +1,6 @@
 import { medusa, fail } from "@/lib/auth";
 import { requireAdmin } from "@/lib/authz";
-import { connectMongo, Design, Payment } from "@/lib/mongo";
+import { connectMongo, Design, Payment, Shipment } from "@/lib/mongo";
 
 type MedusaOrder = {
   id: string;
@@ -26,13 +26,17 @@ export async function GET() {
       { token: session.token }
     );
 
+    const orderIds = orders.map((o) => o.id);
     const designIds = [...new Set(orders.flatMap((o) => o.items.map((i) => i.metadata?.design_id)).filter((x): x is string => !!x))];
     const designs = new Map<string, { status: string; preview?: string }>();
     const payments = new Map<string, { id?: string; status: string; mode?: string; method?: string }>();
+    const shipments = new Map<string, { awb?: string; status?: string; trackingUrl?: string; courier?: string; error?: string; shiprocketOrderId?: number }>();
     try {
       await connectMongo();
-      for (const p of await Payment.find({ medusaOrderId: { $in: orders.map((o) => o.id) } }, "medusaOrderId razorpayPaymentId status mode method").lean())
+      for (const p of await Payment.find({ medusaOrderId: { $in: orderIds } }, "medusaOrderId razorpayPaymentId status mode method").lean())
         payments.set(String(p.medusaOrderId), { id: p.razorpayPaymentId ?? undefined, status: p.status, mode: p.mode ?? undefined, method: p.method ?? undefined });
+      for (const s of await Shipment.find({ medusaOrderId: { $in: orderIds } }, "medusaOrderId awb status trackingUrl courier error shiprocketOrderId").lean())
+        shipments.set(String(s.medusaOrderId), { awb: s.awb ?? undefined, status: s.status ?? undefined, trackingUrl: s.trackingUrl ?? undefined, courier: s.courier ?? undefined, error: s.error ?? undefined, shiprocketOrderId: s.shiprocketOrderId ?? undefined });
       if (designIds.length)
         for (const d of await Design.find({ _id: { $in: designIds } }, "status preview").lean()) designs.set(String(d._id), { status: d.status ?? "pending", preview: d.preview ?? undefined });
     } catch {
@@ -43,6 +47,7 @@ export async function GET() {
       orders: orders.map((o) => ({
         ...o,
         razorpay: payments.get(o.id),
+        shipment: shipments.get(o.id),
         items: o.items.map((i) => ({ ...i, design: i.metadata?.design_id ? { id: i.metadata.design_id, ...designs.get(i.metadata.design_id) } : undefined })),
       })),
     });

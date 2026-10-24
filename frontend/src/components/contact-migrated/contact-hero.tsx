@@ -18,9 +18,10 @@ export function ContactHero() {
               />
             </div>
 
-            <p className="max-w-[390px] text-left text-[15px] leading-[1.7] tracking-[-0.01em] text-[#113858] sm:text-[16px] md:text-[17px] font-medium">
+            <h1 className="max-w-[390px] text-left text-[15px] leading-[1.7] tracking-[-0.01em] text-[#113858] sm:text-[16px] md:text-[17px] font-medium">
               Let&apos;s bring your next corporate wear project to life.
-              <br />
+            </h1>
+            <p className="max-w-[390px] text-left text-[15px] leading-[1.7] tracking-[-0.01em] text-[#113858] sm:text-[16px] md:text-[17px] font-medium">
               Talk to our team about your requirements and customisation.
             </p>
 

@@ -1,5 +1,5 @@
 import "server-only";
-import { PRODUCTS, type Product } from "./catalog";
+import { COLORS, PRODUCTS, type Product } from "./catalog";
 import { CatalogProduct, HiddenProduct, connectMongo } from "./mongo";
 import { normalizeColorImages } from "./product-colors";
 
@@ -15,7 +15,8 @@ export async function listProducts({ includeHidden = false } = {}): Promise<Prod
   return [...PRODUCTS.filter((p) => !gone.has(p.slug)), ...added.map((p) => ({
     slug: String(p.slug), title: String(p.title), category: String(p.category),
     description: String(p.description), price: Number(p.price), currency: String(p.currency),
-    sizes: p.sizes as string[], colors: p.colors as string[], originalColor: String(p.originalColor),
+    // Products a superadmin added earlier may still list a colour that has since been retired
+    sizes: p.sizes as string[], colors: (p.colors as string[]).filter((id) => COLORS.some((c) => c.id === id)), originalColor: String(p.originalColor),
     minBulk: Number(p.minBulk), productionDays: Number(p.productionDays),
     imageUrl: p.imageUrl ? String(p.imageUrl) : undefined,
     colorImages: normalizeColorImages(p.colorImages),

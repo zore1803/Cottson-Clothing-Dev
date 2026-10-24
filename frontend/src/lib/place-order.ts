@@ -1,11 +1,34 @@
-import "server-only";
-import { Design, Payment } from "@/lib/mongo";
-import { getProduct } from "@/lib/catalog";
-import { garmentUnitPrice, CUSTOMIZATION_FEE } from "@/lib/pricing";
-import { store } from "@/lib/medusa-store";
+import "server-only"
+import { Design, Payment } from "@/lib/mongo"
+import { getProduct } from "@/lib/catalog"
+import { garmentUnitPrice, CUSTOMIZATION_FEE } from "@/lib/pricing"
+import { store } from "@/lib/medusa-store"
+import { scheduleShiprocketShipment } from "@/lib/shiprocket-fulfillment"
 
-type Order = { id: string; display_id: number; total: number; item_total: number; shipping_total: number };
-type PaymentDoc = { _id: unknown; cartId: string; designIds: string[]; lines: unknown[] };
+type Order = {
+  id: string
+  display_id: number
+  total: number
+  item_total: number
+  shipping_total: number
+  email: string
+  shipping_address?: {
+    first_name?: string | null
+    last_name?: string | null
+    address_1?: string | null
+    city?: string | null
+    postal_code?: string | null
+    phone?: string | null
+  } | null
+  items?: {
+    id: string
+    title: string
+    variant_title?: string | null
+    quantity: number
+    unit_price: number
+  }[]
+}
+type PaymentDoc = { _id: unknown; cartId: string; designIds: string[]; lines: unknown[] }
 
 export type Placed = { orderId: string; displayId: number; total: number; itemTotal: number; shippingTotal: number };
 
@@ -39,7 +62,36 @@ export async function placeOrderForPayment(pay: PaymentDoc, paymentId: string): 
     const expected = lines.reduce((n, i) => n + i.qty * (garmentUnitPrice(i.price ?? getProduct(i.slug)?.price ?? 0, i.qty) + (i.designId ? CUSTOMIZATION_FEE : 0)), 0);
     if (order.item_total !== expected) console.warn(`[checkout] price drift on order ${order.display_id}: Medusa ${order.item_total} vs expected ${expected}`);
 
+    // In Option B (Manual), admin creates shipment from Orders panel.
+    // If SHIPROCKET_AUTO_CREATE is explicitly "true", run automatically.
+    if (process.env.SHIPROCKET_AUTO_CREATE === "true") {
+      try {
+        const { order: fullOrder } = await store<{
+          order: {
+            id: string
+            display_id: number
+            total: number
+            email: string
+            shipping_address?: { first_name?: string | null; last_name?: string | null; address_1?: string | null; city?: string | null; postal_code?: string | null; phone?: string | null } | null
+            items?: { id: string; title: string; variant_title?: string | null; quantity: number; unit_price: number }[]
+          }
+        }>(`/orders/${order.id}?fields=id,display_id,total,email,*shipping_address,*items,items.title,items.variant_title,items.quantity,items.unit_price`)
+        scheduleShiprocketShipment({
+          orderId: fullOrder.id,
+          displayId: fullOrder.display_id,
+          email: fullOrder.email,
+          shippingAddress: fullOrder.shipping_address ?? null,
+          items: fullOrder.items ?? [],
+          total: fullOrder.total,
+        })
+      } catch (e) {
+        // A Shiprocket error must never fail the checkout — the order is already placed
+        console.error("[shiprocket] could not schedule shipment (non-fatal):", e)
+      }
+    }
+
     return { orderId: order.id, displayId: order.display_id, total: order.total, itemTotal: order.item_total, shippingTotal: order.shipping_total };
+
   } catch (e) {
     // The payment went through but the order didn't: keep it flagged so staff can reconcile
     console.error(`[checkout] order failed after payment ${paymentId}`, e);

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Process" };
+// Placeholder page for now: kept out of search results until it has real content
+export const metadata: Metadata = { title: "Process", robots: { index: false, follow: true } };
 
 export default function ProcessPage() {
   return (

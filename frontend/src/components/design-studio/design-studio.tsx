@@ -143,6 +143,8 @@ export function DesignStudio({ product, initialColor, products = PRODUCTS }: { p
   const [sizesOpen, setSizesOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [positionOpen, setPositionOpen] = useState(false);
+  // A freshly chosen logo waits here while the customer positions it; it only goes on the garment when they press Apply
+  const [pending, setPending] = useState<{ logo: LogoFile; placement: Placement; positionId: PositionId } | null>(null);
   const [slide, setSlide] = useState(0);
   // Zoomed in on the logo (set on upload / by the zoom button); null = chest view
   const [focus, setFocus] = useState<Focus | null>(null);
@@ -214,14 +216,8 @@ export function DesignStudio({ product, initialColor, products = PRODUCTS }: { p
       const size = print.positionId === "center-chest" ? 20 : DEFAULT_LOGO_CM;
       const w = Math.min(maxWidthFor(f, l.aspect), size, size * l.aspect);
       const placement = placeAt(frame, print.positionId, w, l.aspect);
-      updatePrint({ logo: l, placement, thread: null });
-      // Zoom the photo in on the logo right away
-      setSlide(0);
-      setFocus(focusOn(frame, placement, l.aspect));
-      if (f.kind === "embroidery" && l.palette.length > f.maxColors)
-        toast.message(`Your logo has ${l.palette.length} colors`, {
-          description: `${f.label} stitches up to ${f.maxColors} thread colors, so we've reduced it. Choose Premium for up to 4.`,
-        });
+      // Position it first: the positioning dialog opens now, and the logo is placed on the garment when they press Apply
+      setPending({ logo: l, placement, positionId: print.positionId });
     } catch {
       toast.error("Couldn't read that file — try a PNG, JPG or SVG");
     }
@@ -898,6 +894,31 @@ export function DesignStudio({ product, initialColor, products = PRODUCTS }: { p
           </div>
         </div>
       </div>
+
+      {pending && finishing && (
+        <PositionDialog
+          frame={frame}
+          logoSrc={pending.logo.src}
+          aspect={pending.logo.aspect}
+          finishing={finishing}
+          placement={pending.placement}
+          positionId={pending.positionId}
+          // Closing without Apply leaves the garment as it was (a replaced logo stays, a new one is not added)
+          onClose={() => setPending(null)}
+          onApply={(placement, positionId) => {
+            const l = pending.logo;
+            updatePrint({ logo: l, placement, positionId, thread: null });
+            setPending(null);
+            // Zoom the photo in on the logo right away
+            setSlide(0);
+            setFocus(focusOn(frame, placement, l.aspect));
+            if (finishing.kind === "embroidery" && l.palette.length > finishing.maxColors)
+              toast.message(`Your logo has ${l.palette.length} colors`, {
+                description: `${finishing.label} stitches up to ${finishing.maxColors} thread colors, so we've reduced it. Choose Premium for up to 4.`,
+              });
+          }}
+        />
+      )}
 
       {positionOpen && print && logo && logoArt && finishing && (
         <PositionDialog
