@@ -21,6 +21,8 @@ export type OrderItem = { id: string; title: string; product_title?: string | nu
 export type Order = {
   id: string;
   display_id: number;
+  /** 15-character public order reference, added by the account page (lib/order-ref.ts) */
+  ref?: string;
   status: string;
   fulfillment_status?: string;
   payment_status?: string;

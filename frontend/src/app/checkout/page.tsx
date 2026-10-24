@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useCart, cartTotal, unitPriceOf } from "@/lib/cart-store";
-import { shippingFor } from "@/lib/pricing";
+import { garmentUnitPrice, shippingFor } from "@/lib/pricing";
 import { formatPrice } from "@/lib/catalog";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,9 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { DummyRazorpayModal, type RazorpayResult } from "@/components/payments/dummy-razorpay";
 import { RazorpayCheckout } from "@/components/payments/razorpay-checkout";
+import { OrderReceipt, type Receipt } from "@/components/checkout/order-receipt";
 
+const RECEIPT_KEY = "cottson_last_receipt";
 const useMounted = () => useSyncExternalStore(() => () => {}, () => true, () => false);
 
 // Two steps: /api/checkout builds the cart and opens a payment order, the payment modal collects the
@@ -23,7 +25,18 @@ type PaymentOrder = { razorpayOrderId: string; amount: number; email: string; na
 export default function CheckoutPage() {
   const { items, clear } = useCart();
   const mounted = useMounted();
-  const [placed, setPlaced] = useState<{ displayId: number; total: number; test: boolean } | null>(null);
+  // The receipt survives a refresh of the confirmation page (the cart is already empty by then). Nothing
+  // renders before mount, so reading sessionStorage in the initial state can't cause a hydration mismatch.
+  const [placed, setPlaced] = useState<Receipt | null>(() => {
+    try {
+      const saved = typeof window === "undefined" ? null : sessionStorage.getItem(RECEIPT_KEY);
+      const receipt = saved ? (JSON.parse(saved) as Receipt) : null;
+      return receipt?.orderRef ? receipt : null; // a receipt saved before order references existed is dropped
+    } catch {
+      return null;
+    }
+  });
+  const details = useRef<Receipt["customer"] | null>(null); // what the customer typed, kept for the receipt
   const [busy, setBusy] = useState(false);
   const [payment, setPayment] = useState<PaymentOrder | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -63,16 +76,8 @@ export default function CheckoutPage() {
       </div>
     );
 
-  if (placed)
-    return (
-      <div className="mx-auto max-w-xl px-4 py-24 text-center">
-        <h1 className="text-3xl font-semibold">Thank you!</h1>
-        <p className="mt-3 text-muted-foreground">
-          Order #{placed.displayId} is confirmed · {formatPrice(placed.total)}. {placed.test ? "Payment received (test mode, no money was charged)." : "Payment received. Thank you!"}
-        </p>
-        <Link href="/products" className={cn(buttonVariants({ size: "lg" }), "mt-6 h-11 px-6")}>Continue shopping</Link>
-      </div>
-    );
+  // Only while the cart is empty: someone who starts a new order sees the checkout form again
+  if (placed && !items.length) return <OrderReceipt r={placed} />;
 
   if (!items.length)
     return (
@@ -99,8 +104,26 @@ export default function CheckoutPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+      const receipt: Receipt = {
+        orderNo: data.displayId,
+        orderRef: data.orderRef,
+        placedAt: new Date().toISOString(),
+        paymentId: data.paymentId ?? r.razorpay_payment_id,
+        method: data.method,
+        test,
+        customer: details.current ?? { name: "", email: payment?.email ?? "", phone: "", address: "", city: "", pincode: "" },
+        items: items.map((i) => ({ title: i.title, variant: `${i.colorName}, ${i.size}`, qty: i.qty, unit: unitPriceOf(i), customized: !!i.designId })),
+        subtotal: cartTotal(items),
+        bulkDiscount: items.reduce((n, i) => n + i.qty * (i.basePrice - garmentUnitPrice(i.basePrice, i.qty)), 0),
+        shipping: shippingFor(cartTotal(items)),
+        total: data.total,
+      };
+      try {
+        sessionStorage.setItem(RECEIPT_KEY, JSON.stringify(receipt));
+      } catch {}
       clear();
-      setPlaced({ displayId: data.displayId, total: data.total, test });
+      setPlaced(receipt);
+      window.scrollTo({ top: 0 });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not place your order");
     } finally {
@@ -151,6 +174,7 @@ export default function CheckoutPage() {
         onSubmit={async (e) => {
           e.preventDefault();
           const f = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
+          details.current = { name: f.name, email: f.email, phone: f.phone, address: f.address, city: f.city, pincode: f.pincode };
           setBusy(true);
           try {
             const res = await fetch("/api/checkout", {

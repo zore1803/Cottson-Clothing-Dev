@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "type": "hoodie-vest",
+  "width": 1200,
+  "height": 1400,
+  "pxPerCm": 10.7,
+  "layers": {
+    "base": "base.png",
+    "details": "details.png"
+  },
+  "foldStrength": 0.55,
+  "regions": [
+    {
+      "id": "body",
+      "label": "Vest colour",
+      "mask": "mask-body.png",
+      "default": "#1c1c1c"
+    }
+  ],
+  "zones": [
+    {
+      "id": "left-chest",
+      "label": "Left chest",
+      "x": 650,
+      "y": 420,
+      "w": 107,
+      "h": 86,
+      "rotation": 0
+    },
+    {
+      "id": "right-chest",
+      "label": "Right chest",
+      "x": 442,
+      "y": 420,
+      "w": 107,
+      "h": 86,
+      "rotation": 0
+    }
+  ]
+}

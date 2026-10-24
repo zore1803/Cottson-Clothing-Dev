@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCustomer, getOrders } from "@/lib/auth";
 import { Dashboard } from "@/components/account/dashboard";
+import { orderRef } from "@/lib/order-ref";
 import { connectMongo, Design } from "@/lib/mongo";
 
 // Designs live in MongoDB; a database hiccup must not take the whole account page down
@@ -27,7 +28,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   return (
     <Dashboard
       initialTab={tab}
-      orders={orders}
+      orders={orders.map((o) => ({ ...o, ref: orderRef(o.id) }))}
       designs={designs}
       customer={{
         email: customer.email,

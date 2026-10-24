@@ -1,26 +1,27 @@
 import Link from "next/link";
-import { Package } from "lucide-react";
+import { ChevronRight, Package } from "lucide-react";
 import { formatPrice } from "@/lib/catalog";
 import { Card, btnPrimary, type Order } from "./shared";
 
 const date = (d: string) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
-function statusOf(o: Order): { label: string; tone: string } {
+export function statusOf(o: Order): { label: string; tone: string } {
   if (o.status === "canceled") return { label: "Cancelled", tone: "bg-slate-100 text-slate-600" };
   if (o.fulfillment_status === "delivered") return { label: "Delivered", tone: "bg-emerald-50 text-emerald-700" };
-  if (o.fulfillment_status === "shipped" || o.fulfillment_status === "partially_shipped") return { label: "Shipped", tone: "bg-[#DCEAF5] text-[#1F5A8C]" };
+  if (o.fulfillment_status === "shipped" || o.fulfillment_status === "partially_shipped") return { label: "Dispatched", tone: "bg-[#DCEAF5] text-[#1F5A8C]" };
   if (o.status === "completed") return { label: "Completed", tone: "bg-emerald-50 text-emerald-700" };
-  return { label: "Processing", tone: "bg-[#EAF1F7] text-[#113858]" };
+  // An order only exists once its payment has been verified, so an order nobody has shipped yet is confirmed
+  return { label: "Confirmed", tone: "bg-emerald-50 text-emerald-700" };
 }
 
 export function OrderCard({ order }: { order: Order }) {
   const s = statusOf(order);
   const items = order.items ?? [];
   return (
-    <div className="rounded-2xl border border-[#113858]/10 p-5">
+    <Link href={`/account/orders/${order.id}`} className="group block rounded-2xl border border-[#113858]/10 p-5 transition hover:border-[#113858]/30 hover:shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-[15px] font-semibold text-[#0B2A45]">Order #{order.display_id}</p>
+          <p className="break-all font-mono text-[15px] font-semibold tracking-[0.06em] text-[#0B2A45]">{order.ref ?? `Order #${order.display_id}`}</p>
           <p className="text-[13px] text-[#5B7690]">Placed {date(order.created_at)}</p>
         </div>
         <div className="flex items-center gap-4">
@@ -41,7 +42,10 @@ export function OrderCard({ order }: { order: Order }) {
           ))}
         </ul>
       )}
-    </div>
+      <p className="mt-3 flex items-center justify-end gap-0.5 text-[13px] font-semibold text-[#1F5A8C] group-hover:underline">
+        View order details <ChevronRight size={15} />
+      </p>
+    </Link>
   );
 }
 

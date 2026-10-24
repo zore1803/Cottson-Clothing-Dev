@@ -5,6 +5,7 @@ import { paymentMode, verifySignature } from "@/lib/razorpay-dummy";
 import { verifyPaymentWithRazorpay } from "@/lib/razorpay";
 import { OrderFailedError, placeOrderForPayment } from "@/lib/place-order";
 import { getSession } from "@/lib/authz";
+import { orderRef } from "@/lib/order-ref";
 
 // Step 2 of checkout: the browser reports the payment result (Razorpay's three fields). Only a payment
 // whose signature verifies places the order; the cart then becomes a Medusa order exactly once.
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
 
   // Replays of an already-completed payment just return the same order
   if (pay.status === "paid" && pay.medusaOrderId) {
-    return NextResponse.json({ orderId: pay.medusaOrderId, displayId: pay.displayId, total: pay.orderTotal });
+    return NextResponse.json({ orderId: pay.medusaOrderId, orderRef: orderRef(pay.medusaOrderId), displayId: pay.displayId, total: pay.orderTotal, paymentId: pay.razorpayPaymentId, method: pay.method });
   }
 
   if (!verifySignature(orderId, paymentId, signature)) {
@@ -37,9 +38,10 @@ export async function POST(req: Request) {
     return fail("Payment could not be verified", 400);
   }
 
+  let method: string | undefined;
   try {
     // With real Razorpay, also ask Razorpay whether this payment really covers this order and amount
-    if (paymentMode() === "razorpay") await verifyPaymentWithRazorpay(paymentId, orderId, pay.amount);
+    if (paymentMode() === "razorpay") method = (await verifyPaymentWithRazorpay(paymentId, orderId, pay.amount)).method;
   } catch (e) {
     // Left open on purpose: if Razorpay was just unreachable the customer can retry, and the webhook still covers a real payment
     console.error("[checkout] could not verify payment with Razorpay", e);
@@ -51,10 +53,11 @@ export async function POST(req: Request) {
     // The webhook may have placed it a moment ago: report that order instead of an error
     if (!placed) {
       const again = await Payment.findOne({ _id: pay._id });
-      if (again?.status === "paid" && again.medusaOrderId) return NextResponse.json({ orderId: again.medusaOrderId, displayId: again.displayId, total: again.orderTotal });
+      if (again?.status === "paid" && again.medusaOrderId) return NextResponse.json({ orderId: again.medusaOrderId, orderRef: orderRef(again.medusaOrderId), displayId: again.displayId, total: again.orderTotal, paymentId: again.razorpayPaymentId, method: again.method });
       return fail("This payment can no longer be used", 409);
     }
-    return NextResponse.json(placed);
+    if (method) await Payment.updateOne({ _id: pay._id }, { method });
+    return NextResponse.json({ ...placed, orderRef: orderRef(placed.orderId), paymentId, method });
   } catch (e) {
     return fail(e instanceof OrderFailedError ? e.message : "Could not place your order", 500);
   }
