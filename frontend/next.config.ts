@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Self-contained server output for the Docker image (smaller, uses less RAM on the VPS)
+  output: "standalone",
   // Product photos served from ImageKit
   images: {
     remotePatterns: [
